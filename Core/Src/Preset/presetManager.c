@@ -48,6 +48,9 @@ char currentFolder[13];
 //char currentName[8];
 //uint8_t activePresetNr = 0;
 
+#include "Preset/JimbonesPreset.h"
+static uint8_t jb_kits[NUM_KIT_SLOTS][JB_KIT_BYTES];
+
 #define FILE_VERSION 2
 
 /*
@@ -228,6 +231,10 @@ FRESULT preset_saveTmpKit()
 	}
 	//write the preset data
 	f_write((FIL*)&SDFile,activeParameters,END_OF_SOUND_PARAMETERS,&bytesWritten);
+ uint8_t record[JB_RECORD_BYTES];
+ jb_pack(record,&jb_parameters[0][0]);
+ res=f_write((FIL*)&SDFile,record,sizeof(record),&bytesWritten);
+ if(res==FR_OK && bytesWritten!=sizeof(record)) res=FR_DISK_ERR;
 
 	//close the file
 	f_close((FIL*)&SDFile);
@@ -236,11 +243,12 @@ FRESULT preset_saveTmpKit()
 #else
 
 #endif
-	return FR_OK;
+	return res;
 }
 
 FRESULT preset_LoadTmpKit()
 {
+ uint8_t kit[JB_KIT_BYTES]; jb_defaults(kit); jb_loadKit(kit);
 	FRESULT res;
 	unsigned int bytesRead;
 	uint8_t kitNr = 0;
@@ -256,6 +264,7 @@ FRESULT preset_LoadTmpKit()
 		goto closeFile;
 	}
 
+	if(kitNr>=NUM_KIT_SLOTS) { res=FR_DISK_ERR; goto closeFile; }
 	menu_selectedPresetNr[SAVE_TYPE_KIT] = kitNr;
 
 
@@ -268,6 +277,12 @@ FRESULT preset_LoadTmpKit()
 		para=activeParameters;
 
 		res=f_read((FIL*)&SDFile, para,END_OF_SOUND_PARAMETERS, &bytesRead);
+  if(res==FR_OK) {
+   uint8_t record[JB_RECORD_BYTES]; UINT got=0;
+   FRESULT extra=f_read((FIL*)&SDFile,record,sizeof(record),&got);
+   if(extra==FR_OK) { jb_unpack(kit,record,got); jb_loadKit(kit); }
+   else res=extra;
+  }
 		if(res==FR_OK) {
 			// set to 0 for any that were not read from the file
 			if(END_OF_SOUND_PARAMETERS-bytesRead)
@@ -749,6 +764,8 @@ uint8_t preset_isNameEmpty(char* name)
 //load init kit
 void preset_init(uint8_t presetNr)
 {
+	jb_defaults(jb_kits[presetNr]);
+	jb_loadKit(jb_kits[presetNr]);
 
 	//const uint8_t presetNr = menu_selectedPresetNr[SAVE_TYPE_KIT];
 
@@ -842,6 +859,7 @@ void preset_loadDrumsetRam(uint8_t presetNr, uint8_t isMorph, uint8_t sendImmedi
 	{
 		//copy parameters to edit buffer
 		memcpy(activeParameters, mainParameters[presetNr], sizeof(uint8_t) * END_OF_SOUND_PARAMETERS);
+		jb_loadKit(jb_kits[presetNr]);
 		//if(activeParameters[PAR_PATTERN_MODE] = 1)
 		//load asociated morph kit as well
 
@@ -864,6 +882,7 @@ void preset_loadDrumsetRam(uint8_t presetNr, uint8_t isMorph, uint8_t sendImmedi
 //----------------------------------------------------
 void preset_saveDrumsetRam(uint8_t presetNr, uint8_t isMorph)
 {
+	memcpy(jb_kits[presetNr],jb_parameters,JB_KIT_BYTES);
 	if(isMorph)
 	{
 		for(uint16_t i=0;i<END_OF_SOUND_PARAMETERS;i++)
@@ -917,6 +936,12 @@ FRESULT preset_saveDrumsetSD(uint8_t presetNr, uint8_t isMorph)
 	if(res != FR_OK) return res;
 	//write the preset data
 	preset_writeDrumsetData(presetNr, isMorph);
+ uint8_t record[JB_RECORD_BYTES];
+ jb_pack(record,isMorph?&jb_parameters[0][0]:jb_kits[presetNr]);
+ res=f_write((FIL*)&SDFile,record,sizeof(record),&bytesWritten);
+ if(res!=FR_OK || bytesWritten!=sizeof(record)) {
+  f_close((FIL*)&SDFile); return res==FR_OK?FR_DISK_ERR:res;
+ }
 	
 	//close the file
 	f_close((FIL*)&SDFile);
@@ -1175,6 +1200,7 @@ static FRESULT preset_readDrumsetData(uint8_t presetNr, uint8_t isMorph)
 //----------------------------------------------------
 FRESULT preset_loadDrumsetSD(uint8_t presetNr, uint8_t isMorph)
 {
+	if(!isMorph) jb_defaults(jb_kits[presetNr]);
 	//activePresetNr = presetNr;
 #if USE_SD_CARD
 	//filename in 8.3  format
@@ -1228,6 +1254,12 @@ FRESULT preset_loadDrumsetSD(uint8_t presetNr, uint8_t isMorph)
 #endif
 	//then the data
 	res=preset_readDrumsetData(presetNr, isMorph);
+ if(res==FR_OK && !isMorph) {
+  uint8_t record[JB_RECORD_BYTES]; UINT got=0;
+  FRESULT extra=f_read((FIL*)&SDFile,record,sizeof(record),&got);
+  if(extra==FR_OK) jb_unpack(jb_kits[presetNr],record,got);
+  else res=extra;
+ }
 #if !CALC_SAMPLES_IN_INTERRUPT
 	//to prevent audio dropouts
 	soundengine_calcNextSampleBlock();

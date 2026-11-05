@@ -15,18 +15,25 @@
 #include "Soundengine/AudioCodecManager.h"
 #include "Preset/PresetManager.h"
 #include <string.h>
+#include "Soundengine/DSPAudio/Jimbones.h"
 #include "Soundengine/USB/usb_manager.h"
 #include "Soundengine/MIDI/Uart.h"
 
+/* Debugger-readable timing telemetry. Rendering only; not total interrupt/MIDI load. */
+volatile uint32_t jb_audioMaxCycles=0, jb_audioLastCycles=0, jb_audioOverruns=0;
 uint8_t soundengine_calcNextSampleBlock()
 {
 	if(bCurrentSampleValid!= SAMPLE_VALID)
 	{
+		uint32_t jb_startCycles=DWT->CYCCNT;
 	#if USE_DAC2
 		mixer_calcNextSampleBlock((int16_t*)&dma_buffer[bCurrentSampleValid*(OUTPUT_DMA_SIZE*2)],(int16_t*)&dma_buffer2[bCurrentSampleValid*(OUTPUT_DMA_SIZE*2)]);
 	#else
 		mixer_calcNextSampleBlock(&dma_buffer[bCurrentSampleValid*(OUTPUT_DMA_SIZE*2)],&dma_buffer2[(1-bCurrentSampleValid)*(OUTPUT_DMA_SIZE*2)]);
 	#endif
+		jb_audioLastCycles=DWT->CYCCNT-jb_startCycles;
+        if(jb_audioLastCycles>jb_audioMaxCycles) jb_audioMaxCycles=jb_audioLastCycles;
+        if(jb_audioLastCycles>(uint32_t)(SystemCoreClock*(OUTPUT_DMA_SIZE/REAL_FS))) jb_audioOverruns++;
 		bCurrentSampleValid = SAMPLE_VALID;
 
 		return 1;
@@ -37,6 +44,9 @@ uint8_t soundengine_calcNextSampleBlock()
 
 void soundengine_init()
 {
+	CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+	jb_init();
 	mixer_init();
 
 

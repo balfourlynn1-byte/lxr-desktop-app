@@ -21,6 +21,7 @@
 #include "Soundengine/MIDI/ParameterArray.h"
 #include "Soundengine/DSPAudio/modulationNode.h"
 #include "Soundengine/TriggerOut.h"
+#include "Soundengine/DSPAudio/Jimbones.h"
 #include "Soundengine/MIDI/MidiVoiceControl.h"
 #include "IO/adcPots.h"
 
@@ -121,6 +122,7 @@ void Drum_updatePan(const uint8_t voiceNr)
 void Drum_trigger(const uint8_t voiceNr, const uint8_t vol, const uint8_t note)
 {
 
+	jb_trigger(voiceNr, vol, note, 0);
 	lfo_retrigger(voiceNr);
 
 	//update velocity modulation

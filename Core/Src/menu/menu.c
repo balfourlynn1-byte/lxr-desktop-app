@@ -9,6 +9,7 @@
 
 #include "menu/menu.h"
 #include "lcd.h"
+#include "Soundengine/DSPAudio/Jimbones.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -1512,8 +1513,59 @@ static void menu_displayModTargetShort(uint8_t curParmVal, char *valueAsText, ch
 //-----------------------------------------------------------------
 // paint the screen when in normal parameter edit mode
 // (as opposed to repainting the load save screen)
+/* OSC extension state is separate from the packed legacy menuIndex. */
+static uint8_t jb_screen=0, jb_selected=JB_METAL, jb_oscArmed=0;
+static const char *const jb_short[JB_PARAMS]={
+ "Mod","FML","WTL","Dec", "Met","Noi","Agg","Tex",
+ "vMt","vNo","vAg","vTx", "Pit","Rat","Dep","Fbk",
+ "Det","Nvl","Col","Trn", "Drv","Sat","Bit","Vel",
+ "Pos","Mov","Rnd","PEn"};
+static const char *const jb_long[JB_PARAMS]={
+ "Layer mode","Metal level","Wave level","Amp decay",
+ "METAL","NOISE","AGGRESSION","TEXTURE",
+ "Velocity > Metal","Velocity > Noise","Velocity > Agg","Velocity > Tex",
+ "Carrier pitch","FM ratio","FM depth","FM feedback",
+ "Detune","Noise level","Noise colour","Transient length",
+ "Drive","Sat character","Bit reduction","Velocity sens",
+ "Wave position","Wave movement","Randomisation","Pitch envelope"};
+static uint8_t jb_uiActive(void) { return jb_screen && menu_activePage<7; }
+static uint8_t jb_uiVoice(void) { uint8_t v=menu_getActiveVoice(); return v>5?5:v; }
+static void jb_uiAdjust(unsigned p,int diff) {
+ jb_adjust(jb_uiVoice(),p,diff);
+ preset_touchTimer(PRESET_KIT_TIMER);
+ menu_repaintAll();
+}
+static void jb_uiPaint(void) {
+ unsigned voice=jb_uiVoice();
+ memset(editDisplayBuffer,' ',sizeof(editDisplayBuffer));
+ if(editModeActive) {
+  const char *label=jb_long[jb_selected];
+  memcpy(editDisplayBuffer[0],label,strlen(label));
+  char b[17]; int value=jb_parameters[voice][jb_selected];
+  if(jb_selected>=JB_VMETAL && jb_selected<=JB_VTEXTURE) value-=64;
+  if(jb_selected==JB_MODE) {
+   static const char *const modes[]={"Original","Orig + Metal","Orig + Wave","Orig + Both"};
+   snprintf(b,sizeof(b),"%s",modes[value]);
+  } else snprintf(b,sizeof(b),"V%u  %d",voice+1,value);
+  memcpy(editDisplayBuffer[1],b,strlen(b));
+ } else {
+  unsigned base=(jb_selected/4)*4;
+  for(unsigned col=0;col<4;col++) {
+   unsigned p=base+col; char b[5];
+   memcpy(&editDisplayBuffer[0][col*4],jb_short[p],3);
+   int value=jb_parameters[voice][p];
+   if(p>=JB_VMETAL && p<=JB_VTEXTURE) value-=64;
+   snprintf(b,sizeof(b),"%3d",value);
+   memcpy(&editDisplayBuffer[1][col*4],b,3);
+   if(p==jb_selected) editDisplayBuffer[0][col*4+3]='<';
+  }
+ }
+ editDisplayBuffer[0][16]=0; editDisplayBuffer[1][16]=0;
+}
+
 void menu_repaintGeneric()
 {
+ if(jb_uiActive()) { jb_uiPaint(); return; }
 	//first get the active sub-page and parameter from the menuIndex
 	const uint8_t activeParameter	= menuIndex & MASK_PARAMETER; // this will be 0 to 7 for the 4 columns
 	const uint8_t activePage		= (menuIndex&MASK_PAGE)>>PAGE_SHIFT; // this is the active sub page
@@ -2754,7 +2806,16 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
 		return; // nothing has changed. do nothing
 
 	screensaver_touch();
-
+ if(jb_uiActive() && copyClear_Mode==MODE_NONE) {
+  if(inc) {
+   if(editModeActive) jb_uiAdjust(jb_selected,inc);
+   else {
+    int next=(int)jb_selected+inc;
+    jb_selected=next<0?JB_PARAMS-1:(next>=JB_PARAMS?0:next);
+   }
+  }
+  menu_repaintAll(); return;
+ }
 
 	//invert encoder
 	//inc = (int8_t)(inc * -1);
@@ -3155,6 +3216,17 @@ void menu_resetSaveParameters()
 // if its the global menu, and there are multiple pages will toggle to the next page
 void menu_switchSubPage(uint8_t subPageNr, uint8_t toggle)
 {
+ if(menu_activePage<7 && subPageNr==0 && toggle) {
+  if(jb_oscArmed && menu_getSubPage()==0) {
+   if(!jb_screen) { jb_screen=1; jb_selected=JB_METAL; }
+   else if(jb_selected/4==0) { jb_screen=0; }
+   else { jb_selected=(jb_selected/4+1)*4; if(jb_selected>=JB_PARAMS) jb_selected=0; }
+   editModeActive=0; return;
+  }
+  jb_oscArmed=1; jb_screen=0;
+  menuIndex=0; editModeActive=0; return;
+ }
+ jb_screen=0; jb_oscArmed=0;
 	//leave edit mode if active
 	editModeActive = 0;
 
@@ -3216,6 +3288,7 @@ uint8_t menu_getSubPage()
 //-----------------------------------------------------------------
 void menu_switchPage(uint8_t pageNr)
 {
+ jb_screen=0; jb_oscArmed=0;
 	//autosave config page settings
 	/*
 	if(menu_activePage == MENU_MIDI_PAGE)
@@ -3916,6 +3989,11 @@ uint8_t getMenuIndx(void)
 //-----------------------------------------------------------------
 uint8_t menu_parseKnobValue(uint8_t potNr, int16_t diff)
 {
+ if(jb_uiActive() && copyClear_Mode==MODE_NONE && potNr<4) {
+  screensaver_touch(); editModeActive=0;
+  jb_selected=(jb_selected/4)*4+potNr;
+  jb_uiAdjust(jb_selected,diff); return 1;
+ }
 	screensaver_touch();
 	preset_touchTimer(PRESET_KIT_TIMER);
 
