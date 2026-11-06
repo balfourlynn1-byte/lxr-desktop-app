@@ -17,6 +17,7 @@ uint8_t jb_perfui_next(void);
 void jb_perfui_leave(void);
 uint8_t jb_perfui_page(void);
 uint8_t jb_perfui_stepfx_active(void);
+uint8_t jb_perfui_cpu_active(void);
 uint8_t jb_perfui_select(uint8_t index); /* physical step index 0..15 */
 uint8_t jb_perfui_selected(void);
 const char *jb_perfui_effect_name(uint8_t index);
