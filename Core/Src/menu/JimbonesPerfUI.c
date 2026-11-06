@@ -10,12 +10,13 @@ static uint8_t selected_fx = 0;
 
 void jb_perfui_enter(void) { active_page = JB_PERF_PAGE_MAIN; }
 uint8_t jb_perfui_next(void) {
-    active_page = (uint8_t)((active_page + 1u) % 3u);
+    active_page = (uint8_t)((active_page + 1u) % 4u);
     return active_page;
 }
 void jb_perfui_leave(void) { active_page = JB_PERF_PAGE_MAIN; }
 uint8_t jb_perfui_page(void) { return active_page; }
 uint8_t jb_perfui_stepfx_active(void) { return active_page == JB_PERF_PAGE_STEPFX; }
+uint8_t jb_perfui_cpu_active(void) { return active_page == JB_PERF_PAGE_CPU; }
 uint8_t jb_perfui_select(uint8_t index) {
     if (index >= 16u) return 0;
     selected_fx = index;
