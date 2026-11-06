@@ -1521,7 +1521,7 @@ static uint8_t jb_screen=0, jb_selected=JB_METAL, jb_oscArmed=0;
 static const char *const jb_short[JB_PARAMS]={
  "Mod","FML","WTL","Dec", "Met","Noi","Agg","Tex",
  "vMt","vNo","vAg","vTx", "Pit","Rat","Dep","Fbk",
- "Det","Nvl","Col","Trn", "Drv","Sat","Bit","Vel",
+ "Det","Nvl","Col","Trn", "Drv","PSh","Bit","Vel",
  "Pos","Mov","Rnd","PEn"};
 static const char *const jb_long[JB_PARAMS]={
  "Layer mode","Metal level","Wave level","Amp decay",
@@ -1529,7 +1529,7 @@ static const char *const jb_long[JB_PARAMS]={
  "Velocity > Metal","Velocity > Noise","Velocity > Agg","Velocity > Tex",
  "Carrier pitch","FM ratio","FM depth","FM feedback",
  "Detune","Noise level","Noise colour","Transient length",
- "Drive","Sat character","Bit reduction","Velocity sens",
+ "Drive","Phase Shape/Sat","Bit reduction","Velocity sens",
  "Wave position","Wave movement","Randomisation","Pitch envelope"};
 static uint8_t jb_uiActive(void) { return jb_screen && menu_activePage<7; }
 static uint8_t jb_uiVoice(void) { uint8_t v=menu_getActiveVoice(); return v>5?5:v; }
