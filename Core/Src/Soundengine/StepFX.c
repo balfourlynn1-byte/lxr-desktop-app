@@ -55,7 +55,8 @@ void stepfx_live(uint8_t voice,uint8_t note,uint8_t velocity){
 void stepfx_process(uint32_t frames,uint16_t bpm,uint8_t external,StepFxEmit emit){
  Pending events[6];unsigned count=0;uint32_t m=lock();
  if(external!=wasExternal){cancel();clockSeen=0;wasExternal=external;fraction=0;}
- if(bpm<10)bpm=10;if(bpm>400)bpm=400;
+ if(bpm<10)bpm=10;
+ if(bpm>400)bpm=400;
  uint64_t step=(uint64_t)frames*bpm*Q;
  if(external){
   clockAge+=frames;
@@ -92,7 +93,8 @@ void stepfx_process(uint32_t frames,uint16_t bpm,uint8_t external,StepFxEmit emi
      const uint8_t pos=(uint8_t)((phase/(Q/4u))&7u);
      int note=(int)p->note+intervals[(pos+selected)&7u];
      if(selected>=12u)note+=(int)((phase/(4u*Q))%4u)*3;
-     if(note<0)note=0;if(note>127)note=127;
+     if(note<0)note=0;
+     if(note>127)note=127;
      events[count].note=(uint8_t)note;
     }
     count++;
