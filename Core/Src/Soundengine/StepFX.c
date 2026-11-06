@@ -15,7 +15,7 @@ static const Slot slots[16]={
  {"2BAR",4,100,0,2,32}, {"4BAR",8,100,0,4,128},
  {"8BAR",8,100,0,8,256}, {"RND8B",16,50,64,8,512}};
 static Pending pending[6];
-static uint8_t selected,divisor=2,probability=100,mask=62;
+static uint8_t selected,divisor=2,probability=100,mask=40;
 static uint32_t phase,externalPhase,clockAge,clockRemainder,rng=0x53465831u;
 static uint64_t fraction;
 static uint8_t clockSeen,wasExternal;
@@ -23,7 +23,7 @@ static uint32_t lock(void) { uint32_t m=__get_PRIMASK();__disable_irq();return m
 static void unlock(uint32_t m) { __DMB();__set_PRIMASK(m); }
 static uint32_t random32(void) { rng^=rng<<13;rng^=rng>>17;rng^=rng<<5;return rng; }
 static void cancel(void) { memset(pending,0,sizeof(pending)); }
-void stepfx_init(void) { uint32_t m=lock();cancel();selected=0;divisor=2;probability=100;mask=62;phase=externalPhase=clockAge=clockRemainder=0;fraction=0;clockSeen=wasExternal=0;rng=0x53465831u;unlock(m); }
+void stepfx_init(void) { uint32_t m=lock();cancel();selected=0;divisor=2;probability=100;mask=40;phase=externalPhase=clockAge=clockRemainder=0;fraction=0;clockSeen=wasExternal=0;rng=0x53465831u;unlock(m); }
 void stepfx_select(uint8_t slot) { if(slot>15)return;uint32_t m=lock();cancel();selected=slot;divisor=slots[slot].div;probability=slots[slot].prob;unlock(m); }
 void stepfx_rate(int delta) { uint32_t m=lock();if(delta>0 && divisor<16)divisor*=2;if(delta<0 && divisor>2)divisor/=2;cancel();unlock(m); }
 void stepfx_probability(int delta) { uint32_t m=lock();int p=probability+delta;probability=p<0?0:(p>100?100:p);unlock(m); }
@@ -68,12 +68,34 @@ void stepfx_process(uint32_t frames,uint16_t bpm,uint8_t external,StepFxEmit emi
    /* At most one emission per lane per audio block; never catch up in a loop. */
    --p->remaining;p->due+=Q/divisor;
    if((int32_t)(phase-p->due)>=0)p->due=phase+Q/divisor;
-   if(random32()%100<probability){
+   const uint32_t beat=phase/Q;
+   const uint32_t bar=beat/4u;
+   const uint32_t division=(phase/(Q/4u))%16u;
+   const uint8_t phraseBars=slots[selected].bars;
+   uint8_t sceneActive=1u;
+   if(phraseBars) {
+    const uint8_t sceneBar=(uint8_t)(bar%phraseBars);
+    const uint8_t slot16=(uint8_t)division;
+    const uint8_t dense=(sceneBar==phraseBars-2u);
+    sceneActive=(sceneBar==phraseBars-1u)?(slot16==0u):
+       (dense?((slot16&1u)==0u):(slot16==0u||slot16==7u||slot16==10u));
+   }
+   if(sceneActive && random32()%100<probability){
     events[count]=*p;
     int amount=slots[selected].variation;
     int vel=p->velocity;
     if(amount)vel+=(int)(random32()%(2*amount+1))-amount;
-    events[count].velocity=vel<1?1:(vel>127?127:vel);count++;
+    events[count].velocity=vel<1?1:(vel>127?127:vel);
+    /* Note transposition affects pitched oscillators; snare noise needs DSP pitch work. */
+    if(selected>=4u) {
+     static const int8_t intervals[8]={0,5,12,-7,7,19,-12,3};
+     const uint8_t pos=(uint8_t)((phase/(Q/4u))&7u);
+     int note=(int)p->note+intervals[(pos+selected)&7u];
+     if(selected>=12u)note+=(int)((phase/(4u*Q))%4u)*3;
+     if(note<0)note=0;if(note>127)note=127;
+     events[count].note=(uint8_t)note;
+    }
+    count++;
    }
   }
  }

@@ -9,6 +9,8 @@
 
 #include "menu/menu.h"
 #include "lcd.h"
+#include "menu/JimbonesPerfUI.h"
+#include "Soundengine/StepFX.h"
 #include "Soundengine/DSPAudio/Jimbones.h"
 #include <string.h>
 #include <stdlib.h>
@@ -1514,6 +1516,7 @@ static void menu_displayModTargetShort(uint8_t curParmVal, char *valueAsText, ch
 // paint the screen when in normal parameter edit mode
 // (as opposed to repainting the load save screen)
 /* OSC extension is separate from packed legacy menuIndex and does not alter the sequencer. */
+extern volatile uint8_t jb_audioLoadPercent;
 static uint8_t jb_screen=0, jb_selected=JB_METAL, jb_oscArmed=0;
 static const char *const jb_short[JB_PARAMS]={
  "Mod","FML","WTL","Dec", "Met","Noi","Agg","Tex",
@@ -1564,8 +1567,42 @@ static void jb_uiPaint(void) {
  editDisplayBuffer[0][16]=0; editDisplayBuffer[1][16]=0;
 }
 
+/* The third Performance screen is an explicit state, not a legacy menuIndex
+ * subpage, so the first two parameter banks remain completely untouched. */
+static uint8_t jb_fxVoice;
+static void jb_stepfxPaint(void)
+{
+    unsigned index = jb_perfui_selected();
+    const char *name = jb_perfui_effect_name(index);
+    char top[17], bottom[17];
+    memset(editDisplayBuffer, ' ', sizeof(editDisplayBuffer));
+    snprintf(top,sizeof(top),"FX%02u %.6s %2u%%", index+1u,name,jb_audioLoadPercent);
+    snprintf(bottom,sizeof(bottom),"1/%u V%u%c %3u%% %s",stepfx_divisor(),jb_fxVoice+1,(stepfx_mask()&(1u<<jb_fxVoice))?'+':'-',stepfx_chance(),stepfx_slot()?"ON":"--");
+    memcpy(editDisplayBuffer[0],top,strlen(top));
+    memcpy(editDisplayBuffer[1],bottom,strlen(bottom));
+    editDisplayBuffer[0][16]=0;
+    editDisplayBuffer[1][16]=0;
+}
+
+uint8_t menu_stepFxPageActive(void)
+{
+    return menu_activePage==PERF_PAGE && jb_perfui_stepfx_active();
+}
+
+void menu_stepFxSelect(uint8_t stepIndex)
+{
+    if(menu_stepFxPageActive() && jb_perfui_select(stepIndex))
+        menu_repaintAll();
+}
+
+uint8_t menu_stepFxSelected(void)
+{
+    return jb_perfui_selected();
+}
+
 void menu_repaintGeneric()
 {
+ if(menu_stepFxPageActive()) { jb_stepfxPaint(); return; }
  if(jb_uiActive()) { jb_uiPaint(); return; }
 	//first get the active sub-page and parameter from the menuIndex
 	const uint8_t activeParameter	= menuIndex & MASK_PARAMETER; // this will be 0 to 7 for the 4 columns
@@ -2807,6 +2844,12 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
 		return; // nothing has changed. do nothing
 
 	screensaver_touch();
+ if(menu_stepFxPageActive()) {
+  editModeActive=0;
+  if(inc) jb_fxVoice=(uint8_t)((jb_fxVoice+(inc>0?1:5))%6);
+  if(btnClicked)stepfx_include(jb_fxVoice,!(stepfx_mask()&(1u<<jb_fxVoice)));
+  menu_repaintAll(); return;
+ }
  if(jb_uiActive() && copyClear_Mode==MODE_NONE) {
   if(inc) {
    if(editModeActive) jb_uiAdjust(jb_selected,inc);
@@ -3220,9 +3263,12 @@ void menu_switchSubPage(uint8_t subPageNr, uint8_t toggle)
 {
  if(menu_activePage<7 && subPageNr==0 && toggle) {
   if(jb_oscArmed && menu_getSubPage()==0) {
-   if(!jb_screen) { jb_screen=1; jb_selected=JB_METAL; }
-   else if(jb_selected/4==0) { jb_screen=0; }
-   else { jb_selected=(jb_selected/4+1)*4; if(jb_selected>=JB_PARAMS) jb_selected=0; }
+   if(!jb_screen) { jb_screen=1; jb_selected=JB_MODE; }
+   else {
+    unsigned bank=(unsigned)(jb_selected/4)+1u;
+    if(bank >= (JB_PARAMS+3u)/4u) { jb_screen=0; jb_selected=JB_MODE; }
+    else jb_selected=(uint8_t)(bank*4u);
+   }
    editModeActive=0; return;
   }
   jb_oscArmed=1; jb_screen=0;
@@ -3292,6 +3338,7 @@ uint8_t menu_getSubPage()
 void menu_switchPage(uint8_t pageNr)
 {
  jb_screen=0; jb_oscArmed=0;
+ if(pageNr != PERF_PAGE) jb_perfui_leave();
 	//autosave config page settings
 	/*
 	if(menu_activePage == MENU_MIDI_PAGE)
@@ -3377,16 +3424,18 @@ void menu_switchPage(uint8_t pageNr)
 		break;
 
 	case PERF_PAGE:
-	{
-		uint8_t toggle = (menu_activePage == PERF_PAGE);
-
-		// **GMENU TODO do we need to clear any leds?
-		if (toggle) // if we are on the settings page already, toggle between all pages
-		{
-			menu_switchSubPage(menu_getSubPage(),1);
-		}
-		else menu_switchSubPage(0,0);
-	}
+    {
+        const uint8_t alreadyPerf = menu_activePage == PERF_PAGE;
+        /* Every normal Performance press advances: page 1 -> page 2 ->
+         * Step FX -> page 1. No rapid triple-click timing is required. */
+        if(alreadyPerf) jb_perfui_next();
+        else jb_perfui_enter();
+        menu_activePage = PERF_PAGE;
+        editModeActive = 0;
+        /* Existing first/second banks are legacy parameter indices 0-3/4-7. */
+        menuIndex = jb_perfui_page() == JB_PERF_PAGE_MORE ? 4u : 0u;
+    }
+    break;
 
 	case MENU_LAST_STEP_PAGE:
 	case PATTERN_SETTINGS_PAGE:
@@ -3992,6 +4041,13 @@ uint8_t getMenuIndx(void)
 //-----------------------------------------------------------------
 uint8_t menu_parseKnobValue(uint8_t potNr, int16_t diff)
 {
+ if(menu_stepFxPageActive()) {
+  if(potNr==0 && diff){int i=jb_perfui_selected()+(diff>0?1:-1);jb_perfui_select(i<0?0:(i>15?15:i));}
+  else if(potNr==1)stepfx_rate(diff);
+  else if(potNr==2)stepfx_probability(diff);
+  else if(potNr==3 && diff)stepfx_include(jb_fxVoice,diff>0);
+  screensaver_touch();menu_repaintAll();return 1;
+ }
  if(jb_uiActive() && copyClear_Mode==MODE_NONE && potNr<4) {
   screensaver_touch(); editModeActive=0;
   jb_selected=(jb_selected/4)*4+potNr;

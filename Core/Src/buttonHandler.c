@@ -431,7 +431,12 @@ static void buttonHandler_handleModeButtons(uint8_t mode) {
 		//set menu to perf page
 		lastActiveSubPage = menu_getSubPage();
 		menu_switchPage(PERF_PAGE);
-		//menu_switchSubPage(0);
+        if(menu_stepFxPageActive()) {
+            for(uint8_t step = 0; step < 8u; step++)
+                frontPanel_sendData(SEQ_CC, SEQ_ROLL_ON_OFF, step);
+            led_clearSequencerLeds();
+            led_setValue(1, led_idx2StepLed(menu_stepFxSelected()));
+        }
 		menu_repaintAll();
 
 	}
@@ -824,8 +829,15 @@ static void buttonHandler_setTrackRotation(uint8_t seqButtonPressed)
 static void buttonHandler_seqButtonPressed(uint8_t seqButtonPressed)
 {
 
-
-	uint8_t ledNr = led_idx2StepLed(seqButtonPressed);
+    uint8_t ledNr = led_idx2StepLed(seqButtonPressed);
+    if(buttonHandler_stateMemory.selectButtonMode == SELECT_MODE_PERF &&
+       menu_stepFxPageActive() && !buttonHandler_getShift() &&
+       !buttonHandler_getSave() && !buttonHandler_getLoad() && !buttonHandler_getCopy()) {
+        menu_stepFxSelect(seqButtonPressed);
+        led_clearSequencerLeds();
+        led_setValue(1,led_idx2StepLed(menu_stepFxSelected()));
+        return;
+    }
 
 	if (buttonHandler_getShift()) {
 
@@ -1288,6 +1300,8 @@ static void buttonHandler_seqButtonPressed(uint8_t seqButtonPressed)
 static void buttonHandler_seqButtonReleased(uint8_t seqButtonPressed)
 {
 
+    if(buttonHandler_stateMemory.selectButtonMode == SELECT_MODE_PERF &&
+       menu_stepFxPageActive() && !buttonHandler_getShift()) return;
 	uint8_t ledNr = led_idx2StepLed(seqButtonPressed);
 
 	if(buttonHandler_stateMemory.selectButtonMode == SEQ_LAST_STEP)
