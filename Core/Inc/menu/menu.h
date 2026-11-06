@@ -64,6 +64,7 @@ enum
 };
 
 extern uint8_t menu_loadedPresetNr[NUM_CURRENT];
+uint8_t menu_cpuPageActive(void);
 uint8_t menu_stepFxPageActive(void);
 void menu_stepFxSelect(uint8_t stepIndex);
 uint8_t menu_stepFxSelected(void);
