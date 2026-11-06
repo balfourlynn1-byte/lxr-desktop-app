@@ -281,6 +281,7 @@ IN_ITCM_RAM void calcDrumVoiceSyncBlock(const uint8_t voiceNr, int16_t* buf, con
 	//Mix with transient buffer - int16_t processing
 	bufferTool_addBuffersSaturating(buf,modBuf,size);
 
+		jb_preFilterNoise(voiceNr,buf,size);
 	//calc filter block - float processing
 	SVF_calcBlockZDF(&voiceArray[voiceNr].filter,voiceArray[voiceNr].filterType,buf,size);
 

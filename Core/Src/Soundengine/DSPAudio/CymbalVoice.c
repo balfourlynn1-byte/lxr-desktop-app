@@ -168,6 +168,7 @@ void Cymbal_calcSyncBlock(int16_t* buf, const uint8_t size)
 		bufferTool_addBuffersSaturating(mod,mod2,size);
 
 		calcNextOscSampleFmBlock(&cymbalVoice.osc,mod,buf,size,1.f, cymbalVoice.pwm) ;
+		jb_preFilterNoise(4,buf,size);
 #if USE_REVERB
 		if(fxBus.fxType != FX_REVERB)
 		{

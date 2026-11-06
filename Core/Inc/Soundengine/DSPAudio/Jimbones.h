@@ -20,6 +20,9 @@ void jb_loadKit(const uint8_t *kit);
 void jb_silence(void);
 void jb_trigger(uint8_t voice, uint8_t velocity, uint8_t note, uint8_t open);
 void jb_render(uint8_t voice, int16_t *buffer, unsigned size, float gain);
+/* Add experimental noise to native voice signal BEFORE its original filter. */
+void jb_preFilterNoise(uint8_t voice, int16_t *buffer, unsigned size);
+extern volatile uint32_t jb_layerSaturationHits;
 uint8_t jb_limit(unsigned parameter);
 void jb_adjust(unsigned voice, unsigned parameter, int delta);
 #endif

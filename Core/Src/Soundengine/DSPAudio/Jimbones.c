@@ -14,6 +14,7 @@ typedef struct {
  uint8_t table, restart;
 } Layer;
 static Layer layers[JB_VOICES];
+volatile uint32_t jb_layerSaturationHits;
 static float clamp(float x, float a, float b) { return x<a?a:(x>b?b:x); }
 static float unit(uint8_t x) { return x*(1.f/127.f); }
 /* All callers pass bounded phases. Integer conversion avoids libm floorf per sample. */
@@ -74,9 +75,9 @@ void jb_trigger(uint8_t v,uint8_t velocity,uint8_t note,uint8_t open) {
  int pitch=(int)p[JB_PITCH]+(int)note-48; pitch=pitch<0?0:(pitch>127?127:pitch);
  s->frequency=clamp(MidiNoteFrequencies[pitch]*(1.f+s->random*.025f),10,12000)/REAL_FS;
  s->table=(pitch+11)/12; if(s->table>10) s->table=10;
- s->ratio=.25f+unit(p[JB_RATIO])*7.75f+s->metal*1.41421356f;
- s->depth=unit(p[JB_DEPTH])*(.1f+2.f*s->metal);
- s->fb=unit(p[JB_FEEDBACK])*.45f; // aggression does not change FM ratios/depth
+ s->ratio=.25f+unit(p[JB_RATIO])*13.75f+s->metal*4.41421356f;
+ s->depth=unit(p[JB_DEPTH])*(.25f+8.5f*s->metal);
+ s->fb=unit(p[JB_FEEDBACK])*.78f; // deeper feedback for clangorous FM
  s->detune=1.f+(p[JB_DETUNE]-64)*(.03f/64.f);
  float seconds=.015f+unit(p[JB_DECAY])*unit(p[JB_DECAY])*4.f;
  if(v==5 && !open) seconds=fminf(seconds,.12f); // closed hit replaces open tail
@@ -96,9 +97,7 @@ void jb_render(uint8_t v,int16_t *buffer,unsigned size,float gain) {
  float drive=1+unit(p[JB_DRIVE])*12+s->aggression*15;
  float crush=1+(unsigned)(unit(p[JB_BITS])*11+s->aggression*3);
  float steps=(float)(1u<<(unsigned)clamp(16-crush,2,15));
- float colour=unit(p[JB_COLOUR]);
- float noiseGain=clamp(unit(p[JB_NOISE_LEVEL])+s->noise,0,1);
- float pitchEnv=(p[JB_PITCH_ENV]-64)/64.f;
+  float pitchEnv=(p[JB_PITCH_ENV]-64)/64.f;
  float move=unit(p[JB_MOVEMENT]);
  float motionInc=(.2f+8*move+12*s->texture)/REAL_FS;
  float position=unit(p[JB_POSITION])*3;
@@ -107,7 +106,7 @@ void jb_render(uint8_t v,int16_t *buffer,unsigned size,float gain) {
  int needsMotion=s->texture>0 || (wtGain>0 && move>0);
  for(unsigned i=0;i<size;i++) {
   if(s->envelope<.00003f && fabsf(s->tail)<.00003f) { s->last=0; break; }
-  float inc=clamp(s->frequency*(1+pitchEnv*s->transient*3),.00001f,.4f);
+  float inc=clamp(s->frequency*(1+pitchEnv*s->transient*5),.00001f,.4f);
   s->carrier=wrap(s->carrier+inc);
   s->modulator=wrap(s->modulator+fminf(inc*s->ratio,.45f));
   s->motion=wrap(s->motion+motionInc);
@@ -118,11 +117,12 @@ void jb_render(uint8_t v,int16_t *buffer,unsigned size,float gain) {
    float mod=sine(s->modulator+s->feedback*s->fb);
    s->feedback=mod;
    float metal=sine(s->carrier+mod*s->depth*(.25f+.75f*s->envelope)*(1+s->texture*.8f*movement)+s->texture*.35f*movement);
-   if(noiseGain>0) {
-    float n=noise(s); s->lowNoise+=(.005f+.45f*colour)*(n-s->lowNoise);
-    float tilt=(p[JB_COLOUR]-64)/64.f;
-    n=tilt<0?n+(-tilt)*(s->lowNoise-n):n-tilt*s->lowNoise;
-    metal=(1-noiseGain)*metal+n*noiseGain*(.6f+.4f*s->transient);
+   /* More prominent inharmonic ring/fold texture without raising output level. */
+   if(s->aggression>0.f) {
+    const float fold=fabsf(metal*3.f)-1.f;
+    const float ring=metal*mod;
+    const float amount=s->aggression*.8f;
+    metal=(1.f-amount)*metal+amount*(ring+fold*.6f);
    }
    out+=fmGain*metal;
   }
@@ -146,7 +146,38 @@ void jb_render(uint8_t v,int16_t *buffer,unsigned size,float gain) {
   out+=s->tail;
   s->tail*=.94f; s->last=out;
   s->envelope*=s->decay; s->transient*=s->transientDecay;
-  float mixed=buffer[i]+out*gain*12000.f;
-  buffer[i]=(int16_t)clamp(mixed,-32768,32767);
+  /* Reserve room for experimental layers; protect original in exact Mode 0. */
+  float mixed=buffer[i]*.78f+out*gain*15500.f;
+  const float mag=fabsf(mixed);
+  if(mag>24000.f) {
+   ++jb_layerSaturationHits;
+   const float excess=mag-24000.f;
+   const float knee=excess*8192.f/(8192.f+excess);
+   mixed=(mixed<0.f?-1.f:1.f)*(24000.f+knee);
+  }
+  buffer[i]=(int16_t)clamp(mixed,-32768.f,32767.f);
+ }
+}
+
+/* Added experimental noise is injected ahead of each voice's native filter.
+   Mode 0 bypasses this entirely; jb_render is the only envelope-time clock. */
+void jb_preFilterNoise(uint8_t v,int16_t *buffer,unsigned size) {
+ if(v>=JB_VOICES || !buffer) return;
+ const uint8_t *p=jb_parameters[v];
+ if(!p[JB_MODE]) return;
+ Layer *s=&layers[v];
+ if(s->envelope<.00003f) return;
+ float level=fmaxf(unit(p[JB_NOISE_LEVEL]),s->noise);
+ if(level<=0.f) return;
+ const float colour=clamp(unit(p[JB_COLOUR]),0.f,1.f);
+ const float smooth=.015f+.38f*colour;
+ const float wet=clamp(level*s->envelope*s->velocity,0.f,1.f);
+ for(unsigned i=0;i<size;i++) {
+  const float white=noise(s);
+  s->lowNoise+=smooth*(white-s->lowNoise);
+  const float shaped=colour<.5f?s->lowNoise:(white-s->lowNoise);
+  /* Bounded gain staging prior to original filter stage. */
+  const float mixed=buffer[i]*(1.f-wet*.28f)+shaped*wet*12500.f;
+  buffer[i]=(int16_t)clamp(mixed,-32768.f,32767.f);
  }
 }

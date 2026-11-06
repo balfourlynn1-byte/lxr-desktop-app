@@ -177,6 +177,7 @@ void HiHat_calcSyncBlock(int16_t* buf, const uint8_t size)
 
 	calcNextOscSampleFmBlock(&hatVoice.osc,mod1,buf,size,0.5f, hatVoice.pwm) ;
 
+	jb_preFilterNoise(5,buf,size);
 #if USE_REVERB
 	if(fxBus.fxType != FX_REVERB)
 	{

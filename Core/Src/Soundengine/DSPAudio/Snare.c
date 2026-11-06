@@ -153,6 +153,7 @@ void Snare_calcSyncBlock(int16_t* buf, const uint8_t size)
 	int16_t oscBuf[size];
 
 	calcNoiseBlock(&snareVoice.noiseOsc,buf,size,0.9f);
+	jb_preFilterNoise(3,buf,size);
 #if USE_REVERB
 	if(fxBus.fxType != FX_REVERB)
 	{
