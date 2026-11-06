@@ -25,7 +25,7 @@ int main(int argc,char **argv){
   click(BUT_MODE2);assert(jb_perfui_page()==0);click(BUT_MODE2);assert(jb_perfui_page()==1);click(BUT_MODE2);assert(menu_stepFxPageActive());
   const int buttons[]={BUT_SEQ1,BUT_SEQ2,BUT_SEQ3,BUT_SEQ4,BUT_SEQ5,BUT_SEQ6,BUT_SEQ7,BUT_SEQ8,BUT_SEQ9,BUT_SEQ10,BUT_SEQ11,BUT_SEQ12,BUT_SEQ13,BUT_SEQ14,BUT_SEQ15,BUT_SEQ16};
   for(int i=0;i<16;i++){click(buttons[i]);assert(stepfx_slot()==i);printf("slot %d LCD [%.16s][%.16s]\n",i+1,lxr_get_lcd(),lxr_get_lcd()+16);}
-  click(BUT_SEQ1);assert(!stepfx_pending());click(BUT_MODE2);assert(jb_perfui_page()==0);click(BUT_MODE1);assert(!menu_stepFxPageActive());
+  click(BUT_SEQ1);assert(!stepfx_pending());click(BUT_MODE2);assert(jb_perfui_cpu_active());click(BUT_SEQ2);click(BUT_MODE2);assert(jb_perfui_page()==0);click(BUT_MODE1);assert(!menu_stepFxPageActive());
   puts("PASS actual button-handler page cycle and all 16 selector buttons");
 #endif
  return 0;
