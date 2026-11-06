@@ -1,0 +1,32 @@
+name: JIMBONES Production Audio Replay
+on:
+  push:
+    branches: [jimbones-combined-source-v1.7.96-20261106]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  dsp-replay:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout combined source
+        uses: actions/checkout@v4
+      - name: Checkout original No Clip baseline
+        uses: actions/checkout@v4
+        with:
+          ref: jimbones-noclip-baseline
+          path: baseline-src
+      - name: Replay real firmware MIDI and DSP
+        run: |
+          CC=clang python3 tests/production/run_combined.py baseline-src . --out build/production-combined
+      - name: Upload audio comparison and test evidence
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: JIMBONES-v1.7.96-production-audio-replay
+          path: |
+            build/production-combined/*.json
+            build/production-combined/*.wav
+            build/production-combined/*.log
+          if-no-files-found: warn
