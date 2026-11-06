@@ -8,7 +8,8 @@
 enum {
     JB_PERF_PAGE_MAIN = 0,    /* Original Performance: parameter bank 1 */
     JB_PERF_PAGE_MORE = 1,    /* Original Performance: parameter bank 2 */
-    JB_PERF_PAGE_STEPFX = 2  /* Third press: JIMBONES Step FX */
+    JB_PERF_PAGE_STEPFX = 2, /* Third press: JIMBONES Step FX */
+    JB_PERF_PAGE_CPU = 3     /* Fourth press: CPU / output diagnostics */
 };
 
 void jb_perfui_enter(void);
