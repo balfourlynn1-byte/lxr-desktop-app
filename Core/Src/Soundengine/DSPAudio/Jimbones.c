@@ -129,7 +129,8 @@ void jb_render(uint8_t v,int16_t *buffer,unsigned size,float gain) {
   if(wtGain>0) {
    float pos=position+(move+2.5f*s->texture)*movement+s->random*.3f;
    /* Reflect scans at either end so position zero still moves. */
-   if(pos<0)pos=-pos; if(pos>3)pos=6-pos;
+   if(pos<0)pos=-pos;
+   if(pos>3)pos=6-pos;
    out+=wtGain*wave(s->wave,pos,s->table);
   }
   if(wet>0) {
