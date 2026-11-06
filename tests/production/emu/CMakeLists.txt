@@ -91,6 +91,7 @@ set(FW_SOURCES
     Core/Src/Soundengine/FIFO.c
     Core/Src/Soundengine/FxBus.c
     Core/Src/Soundengine/Soundengine.c
+    Core/Src/Soundengine/AudioDiagnostics.c
     Core/Src/Soundengine/TriggerOut.c
     # midi
     Core/Src/Soundengine/MIDI/CortexParser.c
