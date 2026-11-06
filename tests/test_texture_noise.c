@@ -16,11 +16,21 @@ int main(void) {
   double ratio=sqrt(delta/reference);printf("Texture %s relative RMS change: %.3f\n",mode==1?"metal":"wave",ratio);
   if(ratio<.7) failed=1;
  }
+ /* New noise must exist before the native SVF, even with no metallic wet layer. */
  jb_init();jb_parameters[0][JB_MODE]=1;jb_parameters[0][JB_NOISE]=127;
  jb_parameters[0][JB_COLOUR]=64;jb_parameters[0][JB_DECAY]=127;
- jb_trigger(0,127,48,0); double correlation=0,power=0;int16_t last=0;
- for(unsigned i=0;i<22050;i++) { int16_t n=0;jb_render(0,&n,1,1); if(i>500) {correlation+=(double)last*n;power+=(double)n*n;}last=n; }
- double lag=correlation/power;printf("Full-noise, neutral-colour lag-1 correlation: %.4f\n",lag);
- if(fabs(lag)>.05) failed=1;
+ jb_trigger(0,127,48,0);
+ double power=0; int16_t last=0; unsigned changes=0;
+ for(unsigned i=0;i<22050;i++) {
+  int16_t n=0;
+  jb_preFilterNoise(0,&n,1);
+  if(i>500) { power+=(double)n*n; if(n!=last) changes++; }
+  last=n;
+ }
+ printf("Pre-filter noise power %.0f, transitions %u\\n",power,changes);
+ if(power<1000000.0 || changes<1000) failed=1;
+ jb_parameters[0][JB_MODE]=0;
+ int16_t buffer=12345; jb_preFilterNoise(0,&buffer,1);
+ if(buffer!=12345) failed=1;
  return failed;
 }
