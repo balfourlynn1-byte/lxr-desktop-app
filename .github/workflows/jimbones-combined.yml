@@ -1,0 +1,36 @@
+name: JIMBONES Combined ARM Build
+on:
+  push:
+    branches:
+      - jimbones-combined-source-v1.7.96-20261106
+  workflow_dispatch:
+jobs:
+  arm-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ARM GNU and Ninja
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-none-eabi libnewlib-arm-none-eabi ninja-build cmake python3
+      - name: Configure release
+        run: cmake --preset release
+      - name: Compile LXR-02 firmware
+        run: cmake --build --preset release -j 2
+      - name: Show generated files
+        run: |
+          find build/release -maxdepth 2 -type f \( -name '*.img' -o -name '*.elf' -o -name '*.map' \) -print
+      - name: Verify original No Clip retrigger tests
+        run: |
+          if [ -x tests/retrigger/run_tests_mac.sh ]; then tests/retrigger/run_tests_mac.sh; fi
+      - name: Publish build outputs
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: JIMBONES-combined-v1.7.96-ARM-unverified
+          path: |
+            build/release/*.img
+            build/release/*.elf
+            build/release/*.map
+          if-no-files-found: error
