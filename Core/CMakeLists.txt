@@ -111,6 +111,7 @@ add_library(lxr_engine OBJECT
     Src/Soundengine/FIFO.c
     Src/Soundengine/FxBus.c
     Src/Soundengine/Soundengine.c
+    Src/Soundengine/AudioDiagnostics.c
     Src/Soundengine/StepFX.c
     Src/Soundengine/StepFXRuntime.c
     Src/Soundengine/TriggerOut.c
