@@ -31,7 +31,7 @@ add_library(lxr_platform OBJECT
 )
 # Shown on the boot splash screen; comes from project(VERSION) in the top-level CMakeLists.txt.
 set_source_files_properties(Src/main.c PROPERTIES
-    COMPILE_DEFINITIONS "FIRMWARE_VERSION=\" RTEST ${PROJECT_VERSION}\""
+    COMPILE_DEFINITIONS "FIRMWARE_VERSION=\"${PROJECT_VERSION}\""
 )
 
 # Hardware inputs/outputs: shift-register buttons/LEDs, pots & faders.
@@ -53,6 +53,7 @@ add_library(lxr_ui OBJECT
     Src/menu/Cc2Text.c
     Src/menu/copyClearTools.c
     Src/menu/menu.c
+    Src/menu/JimbonesPerfUI.c
     Src/menu/screensaver.c
 )
 
@@ -108,6 +109,8 @@ add_library(lxr_engine OBJECT
     Src/Soundengine/FIFO.c
     Src/Soundengine/FxBus.c
     Src/Soundengine/Soundengine.c
+    Src/Soundengine/StepFX.c
+    Src/Soundengine/StepFXRuntime.c
     Src/Soundengine/TriggerOut.c
 )
 

@@ -66,6 +66,10 @@ enum
 extern uint8_t menu_loadedPresetNr[NUM_CURRENT];
 extern uint32_t sucessTimer;
 
+uint8_t menu_stepFxPageActive(void);
+void menu_stepFxSelect(uint8_t stepIndex);
+uint8_t menu_stepFxSelected(void);
+
 void menu_setShownPattern(uint8_t patternNr);
 uint8_t menu_getViewedPattern();
 

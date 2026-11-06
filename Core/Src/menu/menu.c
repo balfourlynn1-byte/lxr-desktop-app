@@ -9,6 +9,8 @@
 
 #include "menu/menu.h"
 #include "lcd.h"
+#include "menu/JimbonesPerfUI.h"
+#include "Soundengine/StepFX.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -1512,8 +1514,42 @@ static void menu_displayModTargetShort(uint8_t curParmVal, char *valueAsText, ch
 //-----------------------------------------------------------------
 // paint the screen when in normal parameter edit mode
 // (as opposed to repainting the load save screen)
+/* The third Performance screen is an explicit state, not a legacy menuIndex
+ * subpage, so the first two parameter banks remain completely untouched. */
+static uint8_t jb_fxVoice;
+static void jb_stepfxPaint(void)
+{
+    unsigned index = jb_perfui_selected();
+    const char *name = jb_perfui_effect_name(index);
+    char top[17], bottom[17];
+    memset(editDisplayBuffer, ' ', sizeof(editDisplayBuffer));
+    snprintf(top,sizeof(top),"STEP FX%02u %.6s", index+1u,name);
+    snprintf(bottom,sizeof(bottom),"1/%u V%u%c %3u%% %s",stepfx_divisor(),jb_fxVoice+1,(stepfx_mask()&(1u<<jb_fxVoice))?'+':'-',stepfx_chance(),stepfx_slot()?"ON":"--");
+    memcpy(editDisplayBuffer[0],top,strlen(top));
+    memcpy(editDisplayBuffer[1],bottom,strlen(bottom));
+    editDisplayBuffer[0][16]=0;
+    editDisplayBuffer[1][16]=0;
+}
+
+uint8_t menu_stepFxPageActive(void)
+{
+    return menu_activePage==PERF_PAGE && jb_perfui_stepfx_active();
+}
+
+void menu_stepFxSelect(uint8_t stepIndex)
+{
+    if(menu_stepFxPageActive() && jb_perfui_select(stepIndex))
+        menu_repaintAll();
+}
+
+uint8_t menu_stepFxSelected(void)
+{
+    return jb_perfui_selected();
+}
+
 void menu_repaintGeneric()
 {
+ if(menu_stepFxPageActive()) { jb_stepfxPaint(); return; }
 	//first get the active sub-page and parameter from the menuIndex
 	const uint8_t activeParameter	= menuIndex & MASK_PARAMETER; // this will be 0 to 7 for the 4 columns
 	const uint8_t activePage		= (menuIndex&MASK_PAGE)>>PAGE_SHIFT; // this is the active sub page
@@ -2754,6 +2790,12 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
 		return; // nothing has changed. do nothing
 
 	screensaver_touch();
+ if(menu_stepFxPageActive()) {
+  editModeActive=0;
+  if(inc) jb_fxVoice=(uint8_t)((jb_fxVoice+(inc>0?1:5))%6);
+  if(btnClicked)stepfx_include(jb_fxVoice,!(stepfx_mask()&(1u<<jb_fxVoice)));
+  menu_repaintAll(); return;
+ }
 
 
 	//invert encoder
@@ -3216,6 +3258,7 @@ uint8_t menu_getSubPage()
 //-----------------------------------------------------------------
 void menu_switchPage(uint8_t pageNr)
 {
+ if(pageNr != PERF_PAGE) jb_perfui_leave();
 	//autosave config page settings
 	/*
 	if(menu_activePage == MENU_MIDI_PAGE)
@@ -3301,16 +3344,18 @@ void menu_switchPage(uint8_t pageNr)
 		break;
 
 	case PERF_PAGE:
-	{
-		uint8_t toggle = (menu_activePage == PERF_PAGE);
-
-		// **GMENU TODO do we need to clear any leds?
-		if (toggle) // if we are on the settings page already, toggle between all pages
-		{
-			menu_switchSubPage(menu_getSubPage(),1);
-		}
-		else menu_switchSubPage(0,0);
-	}
+    {
+        const uint8_t alreadyPerf = menu_activePage == PERF_PAGE;
+        /* Every normal Performance press advances: page 1 -> page 2 ->
+         * Step FX -> page 1. No rapid triple-click timing is required. */
+        if(alreadyPerf) jb_perfui_next();
+        else jb_perfui_enter();
+        menu_activePage = PERF_PAGE;
+        editModeActive = 0;
+        /* Existing first/second banks are legacy parameter indices 0-3/4-7. */
+        menuIndex = jb_perfui_page() == JB_PERF_PAGE_MORE ? 4u : 0u;
+    }
+    break;
 
 	case MENU_LAST_STEP_PAGE:
 	case PATTERN_SETTINGS_PAGE:
@@ -3916,6 +3961,13 @@ uint8_t getMenuIndx(void)
 //-----------------------------------------------------------------
 uint8_t menu_parseKnobValue(uint8_t potNr, int16_t diff)
 {
+ if(menu_stepFxPageActive()) {
+  if(potNr==0 && diff){int s=jb_perfui_selected()+(diff>0?1:-1);jb_perfui_select(s<0?0:(s>15?15:s));}
+  else if(potNr==1)stepfx_rate(diff);
+  else if(potNr==2)stepfx_probability(diff);
+  else if(potNr==3 && diff)stepfx_include(jb_fxVoice,diff>0);
+  screensaver_touch();menu_repaintAll();return 1;
+ }
 	screensaver_touch();
 	preset_touchTimer(PRESET_KIT_TIMER);
 

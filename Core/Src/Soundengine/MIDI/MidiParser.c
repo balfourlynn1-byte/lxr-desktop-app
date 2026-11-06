@@ -19,6 +19,7 @@
 #include "Soundengine/DSPAudio/Snare.h"
 #include "Soundengine/config.h"
 #include "Soundengine/DSPAudio/HiHat.h"
+#include "Soundengine/StepFX.h"
 #include "Soundengine/DSPAudio/CymbalVoice.h"
 #include "Soundengine/MIDI/Uart.h"
 #include "Soundengine/Sequencer/sequencer.h"
@@ -1511,6 +1512,7 @@ static void midiParser_noteOn(uint8_t voice, uint8_t note, uint8_t vel, uint8_t 
 		}
 
 		voiceControl_noteOn(voice,note,vel);
+		stepfx_live(voice,note,vel);
 
 		//Recording Mode - record the note to sequencer and echo to channel of that voice
 		// (we'd want to hear what's being recorded)
@@ -1749,7 +1751,7 @@ void midiParser_parseMidiMessage(MidiMsg msg)
     {
       case MIDI_CLOCK:
         if((midiParser_txRxFilter & MIDI_FILTER_SYSTEM) && seq_getExtSync())
-          seq_sync();
+          { seq_sync(); stepfx_clock(); }
         break;
       case MIDI_START:
         if((midiParser_txRxFilter & MIDI_FILTER_SYSTEM) && seq_getExtSync())
@@ -1764,7 +1766,7 @@ void midiParser_parseMidiMessage(MidiMsg msg)
         break;
       case MIDI_STOP:
         if((midiParser_txRxFilter & MIDI_FILTER_SYSTEM) && seq_getExtSync())
-          sync_midiStartStop(0);
+          { sync_midiStartStop(0); stepfx_stop(); }
         break;
       case MIDI_SONG_POSITION_POINTER:
         {

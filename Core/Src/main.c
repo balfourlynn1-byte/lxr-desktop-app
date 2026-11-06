@@ -351,10 +351,10 @@ int main(void)
 #else
 	//print boot up message
 lcd_clear();
-lcd_string("Sonic Potions");
+lcd_string("JIMBONES STEP FX");
 //goto 2nd line
 lcd_setcursor(0,2);
-lcd_string("LXR2 Drums V");
+lcd_string("FW ");
 lcd_string(FIRMWARE_VERSION);
 #endif
 

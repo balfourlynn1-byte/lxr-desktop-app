@@ -23,6 +23,7 @@
 #include "Soundengine/MIDI/MidiVoiceControl.h"
 #include "Soundengine/DSPAudio/CymbalVoice.h"
 #include "Soundengine/Sequencer/sequencer.h"
+#include "Soundengine/StepFX.h"
 #include <string.h>
 #include <Soundengine/MIDI/CortexParser.h>
 #include "Soundengine/USB/usb_manager.h"
@@ -1935,6 +1936,7 @@ void seq_resetPosition()
 	seq_songPositionPointer = -1;
 	//so the next seq_tick call will trigger the next step immediately
 	seq_deltaT = 0;
+	stepfx_stop();
 	seq_sendRealtime(MIDI_STOP);
 
 	// send notes off on all channels that have notes playing and reset our bitmap to reflect that
