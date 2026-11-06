@@ -1,0 +1,71 @@
+name: JIMBONES v1.7.98 CPU Diagnostics Validation
+on:
+  push:
+    branches: [jimbones-cpu-monitor-v1.7.98]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  host:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: CPU rail counter and reset semantics
+        run: bash tests/run_audio_diagnostics.sh
+      - name: All Performance pages and original retrigger
+        run: sh tests/run_stepfx.sh
+      - name: WaveShape, original voices, OSC, kit persistence
+        run: |
+          bash tests/run_waveshaping.sh
+          bash tests/run_host.sh
+          bash tests/run_combined_stepfx.sh
+          python3 tests/test_combined_source_guards.py
+  arm:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    needs: [host]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ARM toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-none-eabi libnewlib-arm-none-eabi ninja-build cmake python3
+      - name: Configure and build ARM image
+        run: |
+          cmake --preset release
+          cmake --build --preset release -j 2
+      - name: Print checksums and memory footprint
+        run: |
+          sha256sum build/release/LXR_V2_V1.7.98.img
+          arm-none-eabi-size build/release/LXR_V2_STM32F765.elf
+      - name: Save experimental image
+        uses: actions/upload-artifact@v4
+        with:
+          name: JIMBONES-v1.7.98-CPU-monitor-HARDWARE-UNVERIFIED
+          path: |
+            build/release/*.img
+            build/release/*.elf
+            build/release/*.map
+          if-no-files-found: error
+  replay:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    needs: [host]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: jimbones-noclip-baseline
+          path: baseline-src
+      - name: Real production mixer with Mode 0 baseline comparison
+        run: CC=clang python3 tests/production/run_combined.py baseline-src . --out build/production-1.7.98
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: JIMBONES-v1.7.98-production-mixer-Mac-WAV-tests
+          path: |
+            build/production-1.7.98/*.wav
+            build/production-1.7.98/*.json
+            build/production-1.7.98/*.log
+          if-no-files-found: warn
