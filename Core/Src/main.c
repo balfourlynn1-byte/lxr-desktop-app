@@ -964,6 +964,16 @@ lcd_process_display_interrupt = 1;
 	  soundengine_process();
 	//  menu_tick();
 	  screensaver_check();
+      /* Refresh the LCD only while CPU diagnostics are visible. No LCD
+       * calls or sleeps from the DMA audio render path. */
+      if(menu_cpuPageActive()) {
+          static uint32_t jb_lastCpuPaintMs;
+          const uint32_t now = HAL_GetTick();
+          if((uint32_t)(now-jb_lastCpuPaintMs)>=500u) {
+              jb_lastCpuPaintMs=now;
+              menu_repaintAll();
+          }
+      }
 	//  menu_tick();
   checkMainLoc = -10;
 
