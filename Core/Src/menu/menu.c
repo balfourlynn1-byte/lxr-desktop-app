@@ -11,6 +11,7 @@
 #include "lcd.h"
 #include "menu/JimbonesPerfUI.h"
 #include "Soundengine/StepFX.h"
+#include "Soundengine/AudioDiagnostics.h"
 #include "Soundengine/DSPAudio/Jimbones.h"
 #include <string.h>
 #include <stdlib.h>
@@ -1570,6 +1571,7 @@ static void jb_uiPaint(void) {
 /* The third Performance screen is an explicit state, not a legacy menuIndex
  * subpage, so the first two parameter banks remain completely untouched. */
 static uint8_t jb_fxVoice;
+static uint8_t jb_cpuDetails;
 static void jb_stepfxPaint(void)
 {
     unsigned index = jb_perfui_selected();
@@ -1600,8 +1602,36 @@ uint8_t menu_stepFxSelected(void)
     return jb_perfui_selected();
 }
 
+uint8_t menu_cpuPageActive(void) {
+    return menu_activePage==PERF_PAGE && jb_perfui_cpu_active();
+}
+static unsigned jb_cap(unsigned long value,unsigned max) {
+    return value>max?max:(unsigned)value;
+}
+static void jb_cpuPaint(void) {
+    char top[17],bottom[17];
+    memset(editDisplayBuffer,' ',sizeof(editDisplayBuffer));
+    if(!jb_cpuDetails) {
+        snprintf(top,sizeof(top),"DSP%3u%% PK%3u%%",
+                 (unsigned)jb_audioLoadPercent,(unsigned)jb_audioPeakPercent);
+        snprintf(bottom,sizeof(bottom),"LATE%3u RAIL%4u",
+                 jb_cap(jb_audioOverruns,999u),jb_cap(jb_audioNearRailHits,9999u));
+    } else {
+        snprintf(top,sizeof(top),"LAST%3uk MAX%3uk",
+                 jb_cap(jb_audioLastCycles/1000u,999u),
+                 jb_cap(jb_audioMaxCycles/1000u,999u));
+        snprintf(bottom,sizeof(bottom),"KNEE%4u RAIL%3u",
+                 jb_cap(jb_layerSaturationHits,9999u),
+                 jb_cap(jb_audioNearRailHits,999u));
+    }
+    memcpy(editDisplayBuffer[0],top,strlen(top));
+    memcpy(editDisplayBuffer[1],bottom,strlen(bottom));
+    editDisplayBuffer[0][16]=0;
+    editDisplayBuffer[1][16]=0;
+}
 void menu_repaintGeneric()
 {
+ if(menu_cpuPageActive()) { jb_cpuPaint(); return; }
  if(menu_stepFxPageActive()) { jb_stepfxPaint(); return; }
  if(jb_uiActive()) { jb_uiPaint(); return; }
 	//first get the active sub-page and parameter from the menuIndex
@@ -2844,6 +2874,12 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
 		return; // nothing has changed. do nothing
 
 	screensaver_touch();
+ if(menu_cpuPageActive()) {
+  editModeActive=0;
+  if(inc) jb_cpuDetails=(uint8_t)!jb_cpuDetails;
+  if(btnClicked) jb_audioDiagReset();
+  menu_repaintAll(); return;
+ }
  if(menu_stepFxPageActive()) {
   editModeActive=0;
   if(inc) jb_fxVoice=(uint8_t)((jb_fxVoice+(inc>0?1:5))%6);
@@ -3432,9 +3468,10 @@ void menu_switchPage(uint8_t pageNr)
     {
         const uint8_t alreadyPerf = menu_activePage == PERF_PAGE;
         /* Every normal Performance press advances: page 1 -> page 2 ->
-         * Step FX -> page 1. No rapid triple-click timing is required. */
+         * Step FX -> CPU diagnostics -> page 1. */
         if(alreadyPerf) jb_perfui_next();
         else jb_perfui_enter();
+        jb_cpuDetails=0;
         menu_activePage = PERF_PAGE;
         editModeActive = 0;
         /* Existing first/second banks are legacy parameter indices 0-3/4-7. */
@@ -4046,6 +4083,10 @@ uint8_t getMenuIndx(void)
 //-----------------------------------------------------------------
 uint8_t menu_parseKnobValue(uint8_t potNr, int16_t diff)
 {
+ if(menu_cpuPageActive()) {
+    /* Read-only diagnostic meters never send kit parameter changes. */
+    (void)potNr;(void)diff; screensaver_touch();return 1;
+ }
  if(menu_stepFxPageActive()) {
   if(potNr==0 && diff){int i=jb_perfui_selected()+(diff>0?1:-1);jb_perfui_select(i<0?0:(i>15?15:i));}
   else if(potNr==1)stepfx_rate(diff);
