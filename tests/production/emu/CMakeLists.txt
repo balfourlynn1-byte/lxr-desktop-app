@@ -91,7 +91,6 @@ set(FW_SOURCES
     Core/Src/Soundengine/FIFO.c
     Core/Src/Soundengine/FxBus.c
     Core/Src/Soundengine/Soundengine.c
-    Core/Src/Soundengine/AudioDiagnostics.c
     Core/Src/Soundengine/TriggerOut.c
     # midi
     Core/Src/Soundengine/MIDI/CortexParser.c
@@ -115,6 +114,9 @@ set(FW_SOURCES
 )
 list(TRANSFORM FW_SOURCES PREPEND ${FW}/)
 list(APPEND FW_SOURCES ${FW}/Core/Src/Soundengine/DSPAudio/RetriggerSmoother.c)
+if(EXISTS ${FW}/Core/Src/Soundengine/AudioDiagnostics.c)
+ list(APPEND FW_SOURCES ${FW}/Core/Src/Soundengine/AudioDiagnostics.c)
+endif()
 if(EXISTS ${FW}/Core/Src/Soundengine/StepFX.c)
  list(APPEND FW_SOURCES ${FW}/Core/Src/Soundengine/StepFX.c ${FW}/Core/Src/Soundengine/StepFXRuntime.c ${FW}/Core/Src/menu/JimbonesPerfUI.c)
  add_compile_definitions(TEST_STEPFX=1)
