@@ -17,10 +17,13 @@
 #include <string.h>
 #include "Soundengine/USB/usb_manager.h"
 #include "Soundengine/DSPAudio/Jimbones.h"
+#include "Soundengine/StepFX.h"
+void stepfx_audioBlock(void);
 #include "Soundengine/MIDI/Uart.h"
 
 /* Debugger telemetry measures rendering, not the complete ISR or MIDI load. */
 volatile uint32_t jb_audioMaxCycles, jb_audioLastCycles, jb_audioOverruns;
+volatile uint8_t jb_audioLoadPercent, jb_audioPeakPercent;
 uint8_t soundengine_calcNextSampleBlock()
 {
 	if(bCurrentSampleValid!= SAMPLE_VALID)
@@ -28,6 +31,7 @@ uint8_t soundengine_calcNextSampleBlock()
 #ifndef LXR_EMU
         uint32_t cycleStart=DWT->CYCCNT;
 #endif
+		stepfx_audioBlock();
 	#if USE_DAC2
 		mixer_calcNextSampleBlock((int16_t*)&dma_buffer[bCurrentSampleValid*(OUTPUT_DMA_SIZE*2)],(int16_t*)&dma_buffer2[bCurrentSampleValid*(OUTPUT_DMA_SIZE*2)]);
 	#else
@@ -36,7 +40,14 @@ uint8_t soundengine_calcNextSampleBlock()
 #ifndef LXR_EMU
         jb_audioLastCycles=DWT->CYCCNT-cycleStart;
         if(jb_audioLastCycles>jb_audioMaxCycles)jb_audioMaxCycles=jb_audioLastCycles;
-        if(jb_audioLastCycles>(uint32_t)(SystemCoreClock*(OUTPUT_DMA_SIZE/REAL_FS)))jb_audioOverruns++;
+        /* Audio render-only budget; no claim to include other ISR and MIDI work. */
+        const uint32_t budget=(uint32_t)((double)SystemCoreClock*OUTPUT_DMA_SIZE/REAL_FS);
+        if(budget) {
+            const uint32_t load=(uint32_t)(((uint64_t)jb_audioLastCycles*100u)/budget);
+            jb_audioLoadPercent=(uint8_t)(load>100u?100u:load);
+            if(jb_audioLoadPercent>jb_audioPeakPercent)jb_audioPeakPercent=jb_audioLoadPercent;
+            if(jb_audioLastCycles>budget)jb_audioOverruns++;
+        }
 #endif
 		bCurrentSampleValid = SAMPLE_VALID;
 
@@ -52,6 +63,7 @@ void soundengine_init()
     CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
     DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
 #endif
+	stepfx_init();
 	jb_init();
 	mixer_init();
 

@@ -53,6 +53,7 @@ add_library(lxr_ui OBJECT
     Src/menu/Cc2Text.c
     Src/menu/copyClearTools.c
     Src/menu/menu.c
+    Src/menu/JimbonesPerfUI.c
     Src/menu/screensaver.c
 )
 
@@ -110,6 +111,8 @@ add_library(lxr_engine OBJECT
     Src/Soundengine/FIFO.c
     Src/Soundengine/FxBus.c
     Src/Soundengine/Soundengine.c
+    Src/Soundengine/StepFX.c
+    Src/Soundengine/StepFXRuntime.c
     Src/Soundengine/TriggerOut.c
 )
 
