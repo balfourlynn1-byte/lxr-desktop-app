@@ -1959,7 +1959,14 @@ void seq_resetPosition()
 //------------------------------------------------------------------------------
 void seq_setRunning(uint8_t isRunning)
 {
+    /* No stale manual-roll/Step FX events on a new playback transport epoch.
+     * Prevent notes that exist only in an old Performance roll bitmap. */
+    const uint8_t wasRunning = seq_running;
 	seq_running = isRunning;
+    if(!seq_running || !wasRunning) {
+        seq_rollState = 0;
+        stepfx_stop();
+    }
 	//jump to 1st step if sequencer is stopped
 	if(!seq_running)
 	{
