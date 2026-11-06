@@ -1,0 +1,28 @@
+name: JIMBONES WaveShape Listening Samples
+on:
+  push:
+    branches: [jimbones-wavefold-phasewarp-v1.7.97]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  wav-demo:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile real experimental layer renderer and render three A/B pairs
+        run: |
+          mkdir -p build/listen-v197
+          cc -std=c11 -O2 -Wall -Wextra -Werror -Itests/host -ICore/Inc \
+            tests/generate_waveshape_audio.c \
+            Core/Src/Soundengine/DSPAudio/Jimbones.c \
+            Core/Src/Soundengine/DSPAudio/wavetable.c \
+            -lm -o build/listen-v197/waveshape_render
+          build/listen-v197/waveshape_render build/listen-v197
+      - name: Downloadable Mac WAV sound comparisons
+        uses: actions/upload-artifact@v4
+        with:
+          name: JIMBONES-v1.7.97-WaveShape-Mac-Listening-A-B-WAVs
+          path: build/listen-v197/*.wav
+          if-no-files-found: error
