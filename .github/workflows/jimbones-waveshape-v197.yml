@@ -1,0 +1,67 @@
+name: JIMBONES Wavefold Phasewarp v1.7.97 Validation
+on:
+  push:
+    branches: [jimbones-wavefold-phasewarp-v1.7.97]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  host-regressions:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: WaveShape and Mode 0 isolation
+        run: bash tests/run_waveshaping.sh
+      - name: All existing No Clip, Metallic, Step FX and OSC tests
+        run: |
+          bash tests/run_combined_stepfx.sh
+          bash tests/run_host.sh
+          python3 tests/test_combined_source_guards.py
+  arm-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    needs: [host-regressions]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-none-eabi libnewlib-arm-none-eabi cmake ninja-build python3
+      - name: Configure and compile release ARM
+        run: |
+          cmake --preset release
+          cmake --build --preset release -j 2
+      - name: Report usage and SHA256
+        run: |
+          sha256sum build/release/LXR_V2_V1.7.97.img
+          arm-none-eabi-size build/release/LXR_V2_STM32F765.elf
+      - uses: actions/upload-artifact@v4
+        with:
+          name: JIMBONES-1.7.97-phasewarp-wavefold-ARM-UNVERIFIED
+          path: |
+            build/release/*.img
+            build/release/*.elf
+            build/release/*.map
+          if-no-files-found: error
+  production-audio:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    needs: [host-regressions]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: jimbones-noclip-baseline
+          path: baseline-src
+      - name: Render production DSP, check baseline Mode 0 parity
+        run: CC=clang python3 tests/production/run_combined.py baseline-src . --out build/production-1.7.97
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: JIMBONES-1.7.97-wavefold-Mac-audio-demos
+          path: |
+            build/production-1.7.97/*.wav
+            build/production-1.7.97/*.json
+            build/production-1.7.97/*.log
+          if-no-files-found: warn
