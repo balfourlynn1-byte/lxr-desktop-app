@@ -1,0 +1,19 @@
+name: JIMBONES Quick Host Tests
+on:
+  push:
+    branches: [jimbones-combined-source-v1.7.96-20261106]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  host-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify source guards
+        run: python3 tests/test_combined_source_guards.py
+      - name: Run Step FX host regression
+        run: bash tests/run_combined_stepfx.sh
+      - name: Run Metallic No Clip host regression
+        run: bash tests/run_host.sh
