@@ -24,6 +24,10 @@ jobs:
       - name: Verify original No Clip retrigger tests
         run: |
           if [ -x tests/retrigger/run_tests_mac.sh ]; then tests/retrigger/run_tests_mac.sh; fi
+      - name: Combined host regression tests
+        run: |
+          bash tests/run_combined_stepfx.sh
+          bash tests/run_host.sh
       - name: Publish build outputs
         uses: actions/upload-artifact@v4
         if: success()
