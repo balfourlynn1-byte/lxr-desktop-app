@@ -14,6 +14,7 @@
 #include <frontPanelParser_ui.h>
 #include "buttonHandler.h"
 #include "menu/menu.h"
+#include "Soundengine/AudioDiagnostics.h"
 #include "ledHandler.h"
 #include "lcd.h"
 #include <stdio.h>
@@ -831,6 +832,13 @@ static void buttonHandler_seqButtonPressed(uint8_t seqButtonPressed)
 
     uint8_t ledNr = led_idx2StepLed(seqButtonPressed);
     if(buttonHandler_stateMemory.selectButtonMode == SELECT_MODE_PERF &&
+       menu_cpuPageActive()) {
+        /* Never arm Performance manual rolls while on diagnostics screen. */
+        if(seqButtonPressed==0u && !buttonHandler_getShift())
+            jb_audioDiagReset();
+        return;
+    }
+    if(buttonHandler_stateMemory.selectButtonMode == SELECT_MODE_PERF &&
        menu_stepFxPageActive() && !buttonHandler_getShift() &&
        !buttonHandler_getSave() && !buttonHandler_getLoad() && !buttonHandler_getCopy()) {
         menu_stepFxSelect(seqButtonPressed);
@@ -1300,6 +1308,8 @@ static void buttonHandler_seqButtonPressed(uint8_t seqButtonPressed)
 static void buttonHandler_seqButtonReleased(uint8_t seqButtonPressed)
 {
 
+    if(buttonHandler_stateMemory.selectButtonMode == SELECT_MODE_PERF &&
+       menu_cpuPageActive()) return;
     if(buttonHandler_stateMemory.selectButtonMode == SELECT_MODE_PERF &&
        menu_stepFxPageActive() && !buttonHandler_getShift()) return;
 	uint8_t ledNr = led_idx2StepLed(seqButtonPressed);
