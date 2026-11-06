@@ -11,7 +11,7 @@ typedef struct {
  float frequency, ratio, depth, fb, detune, metal, noise, aggression, texture;
  float decay, transientDecay, velocity, random, last, tail;
  uint32_t rng;
- uint8_t table;
+ uint8_t table, restart;
 } Layer;
 static Layer layers[JB_VOICES];
 static float clamp(float x, float a, float b) { return x<a?a:(x>b?b:x); }
@@ -63,7 +63,7 @@ void jb_trigger(uint8_t v,uint8_t velocity,uint8_t note,uint8_t open) {
   uint32_t m=lock(); layers[v]=next; unlock(m); return;
  }
  uint32_t seed=layers[v].rng?layers[v].rng:0x917b15u+v*31337u;
- s->rng=seed; s->tail=layers[v].last;
+ s->rng=seed; s->restart=1;
  s->carrier=s->modulator=s->wave=.25f;
  float vel=unit(velocity>127?127:velocity);
  s->metal=clamp(unit(p[JB_METAL])+(p[JB_VMETAL]-64)/63.f*vel,0,1);
@@ -85,7 +85,7 @@ void jb_trigger(uint8_t v,uint8_t velocity,uint8_t note,uint8_t open) {
  s->envelope=1; s->transient=1;
  s->velocity=1-unit(p[JB_VELOCITY])*(1-vel);
  /* Expensive coefficient math runs with interrupts enabled. Publish one bounded state. */
- uint32_t m=lock(); layers[v]=next; unlock(m);
+ uint32_t m=lock(); next.last=layers[v].last; layers[v]=next; unlock(m);
 }
 void jb_render(uint8_t v,int16_t *buffer,unsigned size,float gain) {
  if(v>=JB_VOICES) return;
@@ -97,35 +97,50 @@ void jb_render(uint8_t v,int16_t *buffer,unsigned size,float gain) {
  float crush=1+(unsigned)(unit(p[JB_BITS])*11+s->aggression*3);
  float steps=(float)(1u<<(unsigned)clamp(16-crush,2,15));
  float colour=clamp(unit(p[JB_COLOUR])+s->noise*.25f,0,1);
+ float noiseGain=clamp(unit(p[JB_NOISE_LEVEL])+s->noise,0,1);
+ float pitchEnv=(p[JB_PITCH_ENV]-64)/64.f;
+ float move=unit(p[JB_MOVEMENT]);
+ float motionInc=(.2f+8*move)/REAL_FS;
+ float position=unit(p[JB_POSITION])*3;
+ float wet=clamp(unit(p[JB_DRIVE])+s->aggression,0,1);
+ float character=unit(p[JB_CHARACTER]);
+ int needsMotion=s->texture>0 || (wtGain>0 && move>0);
  for(unsigned i=0;i<size;i++) {
   if(s->envelope<.00003f && fabsf(s->tail)<.00003f) { s->last=0; break; }
-  float inc=clamp(s->frequency*(1+(p[JB_PITCH_ENV]-64)/64.f*s->transient*3),.00001f,.4f);
+  float inc=clamp(s->frequency*(1+pitchEnv*s->transient*3),.00001f,.4f);
   s->carrier=wrap(s->carrier+inc);
   s->modulator=wrap(s->modulator+fminf(inc*s->ratio,.45f));
-  s->wave=wrap(s->wave+inc*s->detune*(1+s->texture*.002f*sine(s->motion)));
-  s->motion=wrap(s->motion+(0.2f+8*unit(p[JB_MOVEMENT]))/REAL_FS);
+  s->motion=wrap(s->motion+motionInc);
+  float movement=needsMotion?sine(s->motion):0;
+  if(wtGain>0) s->wave=wrap(s->wave+inc*s->detune*(1+s->texture*.002f*movement));
   float out=0;
   if(fmGain>0) {
    float mod=sine(s->modulator+s->feedback*s->fb);
    s->feedback=mod;
-   float metal=sine(s->carrier+mod*s->depth*(.25f+.75f*s->envelope)+s->texture*.03f*sine(s->motion));
-   float n=noise(s); s->lowNoise+=(.005f+.45f*colour)*(n-s->lowNoise);
-   n=colour<.5f?s->lowNoise:(n-s->lowNoise);
-   float noiseGain=clamp(unit(p[JB_NOISE_LEVEL])+s->noise,0,1);
-   metal+=n*noiseGain*(.3f+.7f*s->transient);
+   float metal=sine(s->carrier+mod*s->depth*(.25f+.75f*s->envelope)+s->texture*.03f*movement);
+   if(noiseGain>0) {
+    float n=noise(s); s->lowNoise+=(.005f+.45f*colour)*(n-s->lowNoise);
+    n=colour<.5f?s->lowNoise:(n-s->lowNoise);
+    metal+=n*noiseGain*(.3f+.7f*s->transient);
+   }
    out+=fmGain*metal;
   }
   if(wtGain>0) {
-   float pos=unit(p[JB_POSITION])*3+(unit(p[JB_MOVEMENT])+s->texture)*sine(s->motion)+s->random*.3f;
+   float pos=position+(move+s->texture)*movement+s->random*.3f;
    out+=wtGain*wave(s->wave,pos,s->table);
   }
-  float driven=out*drive;
-  float soft=driven/(1+fabsf(driven));
-  float hard=clamp(driven,-1,1);
-  float wet=clamp(unit(p[JB_DRIVE])+s->aggression,0,1);
-  out+=wet*((soft+(hard-soft)*unit(p[JB_CHARACTER]))-out);
+  if(wet>0) {
+   float driven=out*drive;
+   float soft=driven/(1+fabsf(driven));
+   float hard=clamp(driven,-1,1);
+   out+=wet*((soft+(hard-soft)*character)-out);
+  }
   if(p[JB_BITS] || s->aggression>0) { float q=out*steps; out=(int)(q+(q<0?-.5f:.5f))/steps; }
-  out=out*s->envelope*s->velocity+s->tail;
+  out=out*s->envelope*s->velocity;
+  /* Match the previous output at the boundary, rather than adding it to the
+     new attack. The correction decays in ~2.5 ms; there is no event delay. */
+  if(s->restart) { s->tail=s->last-out; s->restart=0; }
+  out+=s->tail;
   s->tail*=.94f; s->last=out;
   s->envelope*=s->decay; s->transient*=s->transientDecay;
   float mixed=buffer[i]+out*gain*12000.f;

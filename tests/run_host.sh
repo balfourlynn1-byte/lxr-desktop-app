@@ -9,3 +9,9 @@ ${CC:-cc} -std=c11 -O2 -g -Wall -Wextra -Werror -fsanitize=address,undefined,flo
 build/host/test_jimbones build/host/layers-demo.s16
 python3 tests/test_menu.py
 python3 tests/test_storage_paths.py
+${CC:-cc} -std=c11 -O2 -g -Wall -Wextra -Werror -fsanitize=address,undefined,float-cast-overflow \
+ -Itests/host -ICore/Inc tests/test_retrigger.c \
+ Core/Src/Soundengine/DSPAudio/Jimbones.c Core/Src/Soundengine/DSPAudio/wavetable.c \
+ -lm -o build/host/test_retrigger
+build/host/test_retrigger
+python3 tests/test_original_retrigger.py

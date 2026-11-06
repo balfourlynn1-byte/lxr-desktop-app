@@ -128,12 +128,12 @@ void Drum_trigger(const uint8_t voiceNr, const uint8_t vol, const uint8_t note)
 	//update velocity modulation
 	modNode_updateValue(&velocityModulators[voiceNr],vol/127.f);
 
-	//only reset phase if envelope is closed
-#ifdef USE_AMP_FILTER
-	if((voiceArray[voiceNr].volEgValueBlock[15]<=0.01f) || (voiceArray[voiceNr].transGen.waveform==1))
-#else
-		//if((voiceArray[voiceNr].ampFilterInput<=0.01f) || (voiceArray[voiceNr].transGen.waveform==1))
-#endif
+	/* Keep an audible oscillator/filter tail continuous on repeated pad hits.
+	 * The old non-USE_AMP_FILTER branch had its condition commented out. */
+	const uint8_t resetPhase = voiceArray[voiceNr].oscVolEg.state == EG_STOPPED ||
+		voiceArray[voiceNr].ampFilterInput <= 0.001 ||
+		voiceArray[voiceNr].transGen.waveform == 1;
+	if(resetPhase)
 	{
 		float offset = 1;
 		if(voiceArray[voiceNr].transGen.waveform==1) //offset mode
@@ -176,7 +176,7 @@ void Drum_trigger(const uint8_t voiceNr, const uint8_t vol, const uint8_t note)
 	SnapEg_trigger(&voiceArray[voiceNr].snapEg);
 
 	//reset filter coeffs to prevent wrong transient
-	SVF_reset(&voiceArray[voiceNr].filter);
+	if(resetPhase) SVF_reset(&voiceArray[voiceNr].filter);
 
 	//update pan value
 	Drum_updatePan(voiceNr);

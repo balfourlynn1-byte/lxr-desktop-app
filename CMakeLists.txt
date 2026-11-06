@@ -20,7 +20,7 @@ if(NOT CMAKE_TOOLCHAIN_FILE)
 endif()
 
 project(LXR_V2_STM32F765
-    VERSION 1.7.91
+    VERSION 1.7.91.1
     DESCRIPTION "LXR V2 drum machine firmware"
     LANGUAGES C ASM
 )
