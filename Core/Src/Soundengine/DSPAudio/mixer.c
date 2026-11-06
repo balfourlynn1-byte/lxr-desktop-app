@@ -23,6 +23,7 @@
 #include "main.h"
 #include "IO/adcPots.h"
 #include "Soundengine/DSPAudio/Jimbones.h"
+#include "Soundengine/AudioDiagnostics.h"
 #include "Soundengine/TriggerOut.h"
 #include "menu/menu.h"
 #include "Soundengine/FxBus.h"
@@ -718,6 +719,7 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 
 #endif
 	FxBus_process(fxBusData,  &output[pos],&output[pos+1],&output2[pos],&output2[pos+1], OUTPUT_DMA_SIZE);
+    jb_audioDiagScan(output,output2,OUTPUT_DMA_SIZE);
 /*
 	if(activeParameters[UNUSED_PAR_GLO_SAT])
 	{
