@@ -3337,7 +3337,12 @@ uint8_t menu_getSubPage()
 //-----------------------------------------------------------------
 void menu_switchPage(uint8_t pageNr)
 {
- jb_screen=0; jb_oscArmed=0;
+ /* A voice-page reselect must not erase the OSC extension's position.
+  * Otherwise the extra banks become inaccessible on repeated button presses. */
+ if(pageNr >= 7u || pageNr != menu_activePage) {
+  jb_screen=0;
+  jb_oscArmed=0;
+ }
  if(pageNr != PERF_PAGE) jb_perfui_leave();
 	//autosave config page settings
 	/*
