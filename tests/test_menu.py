@@ -31,11 +31,10 @@ int main(void) {
  for(unsigned voice=0;voice<7;voice++) {
   menu_activePage=voice; menuIndex=3<<3; jb_screen=jb_oscArmed=0;
   menu_switchSubPage(0,1); assert(!jb_screen && menuIndex==0);
-  menu_switchSubPage(0,1); assert(jb_screen && jb_selected==JB_METAL);
-  for(unsigned page=2;page<7;page++) { menu_switchSubPage(0,1); assert(jb_screen && jb_selected==page*4); }
   menu_switchSubPage(0,1); assert(jb_screen && jb_selected==JB_MODE);
+  for(unsigned page=1;page<7;page++) { menu_switchSubPage(0,1); assert(jb_screen && jb_selected==page*4); }
   menu_switchSubPage(0,1); assert(!jb_screen);
-  menu_switchSubPage(0,1); assert(jb_screen);
+  menu_switchSubPage(0,1); assert(jb_screen && jb_selected==JB_MODE);
   menu_switchSubPage(1,1); assert(!jb_screen && !jb_oscArmed && menu_getSubPage()==1);
   menu_switchSubPage(0,1); assert(!jb_screen && menuIndex==0);
   menu_switchSubPage(0,1); assert(jb_screen);
