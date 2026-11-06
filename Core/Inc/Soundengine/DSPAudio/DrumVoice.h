@@ -27,6 +27,7 @@
 #include "Soundengine/DSPAudio/transientGenerator.h"
 #include "Soundengine/DSPAudio/snapEg.h"
 #include "Soundengine/DSPAudio/dither.h"
+#include "Soundengine/DSPAudio/RetriggerSmoother.h"
 //------------------------------------------------------------------------
 enum
 {
@@ -93,6 +94,10 @@ typedef struct VoiceStruct
 #endif
 
 	float pwm;
+
+#if LXR_RETRIGGER_SMOOTH
+	RetriggerSmoother retriggerSmooth;
+#endif
 } DrumVoice;
 //------------------------------------------------------------------------
 

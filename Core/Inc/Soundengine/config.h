@@ -32,6 +32,11 @@
 
 #define SMOOTH_MIXER_VOL_PAN_DRIVE 1
 
+/* EXPERIMENTAL retrigger click-reduction for main drum voices 1-3.
+ * Change to 0 to retain original behaviour; rebuild firmware.
+ * Not yet tested on LXR-02 hardware. */
+#define LXR_RETRIGGER_SMOOTH 1
+
 #define UART_DEBUG_ECHO_MODE 0
 
 #if USE_BIG_SAMPLE_BUFFER

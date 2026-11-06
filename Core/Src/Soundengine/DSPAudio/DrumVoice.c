@@ -65,6 +65,9 @@ void initDrumVoice()
 
 #endif
 
+#if LXR_RETRIGGER_SMOOTH
+		retrigger_smoother_init(&voiceArray[i].retriggerSmooth);
+#endif
 		SnapEg_init(&voiceArray[i].snapEg);
 		setPan(i,0.f);
 		voiceArray[i].vol = 0.8f;
@@ -120,6 +123,14 @@ void Drum_updatePan(const uint8_t voiceNr)
 //---------------------------------------------------
 void Drum_trigger(const uint8_t voiceNr, const uint8_t vol, const uint8_t note)
 {
+#if LXR_RETRIGGER_SMOOTH
+	/* Capture retriggers while the previous main-drum amplitude EG is active.
+	 * Call BEFORE slopeEg2_trigger changes the EG state.  No changes to
+	 * MIDI velocity, pitch, timing, or the native oscillator/filter path. */
+	retrigger_smoother_note_on(&voiceArray[voiceNr].retriggerSmooth,
+		(voiceArray[voiceNr].oscVolEg.value > 0.015 &&
+		 voiceArray[voiceNr].oscVolEg.state != EG_STOPPED) ? 1u : 0u);
+#endif
 
 	lfo_retrigger(voiceNr);
 
@@ -309,6 +320,10 @@ IN_ITCM_RAM void calcDrumVoiceSyncBlock(const uint8_t voiceNr, int16_t* buf, con
 #endif
 		buf[i] *= voiceArray[voiceNr].combinedVolume;
 	}
+#if LXR_RETRIGGER_SMOOTH
+	/* Last stage of the main drum voice, before mixer decimation/routing. */
+	retrigger_smoother_process(&voiceArray[voiceNr].retriggerSmooth, buf, size);
+#endif
 }
 //---------------------------------------------------
 
