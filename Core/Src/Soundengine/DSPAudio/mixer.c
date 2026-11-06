@@ -21,6 +21,8 @@
 #include "Soundengine/DSPAudio/BufferTools.h"
 #include "Soundengine/DSPAudio/squareRootLut.h"
 #include "main.h"
+#include "IO/adcPots.h"
+#include "Soundengine/DSPAudio/Jimbones.h"
 #include "Soundengine/TriggerOut.h"
 #include "menu/menu.h"
 #include "Soundengine/FxBus.h"
@@ -600,6 +602,7 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 
 	//calc voice 1
 	calcDrumVoiceSyncBlock(0, sampleData,OUTPUT_DMA_SIZE);
+	jb_render(0, sampleData, OUTPUT_DMA_SIZE, voiceArray[0].vol * adc_getFaderVolume(0));
 	//decimate voice
 	mixer_decimateBlock(0,sampleData);
 	//copy to selected dma buffer
@@ -625,6 +628,7 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 
 	//calc voice 2
 	calcDrumVoiceSyncBlock(1, sampleData,OUTPUT_DMA_SIZE);
+	jb_render(1, sampleData, OUTPUT_DMA_SIZE, voiceArray[1].vol * adc_getFaderVolume(1));
 	//decimate voice
 	mixer_decimateBlock(1,sampleData);
 	//copy to selected dma buffer
@@ -645,6 +649,7 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 #endif
 	//calc voice 3
 	calcDrumVoiceSyncBlock(2, sampleData,OUTPUT_DMA_SIZE);
+	jb_render(2, sampleData, OUTPUT_DMA_SIZE, voiceArray[2].vol * adc_getFaderVolume(2));
 	//decimate voice
 	mixer_decimateBlock(2,sampleData);
 	//copy to selected dma buffer
@@ -664,6 +669,7 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 #endif
 	//calc snare
 	Snare_calcSyncBlock(sampleData,OUTPUT_DMA_SIZE);
+	jb_render(3, sampleData, OUTPUT_DMA_SIZE, snareVoice.vol * adc_getFaderVolume(3));
 	//decimate voice
 	mixer_decimateBlock(3,sampleData);
 	//copy to selected dma buffer
@@ -679,6 +685,7 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 #endif
 	//calc cymbal
 	Cymbal_calcSyncBlock(sampleData,OUTPUT_DMA_SIZE);
+	jb_render(4, sampleData, OUTPUT_DMA_SIZE, cymbalVoice.vol * adc_getFaderVolume(4));
 	//decimate voice
 	mixer_decimateBlock(4,sampleData);
 	//copy to selected dma buffer
@@ -695,6 +702,7 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 
 	//calc HiHat
 	HiHat_calcSyncBlock(sampleData,OUTPUT_DMA_SIZE);
+	jb_render(5, sampleData, OUTPUT_DMA_SIZE, hatVoice.vol * adc_getFaderVolume(5) * hatVoice.egValueOscVol);
 	//decimate voice
 	mixer_decimateBlock(5,sampleData);
 	//copy to selected dma buffer

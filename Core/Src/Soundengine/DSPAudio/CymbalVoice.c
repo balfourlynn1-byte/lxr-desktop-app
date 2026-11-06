@@ -16,6 +16,7 @@
 #include "Soundengine/DSPAudio/squareRootLut.h"
 #include "Soundengine/DSPAudio/modulationNode.h"
 #include "Soundengine/TriggerOut.h"
+#include "Soundengine/DSPAudio/Jimbones.h"
 #include "Soundengine/config.h"
 #include "Soundengine/MIDI/MidiVoiceControl.h"
 #include "IO/adcPots.h"
@@ -90,6 +91,7 @@ void Cymbal_updatePan()
 //---------------------------------------------------
 void Cymbal_trigger( const uint8_t vel, const uint8_t note)
 {
+	jb_trigger(4, vel, note, 0);
 	lfo_retrigger(4);
 	//update velocity modulation
 	modNode_updateValue(&velocityModulators[4],vel/127.f);

@@ -17,6 +17,7 @@
 #include "Soundengine/DSPAudio/squareRootLut.h"
 #include "Soundengine/DSPAudio/modulationNode.h"
 #include "Soundengine/TriggerOut.h"
+#include "Soundengine/DSPAudio/Jimbones.h"
 #include "Soundengine/MIDI/MidiVoiceControl.h"
 #include "IO/adcPots.h"
 #include "Soundengine/FxBus.h"
@@ -89,6 +90,7 @@ void HiHat_updatePan()
 //---------------------------------------------------
 void HiHat_trigger( uint8_t vel, uint8_t isOpen, const uint8_t note)
 {
+	jb_trigger(5, vel, note, isOpen);
 	lfo_retrigger(5);
 
 	//update velocity modulation

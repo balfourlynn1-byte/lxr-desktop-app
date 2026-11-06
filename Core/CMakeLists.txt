@@ -31,7 +31,7 @@ add_library(lxr_platform OBJECT
 )
 # Shown on the boot splash screen; comes from project(VERSION) in the top-level CMakeLists.txt.
 set_source_files_properties(Src/main.c PROPERTIES
-    COMPILE_DEFINITIONS "FIRMWARE_VERSION=\" RTEST ${PROJECT_VERSION}\""
+    COMPILE_DEFINITIONS "FIRMWARE_VERSION=\" JIMBONES ${PROJECT_VERSION}\""
 )
 
 # Hardware inputs/outputs: shift-register buttons/LEDs, pots & faders.
@@ -60,6 +60,7 @@ add_library(lxr_ui OBJECT
 add_library(lxr_preset OBJECT
     Src/Preset/initKit.c
     Src/Preset/presetManager.c
+    Src/Preset/JimbonesPreset.c
 )
 
 # DSP building blocks, drum voices and master effects.
@@ -80,6 +81,7 @@ add_library(lxr_dsp OBJECT
     Src/Soundengine/DSPAudio/random.c
     Src/Soundengine/DSPAudio/ResonantFilter.c
     Src/Soundengine/DSPAudio/RetriggerSmoother.c
+    Src/Soundengine/DSPAudio/Jimbones.c
     Src/Soundengine/DSPAudio/Samples.c
     Src/Soundengine/DSPAudio/SlopeEg2.c
     Src/Soundengine/DSPAudio/snapEg.c

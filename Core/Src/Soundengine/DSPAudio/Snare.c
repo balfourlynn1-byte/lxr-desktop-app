@@ -17,6 +17,7 @@
 #include "Soundengine/DSPAudio/squareRootLut.h"
 #include "Soundengine/DSPAudio/modulationNode.h"
 #include "Soundengine/TriggerOut.h"
+#include "Soundengine/DSPAudio/Jimbones.h"
 #include "Soundengine/MIDI/MidiVoiceControl.h"
 #include "IO/adcPots.h"
 #include "Soundengine/FxBus.h"
@@ -81,6 +82,7 @@ void Snare_updatePan()
 //---------------------------------------------------
 void Snare_trigger(const uint8_t vel, const uint8_t note)
 {
+	jb_trigger(3, vel, note, 0);
 	lfo_retrigger(3);
 	//update velocity modulation
 	modNode_updateValue(&velocityModulators[3],vel/127.f);
