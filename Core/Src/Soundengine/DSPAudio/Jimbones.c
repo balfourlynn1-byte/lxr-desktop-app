@@ -19,6 +19,32 @@ static float clamp(float x, float a, float b) { return x<a?a:(x>b?b:x); }
 static float unit(uint8_t x) { return x*(1.f/127.f); }
 /* All callers pass bounded phases. Integer conversion avoids libm floorf per sample. */
 static float wrap(float x) { float f=x-(int)x; if(f<0) f+=1; return f>=1?0:f; }
+/* Digitone II / Syntakt-inspired techniques, independently implemented.
+ * LXR02Open similarly crossfades adjacent waveform IDs during LFO sweeps.
+ * This implementation keeps the existing LXR oscillator tables and saves
+ * both compute and memory by using the current wavetable layer only. */
+static float jb_phaseWarp(float phase,float shape) {
+ const float pivot=clamp(.5f+shape*.41f,.09f,.91f);
+ return phase<pivot?phase*(.5f/pivot):.5f+(phase-pivot)*(.5f/(1.f-pivot));
+}
+/* Triangle wavefold in fixed work: bounded for input within [-1,1] and
+ * drive <= 6.5; no expensive sin/tanh or additional wavetable lookups. */
+static float jb_waveFold(float input,float drive) {
+ float x=input*drive;
+ for(unsigned n=0;n<5;n++) {
+  if(x>1.f) x=2.f-x;
+  else if(x< -1.f) x=-2.f-x;
+  else break;
+ }
+ return clamp(x,-1.f,1.f);
+}
+/* Reflect wavetable scans at both ends to avoid abrupt sweep wraparound.
+ * The modulated position is at most 0..3 plus <=3.5, safely within 0..6.5. */
+static float jb_waveScan(float x) {
+ if(x<0.f) x=-x;
+ if(x>6.f) x=12.f-x;
+ return x>3.f?6.f-x:x;
+}
 static uint32_t lock(void) { uint32_t mask=__get_PRIMASK(); __disable_irq(); return mask; }
 static void unlock(uint32_t mask) { __DMB(); __set_PRIMASK(mask); }
 static float noise(Layer *s) {
@@ -128,10 +154,20 @@ void jb_render(uint8_t v,int16_t *buffer,unsigned size,float gain) {
   }
   if(wtGain>0) {
    float pos=position+(move+2.5f*s->texture)*movement+s->random*.3f;
-   /* Reflect scans at either end so position zero still moves. */
-   if(pos<0)pos=-pos;
-   if(pos>3)pos=6-pos;
-   out+=wtGain*wave(s->wave,pos,s->table);
+   /* LXR02Open-style adjacent waveform interpolation (already native to
+    * this layer), plus phase distortion and a post-waveform wavefolder. */
+   const float scan=jb_waveScan(pos);
+   /* CHAR=0 is neutral, preserving older patches at zero; higher CHAR
+    * increases phase asymmetry even when the overdrive is disabled.
+    * Texture adds bipolar movement synchronized to the internal motion. */
+   const float warp=clamp(character*.82f+s->texture*.15f*movement,-.88f,.88f);
+   float shaped=wave(jb_phaseWarp(s->wave,warp),scan,s->table);
+   const float foldDepth=s->aggression;
+   if(foldDepth>0.f) {
+    const float fold=jb_waveFold(shaped,1.f+foldDepth*5.5f);
+    shaped+=(fold-shaped)*(foldDepth*.95f);
+   }
+   out+=wtGain*shaped;
   }
   if(wet>0) {
    float driven=out*drive;
