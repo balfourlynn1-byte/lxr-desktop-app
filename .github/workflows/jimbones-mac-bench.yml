@@ -1,0 +1,50 @@
+name: JIMBONES Intel Mac listening bench
+on:
+  push:
+    branches: [jimbones-mac-bench-v1.7.99]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  intel:
+    runs-on: macos-15-intel
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: erica-synths/lxr-desktop-app
+          ref: a43cd4fcda23ec3d577dc425261c3eb28bd5abff
+          path: original-src
+      - uses: actions/checkout@v4
+        with:
+          ref: d3e16f3d2f0d55b5cb1397aa6c76faf462f96422
+          path: noclip-src
+      - name: Production DSP and source regressions
+        run: |
+          mkdir -p build
+          set -eo pipefail
+          (bash tests/run_stepfx.sh && bash tests/run_host.sh && bash tests/run_audio_diagnostics.sh && bash tests/run_waveshaping.sh && python3 tests/test_combined_source_guards.py) | tee build/host.log
+      - run: bash tests/mac/build.sh original-src noclip-src packages
+      - uses: actions/upload-artifact@v4
+        with:
+          name: JIMBONES-Mac-Test-Bench
+          path: packages/JIMBONES-Mac-Test-Bench.zip
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: JIMBONES-Audio-Replay-Tests
+          path: packages/JIMBONES-Audio-Replay-Tests.zip
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: JIMBONES-CPU-Diagnostics
+          path: packages/JIMBONES-CPU-Diagnostics.zip
+          if-no-files-found: error
+  arm:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y gcc-arm-none-eabi libnewlib-arm-none-eabi ninja-build
+      - run: cmake --preset release && cmake --build --preset release -j2
+      - run: arm-none-eabi-size build/release/LXR_V2_STM32F765.elf

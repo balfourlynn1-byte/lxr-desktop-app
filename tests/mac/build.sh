@@ -6,7 +6,8 @@ baseline=$(cd "$2" && pwd)
 mkdir -p "$3"
 dest=$(cd "$3" && pwd)
 cd "$(dirname "$0")/../.."
-stage=$(mktemp -d "$PWD/build-mac.XXXXXX")
+mkdir -p build
+stage=$(mktemp -d "$PWD/build/mac.XXXXXX")
 app="$stage/JIMBONES.app"
 res="$app/Contents/Resources"
 mkdir -p "$res" "$app/Contents/MacOS" "$stage/audio" "$stage/cpu"
@@ -33,6 +34,9 @@ report=$(find "$stage/audio" -name results.json)
 folder=$(dirname "$report")
 cp "$folder/NoClip.wav" "$folder/Layers-plus-StepFX.wav" "$res/"
 cp "$report" "$stage/cpu/"
+for log in build/host.log build/arm.log; do
+    if test -f "$log"; then cp "$log" "$stage/cpu/"; fi
+done
 cp tests/mac/README.md "$stage/"
 cp tests/mac/README.md "$stage/cpu/README.md"
 cp tests/mac/README.md "$stage/audio/README.md"
