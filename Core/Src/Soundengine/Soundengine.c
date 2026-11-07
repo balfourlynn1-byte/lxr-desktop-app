@@ -18,6 +18,7 @@
 #include "Soundengine/USB/usb_manager.h"
 #include "Soundengine/DSPAudio/Jimbones.h"
 #include "Soundengine/StepFX.h"
+#include "Soundengine/AudioDiagnostics.h"
 void stepfx_audioBlock(void);
 #include "Soundengine/MIDI/Uart.h"
 
@@ -44,7 +45,8 @@ uint8_t soundengine_calcNextSampleBlock()
         const uint32_t budget=(uint32_t)((double)SystemCoreClock*OUTPUT_DMA_SIZE/REAL_FS);
         if(budget) {
             const uint32_t load=(uint32_t)(((uint64_t)jb_audioLastCycles*100u)/budget);
-            jb_audioLoadPercent=(uint8_t)(load>100u?100u:load);
+            jb_audioLoadPercent=(uint8_t)(load>255u?255u:load);
+            jb_audioLoadSample(load);
             if(jb_audioLoadPercent>jb_audioPeakPercent)jb_audioPeakPercent=jb_audioLoadPercent;
             if(jb_audioLastCycles>budget)jb_audioOverruns++;
         }

@@ -1617,9 +1617,9 @@ static void jb_cpuPaint(void) {
         snprintf(bottom,sizeof(bottom),"LATE%3u RAIL%4u",
                  jb_cap(jb_audioOverruns,999u),jb_cap(jb_audioNearRailHits,9999u));
     } else {
-        snprintf(top,sizeof(top),"LAST%3uk MAX%3uk",
-                 jb_cap(jb_audioLastCycles/1000u,999u),
-                 jb_cap(jb_audioMaxCycles/1000u,999u));
+        snprintf(top,sizeof(top),"AVG%3u%% DMA%4u",
+                 jb_cap(jb_averageLoad,255u),
+                 jb_cap(jb_dmaPendingCount,9999u));
         snprintf(bottom,sizeof(bottom),"KNEE%4u RAIL%3u",
                  jb_cap(jb_layerSaturationHits,9999u),
                  jb_cap(jb_audioNearRailHits,999u));

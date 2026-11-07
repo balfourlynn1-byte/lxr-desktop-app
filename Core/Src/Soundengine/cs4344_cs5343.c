@@ -81,6 +81,7 @@ void DMA1_Stream7_IRQHandler(void)
 
 volatile int error = 0;
 
+#include "Soundengine/AudioDiagnostics.h"
 #define SWITCH_FLAG 1
 
 IN_ITCM_RAM void HAL_I2S_TxCpltCallback(I2S_HandleTypeDef *hi2s)
@@ -132,6 +133,7 @@ IN_ITCM_RAM void HAL_I2S_TxCpltCallback(I2S_HandleTypeDef *hi2s)
 		HAL_I2S_Transmit_DMA(&hi2s3, (uint16_t*)&dma_buffer[(OUTPUT_DMA_SIZE*2)*(dmaPtr&0x1)], OUTPUT_DMA_SIZE*2);
 
 #if SWITCH_FLAG
+         if(dmaPtr>1 && bCurrentSampleValid!=SAMPLE_VALID && jb_dmaPendingCount!=UINT32_MAX) jb_dmaPendingCount++;
 		   //now start next sample block calculation
 			 bCurrentSampleValid = 1-(dmaPtr&0x1);
 #if CALC_SAMPLES_IN_INTERRUPT

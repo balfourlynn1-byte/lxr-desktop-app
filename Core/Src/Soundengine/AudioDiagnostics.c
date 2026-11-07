@@ -3,7 +3,16 @@
 #ifndef LXR_EMU
 #include "stm32f7xx_hal.h"
 #endif
-volatile uint32_t jb_audioNearRailHits;
+volatile uint32_t jb_audioNearRailHits, jb_dmaPendingCount, jb_averageLoad;
+static uint32_t averageQ8;
+static unsigned hasAverage;
+void jb_audioLoadSample(uint32_t load) {
+    if(load>255u) load=255u;
+    uint32_t target=load*256u;
+    averageQ8=hasAverage?(averageQ8*63u+target+32u)/64u:target;
+    hasAverage=1;
+    jb_averageLoad=(averageQ8+128u)/256u;
+}
 /* Called after FX mixing, in the same audio render budget.
  * 'RAIL' measures near-full-scale samples, not definite clipping.
  * Only integer comparisons on two stereo output pairs, no allocations. */
@@ -26,6 +35,9 @@ void jb_audioDiagReset(void) {
     const uint32_t saved=__get_PRIMASK();
     __disable_irq();
 #endif
+    hasAverage=0;
+    jb_averageLoad=0;
+    jb_dmaPendingCount=0;
     jb_audioMaxCycles=0;
     jb_audioPeakPercent=0;
     jb_audioOverruns=0;

@@ -183,15 +183,18 @@ void jb_render(uint8_t v,int16_t *buffer,unsigned size,float gain) {
   out+=s->tail;
   s->tail*=.94f; s->last=out;
   s->envelope*=s->decay; s->transient*=s->transientDecay;
-  /* Reserve room for experimental layers; protect original in exact Mode 0. */
-  float mixed=buffer[i]*.78f+out*gain*15500.f;
-  const float mag=fabsf(mixed);
+  /* Spend the headroom on the side of the dry waveform the layer moves
+     toward. A silent layer therefore preserves even full-scale dry audio. */
+  float added=out*gain*15500.f;
+  float mag=fabsf(added);
   if(mag>24000.f) {
    ++jb_layerSaturationHits;
-   const float excess=mag-24000.f;
-   const float knee=excess*8192.f/(8192.f+excess);
-   mixed=(mixed<0.f?-1.f:1.f)*(24000.f+knee);
+   float excess=mag-24000.f;
+   added=copysignf(24000.f+excess*8192.f/(8192.f+excess),added);
   }
+  float dry=buffer[i];
+  float room=1.f-fmaxf(0.f,(added<0.f?-dry:dry)/32768.f);
+  float mixed=dry+added*room;
   buffer[i]=(int16_t)clamp(mixed,-32768.f,32767.f);
  }
 }

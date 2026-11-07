@@ -64,6 +64,15 @@ int main(void) {
     jb_trigger(1,127,48,0);
     jb_render(1,samples,64,1);
     assert(!memcmp(samples,reference,sizeof(samples)));
+    for(unsigned mode=1;mode<=3;mode++) {
+        jb_init();
+        jb_parameters[1][JB_MODE]=mode;
+        jb_parameters[1][JB_METAL_LEVEL]=0;
+        jb_parameters[1][JB_WAVE_LEVEL]=0;
+        jb_trigger(1,110,48,0);
+        jb_render(1,samples,64,1);
+        assert(!memcmp(samples,reference,sizeof(samples)));
+    }
     printf("PASS WaveShape: phase RMS delta %.3f, fold RMS delta %.3f, Mode 0 identical\n",
            phaseDelta/ref,changeRms(bufA,bufC)/ref);
     return 0;
