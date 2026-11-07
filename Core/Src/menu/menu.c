@@ -1624,6 +1624,9 @@ static void jb_cpuPaint(void) {
         snprintf(bottom,sizeof(bottom),"KNEE%4u RAIL%3u",
                  jb_cap(jb_layerSaturationHits,9999u),
                  jb_cap(jb_audioNearRailHits,999u));
+    } else if(jb_cpuDetails==8) {
+        snprintf(top,sizeof(top),"Mix balance");
+        snprintf(bottom,sizeof(bottom),"K1: %s",jb_liveBalance?"LIVE (kick dry)":"Legacy");
     } else {
         unsigned voice=jb_cpuDetails-2;
         snprintf(top,sizeof(top),"V%u LAYER PEAK",voice+1);
@@ -2881,7 +2884,7 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
 	screensaver_touch();
  if(menu_cpuPageActive()) {
   editModeActive=0;
-  if(inc) jb_cpuDetails=(uint8_t)((jb_cpuDetails+(inc>0?1:7))%8);
+  if(inc) jb_cpuDetails=(uint8_t)((jb_cpuDetails+(inc>0?1:8))%9);
   if(btnClicked) jb_audioDiagReset();
   menu_repaintAll(); return;
  }
@@ -4090,7 +4093,8 @@ uint8_t menu_parseKnobValue(uint8_t potNr, int16_t diff)
 {
  if(menu_cpuPageActive()) {
     /* Read-only diagnostic meters never send kit parameter changes. */
-    (void)potNr;(void)diff; screensaver_touch();return 1;
+    if(jb_cpuDetails==8 && potNr==0 && diff) { jb_liveBalance=diff>0; menu_repaintAll(); }
+    screensaver_touch();return 1;
  }
  if(menu_stepFxPageActive()) {
   if(potNr==0 && diff){int i=jb_perfui_selected()+(diff>0?1:-1);jb_perfui_select(i<0?0:(i>15?15:i));}

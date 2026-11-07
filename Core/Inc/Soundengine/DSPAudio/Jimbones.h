@@ -16,6 +16,9 @@ enum { JB_MODE, JB_METAL_LEVEL, JB_WAVE_LEVEL, JB_DECAY,
 #define JB_VOICES 6
 #define JB_KIT_BYTES (JB_VOICES * JB_PARAMS)
 extern uint8_t jb_parameters[JB_VOICES][JB_PARAMS];
+#define JB_MIXED_KIT 1
+extern uint8_t jb_liveBalance;
+void jb_prepareBalance(void);
 void jb_stageVoice(uint8_t voice,int16_t *samples,unsigned size,float fader);
 void jb_defaults(uint8_t *kit);
 void jb_init(void);
@@ -27,5 +30,6 @@ void jb_render(uint8_t voice, int16_t *buffer, unsigned size, float gain);
 void jb_preFilterNoise(uint8_t voice, int16_t *buffer, unsigned size);
 extern volatile uint32_t jb_layerSaturationHits;
 uint8_t jb_limit(unsigned parameter);
+void jb_setControl(unsigned voice,unsigned parameter,uint8_t value);
 void jb_adjust(unsigned voice, unsigned parameter, int delta);
 #endif

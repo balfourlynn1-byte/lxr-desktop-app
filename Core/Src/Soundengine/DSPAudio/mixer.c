@@ -563,6 +563,7 @@ static void renderLayer(unsigned voice,int16_t *samples,float voiceGain) {
 IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 {
 
+	jb_prepareBalance();
 	r2_Available = (switch_r2_GPIO_Port->IDR & switch_r2_Pin)>0;
 	l1_Available = (switch_l1_GPIO_Port->IDR & switch_l1_Pin)>0;
 	l2_Available = (switch_l2_GPIO_Port->IDR & switch_l2_Pin)>0;

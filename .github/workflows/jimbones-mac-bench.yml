@@ -1,7 +1,7 @@
 name: JIMBONES Intel Mac listening bench
 on:
   push:
-    branches: [jimbones-v1.8.00]
+    branches: [jimbones-v1.8.01]
   workflow_dispatch:
 permissions:
   contents: read
@@ -24,12 +24,16 @@ jobs:
         with:
           ref: 67ac7fffd4bdd989deffcb5048c1237fe3ac1a44
           path: reference-src
+      - uses: actions/checkout@v4
+        with:
+          ref: 1dda3795280c0c2b826e0361131029768deb0992
+          path: previous-src
       - name: Production DSP and source regressions
         run: |
           mkdir -p build
           set -eo pipefail
           (bash tests/run_stepfx.sh && bash tests/run_host.sh && bash tests/run_audio_diagnostics.sh && bash tests/run_waveshaping.sh && python3 tests/test_combined_source_guards.py) | tee build/host.log
-      - run: bash tests/mac/build.sh original-src noclip-src packages reference-src
+      - run: bash tests/mac/build.sh original-src noclip-src packages reference-src previous-src
       - uses: actions/upload-artifact@v4
         with:
           name: JIMBONES-Mac-Test-Bench
@@ -51,7 +55,14 @@ jobs:
       - uses: actions/checkout@v4
       - run: sudo apt-get update && sudo apt-get install -y gcc-arm-none-eabi libnewlib-arm-none-eabi ninja-build
       - run: cmake --preset release && cmake --build --preset release -j2
-      - run: arm-none-eabi-size build/release/LXR_V2_STM32F765.elf
+      - name: Verify desktop update format and collect ARM measurements
+        run: |
+          python3 tests/mac/check_image.py build/release/LXR_V2_V1.8.01.img > ARM-build.txt
+          arm-none-eabi-size -A build/release/LXR_V2_STM32F765.elf >> ARM-build.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ARM-build
+          path: ARM-build.txt
 
   publish:
     needs: [intel, arm]
@@ -68,5 +79,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           cd packages
-          sha256sum *.zip > SHA256SUMS.txt
-          gh release create jimbones-v1.8.00 --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease --title "JIMBONES v1.8.00 Intel listening bench" --notes "Intel Mac app, matched production WAVs, CPU diagnostics and checksums. Desktop listening release. No hardware update image." *.zip SHA256SUMS.txt
+          sha256sum *.zip ARM-build.txt > SHA256SUMS.txt
+          gh release create jimbones-v1.8.01 --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease --title "JIMBONES v1.8.01 Intel listening bench" --notes "Intel Mac app, matched production WAVs, CPU diagnostics and checksums. Desktop listening release. No hardware update image." *.zip ARM-build.txt SHA256SUMS.txt

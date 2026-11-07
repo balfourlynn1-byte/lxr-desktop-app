@@ -4,6 +4,7 @@ set -eu
 original=$(cd "$1" && pwd)
 baseline=$(cd "$2" && pwd)
 reference=$(cd "$4" && pwd)
+previous=$(cd "$5" && pwd)
 mkdir -p "$3"
 dest=$(cd "$3" && pwd)
 cd "$(dirname "$0")/../.."
@@ -13,22 +14,22 @@ app="$stage/JIMBONES.app"
 res="$app/Contents/Resources"
 mkdir -p "$res" "$app/Contents/MacOS" "$stage/audio" "$stage/cpu"
 test "$(uname -m)" = x86_64
-for engine in original baseline reference combined; do
-    case "$engine" in original) src="$original";; baseline) src="$baseline";; reference) src="$reference";; combined) src="$PWD";; esac
+for engine in original baseline reference previous combined; do
+    case "$engine" in original) src="$original";; baseline) src="$baseline";; reference) src="$reference";; previous) src="$previous";; combined) src="$PWD";; esac
     cmake -G Ninja -S tests/production/emu -B "build/$engine" -DFW="$src"
     cmake --build "build/$engine" --target regression -j4
     cp "build/$engine/regression" "$res/$engine"
 done
 clang -arch x86_64 -O2 -fobjc-arc -framework Cocoa tests/mac/Launcher.m -o "$app/Contents/MacOS/Bench"
 clang -O2 -DLXR_EMU=1 -ICore/Inc tests/test_audio_diagnostics.c Core/Src/Soundengine/AudioDiagnostics.c -o "$res/diagnostics"
-cp tests/mac/aggressive-reference.json tests/mac/bench.py tests/production/events.txt LICENSE NOTICE.md "$res/"
+cp tests/mac/mixed_kit.py tests/mac/custom-reference.json tests/mac/aggressive-reference.json tests/mac/bench.py tests/production/events.txt LICENSE NOTICE.md "$res/"
 git rev-parse HEAD > "$res/revision.txt"
 python3 - "$app/Contents/Info.plist" <<'PY'
 import plistlib,sys
 with open(sys.argv[1],'wb') as f:
     plistlib.dump(dict(CFBundleIdentifier='org.jimbones.macbench', CFBundleExecutable='Bench',
-        CFBundleName='JIMBONES',CFBundlePackageType='APPL',CFBundleShortVersionString='1.8.00',
-        CFBundleVersion='180',NSHighResolutionCapable=True),f)
+        CFBundleName='JIMBONES',CFBundlePackageType='APPL',CFBundleShortVersionString='1.8.01',
+        CFBundleVersion='181',NSHighResolutionCapable=True),f)
 PY
 python3 "$res/bench.py" all "$stage/audio" > "$stage/cpu/test.log" || { cat "$stage/cpu/test.log"; exit 1; }
 report=$(find "$stage/audio" -name results.json)
@@ -38,6 +39,9 @@ cp "$report" "$stage/cpu/"
 for log in build/host.log build/arm.log; do
     if test -f "$log"; then cp "$log" "$stage/cpu/"; fi
 done
+cp tests/mac/HARDWARE-READINESS.md "$stage/audio/"
+cp tests/mac/HARDWARE-READINESS.md "$stage/cpu/"
+cp tests/mac/HARDWARE-READINESS.md "$res/"
 cp tests/mac/README.md "$stage/"
 cp tests/mac/README.md "$stage/cpu/README.md"
 cp tests/mac/README.md "$stage/audio/README.md"

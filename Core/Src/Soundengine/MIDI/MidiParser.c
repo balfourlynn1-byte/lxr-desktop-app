@@ -47,7 +47,7 @@ static int jb_control(unsigned ch,unsigned cc,unsigned value) {
  unsigned v=bank-96,p=jbIndex[ch];
  if(p<JB_PARAMS && (ch==midi_MidiChannels[7] || ch==midi_MidiChannels[v] ||
      (v==5 && ch==midi_MidiChannels[6]))) {
-  jb_parameters[v][p]=value>jb_limit(p)?jb_limit(p):value;
+  jb_setControl(v,p,value>jb_limit(p)?jb_limit(p):value);
   preset_touchTimer(PRESET_KIT_TIMER);
  }
  return 1;

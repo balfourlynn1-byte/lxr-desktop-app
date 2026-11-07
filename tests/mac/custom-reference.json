@@ -1,0 +1,21 @@
+{
+  "name": "Approved live custom mix",
+  "source": "1dda3795280c0c2b826e0361131029768deb0992",
+  "pcm_sha256_intel_local": "14945e58d1dbcc5a9ca9f22654f95c657a3631d13d7d19b8aa28468c643069b0",
+  "seed": 123,
+  "mode": 3,
+  "voices": 6,
+  "stepfx_slot": 8,
+  "fader": 0.4,
+  "decay": 127,
+  "controls": {
+    "1": 86,
+    "2": 38,
+    "24": 115,
+    "29": 46,
+    "20": 100,
+    "30": 41,
+    "28": 17,
+    "31": 110
+  }
+}

@@ -47,7 +47,9 @@
         [self.sliders addObject:slider]; [self.values addObject:value];
         [self.window.contentView addSubview:slider]; [self.window.contentView addSubview:value];
     }
-    [self restore:nil];
+    NSButton *approved=[NSButton buttonWithTitle:@"Restore approved custom mix" target:self action:@selector(restore:)];
+    approved.tag=1; approved.frame=NSMakeRect(296,407,268,38);
+    [self.window.contentView addSubview:approved]; [self restore:nil];
     NSButton *restore=[NSButton buttonWithTitle:@"Restore aggressive preset" target:self action:@selector(restore:)];
     restore.frame=NSMakeRect(19,88,268,38); [self.window.contentView addSubview:restore];
     NSButton *custom=[NSButton buttonWithTitle:@"Render and play my mix" target:self action:@selector(performTest:)];
@@ -63,8 +65,13 @@
     self.values[sender.tag].stringValue=[NSString stringWithFormat:@"%ld",(long)sender.integerValue];
 }
 - (void)restore:(id)sender {
+    NSDictionary *settings=self.reference;
+    if([sender tag]==1) {
+        NSData *data=[NSData dataWithContentsOfFile:[self.resources stringByAppendingPathComponent:@"custom-reference.json"]];
+        settings=[NSJSONSerialization JSONObjectWithData:data options:0 error:NULL][@"controls"];
+    }
     for(NSSlider *slider in self.sliders) {
-        slider.integerValue=[self.reference[self.indices[slider.tag].stringValue] integerValue];
+        slider.integerValue=[settings[self.indices[slider.tag].stringValue] integerValue];
         [self slide:slider];
     }
 }

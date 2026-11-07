@@ -11,7 +11,8 @@ typedef struct {
  float frequency, ratio, depth, fb, detune, metal, noise, aggression, texture;
  float decay, transientDecay, velocity, random, last, tail;
  uint32_t rng;
- uint8_t table, restart;
+ uint8_t table, restart, editPending, fadeLeft;
+ float lastAdded, editStep;
  float hitVelocity;
 } Layer;
 static Layer layers[JB_VOICES];
@@ -67,10 +68,21 @@ static float wave(float phase, float position, unsigned band) {
  return a+mix*(b-a);
 }
 uint8_t jb_limit(unsigned p) { return p==JB_MODE?3:127; }
+void jb_setControl(unsigned v,unsigned p,uint8_t val) {
+ if(v>=JB_VOICES || p>=JB_PARAMS || val>jb_limit(p)) return;
+ uint32_t mask=lock();
+ if(jb_parameters[v][p]!=val) {
+  jb_parameters[v][p]=val;
+  if(p==JB_METAL_LEVEL || p==JB_WAVE_LEVEL || p==JB_POSITION || p==JB_SHAPE ||
+     p==JB_DRIVE || p==JB_BLEND || p==JB_VBLEND)
+   layers[v].editPending=1;
+ }
+ unlock(mask);
+}
 void jb_adjust(unsigned v, unsigned p, int delta) {
  if(v>=JB_VOICES || p>=JB_PARAMS) return;
  int n=jb_parameters[v][p]+delta;
- jb_parameters[v][p]=n<0?0:(n>jb_limit(p)?jb_limit(p):n);
+ jb_setControl(v,p,n<0?0:(n>jb_limit(p)?jb_limit(p):n));
 
 }
 void jb_defaults(uint8_t *kit) {
@@ -127,9 +139,21 @@ static float activeLevel(const uint8_t *p) {
               (p[JB_MODE]&2)?unit(p[JB_WAVE_LEVEL]):0);
 }
 /* Fixed fader law before summing. Depends on control positions only. */
+uint8_t jb_liveBalance;
+static float kitWeight;
+void jb_prepareBalance(void) {
+ kitWeight=0;
+ if(!jb_liveBalance) return;
+ for(unsigned v=0;v<JB_VOICES;v++) {
+  const uint8_t *p=jb_parameters[v];
+  float weight=fminf(1.f,2.f*activeLevel(p))*unit(p[JB_BLEND]);
+  kitWeight=fmaxf(kitWeight,weight);
+ }
+}
 void jb_stageVoice(uint8_t v,int16_t *samples,unsigned size,float fader) {
- if(fader<=.161f || !jb_parameters[v][JB_MODE]) return;
+ if(fader<=.161f) return;
  float active=fminf(1.f,activeLevel(jb_parameters[v])*2)*unit(jb_parameters[v][JB_BLEND]);
+ if(v!=0 && kitWeight>0) active=fmaxf(active,fminf(1.f,kitWeight*8.f));
  if(!active) return;
  float staged=.161f+.04f*(fader-.161f);
  float trim=1.f-active*(1.f-staged/fader);
@@ -211,6 +235,12 @@ void jb_render(uint8_t v,int16_t *buffer,unsigned size,float gain) {
   /* Spend the headroom on the side of the dry waveform the layer moves
      toward. A silent layer therefore preserves even full-scale dry audio. */
   float added=out*gain*15500.f*mix;
+  if(s->editPending) {
+   s->editStep=(s->lastAdded-added)/64.f;
+   s->fadeLeft=64; s->editPending=0;
+  }
+  if(s->fadeLeft) { added+=s->editStep*s->fadeLeft; --s->fadeLeft; }
+  s->lastAdded=added;
   float mag=fabsf(added);
   if(mag>24000.f) {
    ++jb_layerSaturationHits;

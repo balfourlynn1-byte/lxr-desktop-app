@@ -27,6 +27,37 @@ int main(int argc,char **argv){
   const int buttons[]={BUT_SEQ1,BUT_SEQ2,BUT_SEQ3,BUT_SEQ4,BUT_SEQ5,BUT_SEQ6,BUT_SEQ7,BUT_SEQ8,BUT_SEQ9,BUT_SEQ10,BUT_SEQ11,BUT_SEQ12,BUT_SEQ13,BUT_SEQ14,BUT_SEQ15,BUT_SEQ16};
   for(int i=0;i<16;i++){click(buttons[i]);assert(stepfx_slot()==i);printf("slot %d LCD [%.16s][%.16s]\n",i+1,lxr_get_lcd(),lxr_get_lcd()+16);}
   click(BUT_SEQ1);assert(!stepfx_pending());click(BUT_MODE2);assert(jb_perfui_cpu_active());click(BUT_SEQ2);click(BUT_MODE2);assert(jb_perfui_page()==0);click(BUT_MODE1);assert(!menu_stepFxPageActive());
+#ifdef JB_MIXED_KIT
+  const int controls[]={1,2,20,24,28,29,30,31};
+  const char *labels[]={"FML","WTL","Drv","Pos","Mix","Shp","FxA","vMx"};
+  for(int voice=0;voice<7;voice++) {
+   click(BUT_VOICE_1+voice); click(BUT_SELECT2); click(BUT_SELECT1);
+   for(int bank=0;bank<8;bank++) {
+    click(BUT_SELECT1);
+    for(unsigned k=0;k<8;k++) if(controls[k]/4==bank) {
+     int par=controls[k],v=voice>5?5:voice;
+     const char *lcd=lxr_get_lcd();
+     assert(!memcmp(lcd+(par%4)*4,labels[k],3));
+     uint8_t saved[JB_VOICES];for(int i=0;i<6;i++) saved[i]=jb_parameters[i][par];
+     int dir=saved[v]>63?-1:1;
+     menu_parseKnobValue(par%4,dir);
+     for(int i=0;i<6;i++) assert(jb_parameters[i][par]==saved[i]+(i==v?dir:0));
+    }
+   }
+  }
+#endif
+#ifdef JB_MIXED_KIT
+  click(BUT_VOICE_4);click(BUT_SELECT2);click(BUT_SELECT1);click(BUT_SELECT1);
+  lxr_encoder_turn(1);lxr_idle_blocks(32);
+  lxr_encoder_button(1);lxr_idle_blocks(32);lxr_encoder_button(0);lxr_idle_blocks(32);
+  int old=jb_parameters[3][JB_METAL_LEVEL];
+  lxr_encoder_turn(1);lxr_idle_blocks(32);
+  assert(jb_parameters[3][JB_METAL_LEVEL]!=old);
+  click(BUT_MODE2);click(BUT_MODE2);click(BUT_MODE2);click(BUT_MODE2);
+  assert(jb_perfui_cpu_active());menu_parseEncoder(-1,0);
+  menu_parseKnobValue(0,1);assert(jb_liveBalance);
+  menu_parseKnobValue(0,-1);assert(!jb_liveBalance);
+#endif
   puts("PASS actual button-handler page cycle and all 16 selector buttons");
 #endif
  return 0;
@@ -34,24 +65,30 @@ int main(int argc,char **argv){
  for(int v=0;v<7;v++){midi_MidiChannels[v]=v;lxr_set_param(PAR_MIDI_NOTE1+v,0);}midi_MidiChannels[7]=15;
  lxr_set_param(PAR_VELOD1,115);lxr_set_param(PAR_VELOD2,115);lxr_set_param(PAR_VELOD3,115);
  /* Fixed moderate faders retain mix headroom; max-level stress is separate. */
- for(int v=0;v<6;v++)lxr_set_fader(v,mode==4?1:.4f);
+ float fader=getenv("JB_FADER")?atof(getenv("JB_FADER")):(mode==4?1:.4f);
+ assert(fader>=0 && fader<=1);
+ for(int v=0;v<6;v++)lxr_set_fader(v,fader);
+#ifdef JB_MIXED_KIT
+ jb_liveBalance=getenv("JB_LIVE") && atoi(getenv("JB_LIVE"));
+#endif
 #ifdef TEST_METAL
  int count=argc>=7?atoi(argv[4]):6;
  assert(count>=0 && count<=6);
- for(int v=0;v<count;v++){jb_parameters[v][JB_MODE]=mode==4?3:mode;jb_parameters[v][JB_DECAY]=127;
+ unsigned mask=getenv("JB_MASK")?(unsigned)atoi(getenv("JB_MASK")):(1u<<count)-1;
+ for(int v=0;v<6;v++)if(mask&(1u<<v)){jb_parameters[v][JB_MODE]=mode==4?3:mode;jb_parameters[v][JB_DECAY]=127;
  if(argc>=7 && atoi(argv[6])) {jb_parameters[v][JB_CHARACTER]=110; jb_parameters[v][JB_AGGRESSION]=78;}
 }
 #endif
 #ifdef TEST_STEPFX
  int slot=argc>=7?atoi(argv[5]):(mode?15:0); assert(slot>=0 && slot<=15);
- if(slot) {stepfx_select(slot);for(int v=0;v<6;v++)stepfx_include(v,1);}
+ if(slot) {stepfx_select(slot);for(int v=0;v<6;v++)stepfx_include(v,!getenv("JB_FX_MASK") || (atoi(getenv("JB_FX_MASK"))&(1<<v)));}
 #endif
 #ifdef JB_EXTENDED_CONTROLS
  /* Exercise the actual external MIDI entry point used by controllers. */
  for(int arg=7;arg<argc;arg++) {
   int param,value; assert(sscanf(argv[arg],"%d=%d",&param,&value)==2);
   assert(param>=0 && param<JB_PARAMS && value>=0 && value<=jb_limit(param));
-  for(int v=0;v<count;v++){
+  for(int v=0;v<6;v++)if(mask&(1u<<v)){
    uint8_t messages[]={0xb0+v,99,96+v,0xb0+v,98,param,0xb0+v,6,value};
    lxr_midi_in(messages,sizeof(messages));uart_processMidi();
    assert(jb_parameters[v][param]==value);

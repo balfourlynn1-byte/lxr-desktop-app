@@ -25,6 +25,9 @@ void stepfx_audioBlock(void);
 /* Debugger telemetry measures rendering, not the complete ISR or MIDI load. */
 volatile uint32_t jb_audioMaxCycles, jb_audioLastCycles, jb_audioOverruns;
 volatile uint8_t jb_audioLoadPercent, jb_audioPeakPercent;
+#ifndef LXR_EMU
+static uint32_t renderBudgetCycles;
+#endif
 uint8_t soundengine_calcNextSampleBlock()
 {
 	if(bCurrentSampleValid!= SAMPLE_VALID)
@@ -42,7 +45,7 @@ uint8_t soundengine_calcNextSampleBlock()
         jb_audioLastCycles=DWT->CYCCNT-cycleStart;
         if(jb_audioLastCycles>jb_audioMaxCycles)jb_audioMaxCycles=jb_audioLastCycles;
         /* Audio render-only budget; no claim to include other ISR and MIDI work. */
-        const uint32_t budget=(uint32_t)((double)SystemCoreClock*OUTPUT_DMA_SIZE/REAL_FS);
+        const uint32_t budget=renderBudgetCycles;
         if(budget) {
             const uint32_t load=(uint32_t)(((uint64_t)jb_audioLastCycles*100u)/budget);
             jb_audioLoadPercent=(uint8_t)(load>255u?255u:load);
@@ -62,6 +65,8 @@ uint8_t soundengine_calcNextSampleBlock()
 void soundengine_init()
 {
 #ifndef LXR_EMU
+    /* MCLK enabled: 45.2 MHz I2S clock / (256 * 4) = 44140.625 Hz. */
+    renderBudgetCycles=(uint32_t)((uint64_t)SystemCoreClock*OUTPUT_DMA_SIZE*1024u/45200000u);
     CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
     DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
 #endif
