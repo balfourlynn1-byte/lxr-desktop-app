@@ -1,0 +1,12 @@
+{
+  "name": "Aggressive Metallic + Wavetable + Step FX",
+  "source": "67ac7fffd4bdd989deffcb5048c1237fe3ac1a44",
+  "pcm_sha256_intel_local": "8e2496f8cba3789a29e664b3f97416997fb9e4bc1184018daa725aca974f1123",
+  "seed": 123,
+  "mode": 3,
+  "voices": 6,
+  "stepfx_slot": 8,
+  "fader": 0.4,
+  "decay": 127,
+  "controls": {"1":64,"2":64,"24":0,"29":64,"20":0,"30":127,"28":127,"31":64}
+}

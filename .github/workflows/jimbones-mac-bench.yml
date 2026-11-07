@@ -1,7 +1,7 @@
 name: JIMBONES Intel Mac listening bench
 on:
   push:
-    branches: [jimbones-mac-bench-v1.7.99]
+    branches: [jimbones-v1.8.00]
   workflow_dispatch:
 permissions:
   contents: read
@@ -20,12 +20,16 @@ jobs:
         with:
           ref: d3e16f3d2f0d55b5cb1397aa6c76faf462f96422
           path: noclip-src
+      - uses: actions/checkout@v4
+        with:
+          ref: 67ac7fffd4bdd989deffcb5048c1237fe3ac1a44
+          path: reference-src
       - name: Production DSP and source regressions
         run: |
           mkdir -p build
           set -eo pipefail
           (bash tests/run_stepfx.sh && bash tests/run_host.sh && bash tests/run_audio_diagnostics.sh && bash tests/run_waveshaping.sh && python3 tests/test_combined_source_guards.py) | tee build/host.log
-      - run: bash tests/mac/build.sh original-src noclip-src packages
+      - run: bash tests/mac/build.sh original-src noclip-src packages reference-src
       - uses: actions/upload-artifact@v4
         with:
           name: JIMBONES-Mac-Test-Bench
@@ -48,3 +52,21 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y gcc-arm-none-eabi libnewlib-arm-none-eabi ninja-build
       - run: cmake --preset release && cmake --build --preset release -j2
       - run: arm-none-eabi-size build/release/LXR_V2_STM32F765.elf
+
+  publish:
+    needs: [intel, arm]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: packages
+          merge-multiple: true
+      - name: Publish Intel listening packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd packages
+          sha256sum *.zip > SHA256SUMS.txt
+          gh release create jimbones-v1.8.00 --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease --title "JIMBONES v1.8.00 Intel listening bench" --notes "Intel Mac app, matched production WAVs, CPU diagnostics and checksums. Desktop listening release. No hardware update image." *.zip SHA256SUMS.txt

@@ -3,6 +3,7 @@
 #include "Parameters.h"
 #include "buttonHandler.h"
 #include "Soundengine/MIDI/MidiParser.h"
+#include "Soundengine/MIDI/Uart.h"
 #include "menu/menu.h"
 #ifdef TEST_STEPFX
 #include "Soundengine/StepFX.h"
@@ -19,7 +20,7 @@
 #include <time.h>
 static void click(int b){lxr_button_click(b);lxr_idle_blocks(8);}
 int main(int argc,char **argv){
- assert(argc==4 || argc==7);int mode=atoi(argv[2]);assert(lxr_init(123,128)==0);lxr_set_jacks(3);lxr_idle_blocks(1600);
+ assert(argc==4 || argc>=7);int mode=atoi(argv[2]);assert(lxr_init(123,128)==0);lxr_set_jacks(3);lxr_idle_blocks(1600);
  if(!strcmp(argv[1],"ui")){
 #ifdef TEST_STEPFX
   click(BUT_MODE2);assert(jb_perfui_page()==0);click(BUT_MODE2);assert(jb_perfui_page()==1);click(BUT_MODE2);assert(menu_stepFxPageActive());
@@ -35,15 +36,27 @@ int main(int argc,char **argv){
  /* Fixed moderate faders retain mix headroom; max-level stress is separate. */
  for(int v=0;v<6;v++)lxr_set_fader(v,mode==4?1:.4f);
 #ifdef TEST_METAL
- int count=argc==7?atoi(argv[4]):6;
+ int count=argc>=7?atoi(argv[4]):6;
  assert(count>=0 && count<=6);
  for(int v=0;v<count;v++){jb_parameters[v][JB_MODE]=mode==4?3:mode;jb_parameters[v][JB_DECAY]=127;
- if(argc==7 && atoi(argv[6])) {jb_parameters[v][JB_CHARACTER]=110; jb_parameters[v][JB_AGGRESSION]=78;}
+ if(argc>=7 && atoi(argv[6])) {jb_parameters[v][JB_CHARACTER]=110; jb_parameters[v][JB_AGGRESSION]=78;}
 }
 #endif
 #ifdef TEST_STEPFX
- int slot=argc==7?atoi(argv[5]):(mode?15:0); assert(slot>=0 && slot<=15);
+ int slot=argc>=7?atoi(argv[5]):(mode?15:0); assert(slot>=0 && slot<=15);
  if(slot) {stepfx_select(slot);for(int v=0;v<6;v++)stepfx_include(v,1);}
+#endif
+#ifdef JB_EXTENDED_CONTROLS
+ /* Exercise the actual external MIDI entry point used by controllers. */
+ for(int arg=7;arg<argc;arg++) {
+  int param,value; assert(sscanf(argv[arg],"%d=%d",&param,&value)==2);
+  assert(param>=0 && param<JB_PARAMS && value>=0 && value<=jb_limit(param));
+  for(int v=0;v<count;v++){
+   uint8_t messages[]={0xb0+v,99,96+v,0xb0+v,98,param,0xb0+v,6,value};
+   lxr_midi_in(messages,sizeof(messages));uart_processMidi();
+   assert(jb_parameters[v][param]==value);
+  }
+ }
 #endif
  lxr_idle_blocks(16);FILE *events=fopen(argv[1],"r"),*out=fopen(argv[3],"wb");assert(events&&out);
  unsigned at=0,status=0,note=0,vel=0;int have=fscanf(events,"%u %u %u %u",&at,&status,&note,&vel)==4;
