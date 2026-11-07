@@ -4,6 +4,7 @@
 #include "stm32f7xx_hal.h"
 #endif
 volatile uint32_t jb_audioNearRailHits, jb_dmaPendingCount, jb_averageLoad;
+volatile uint32_t jb_layerPeakCycles[6];
 static uint32_t averageQ8;
 static unsigned hasAverage;
 void jb_audioLoadSample(uint32_t load) {
@@ -35,6 +36,7 @@ void jb_audioDiagReset(void) {
     const uint32_t saved=__get_PRIMASK();
     __disable_irq();
 #endif
+    for(unsigned v=0;v<6;v++) jb_layerPeakCycles[v]=0;
     hasAverage=0;
     jb_averageLoad=0;
     jb_dmaPendingCount=0;

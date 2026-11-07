@@ -1523,7 +1523,7 @@ static const char *const jb_short[JB_PARAMS]={
  "Mod","FML","WTL","Dec", "Met","Noi","Agg","Tex",
  "vMt","vNo","vAg","vTx", "Pit","Rat","Dep","Fbk",
  "Det","Nvl","Col","Trn", "Drv","PSh","Bit","Vel",
- "Pos","Mov","Rnd","PEn"};
+ "Pos","Mov","Rnd","PEn", "Mix","Shp","FxA","vMx"};
 static const char *const jb_long[JB_PARAMS]={
  "Layer mode","Metal level","Wave level","Amp decay",
  "METAL","NOISE","AGGRESSION","TEXTURE",
@@ -1531,7 +1531,8 @@ static const char *const jb_long[JB_PARAMS]={
  "Carrier pitch","FM ratio","FM depth","FM feedback",
  "Detune","Noise level","Noise colour","Transient length",
  "Drive","Phase Shape/Sat","Bit reduction","Velocity sens",
- "Wave position","Wave movement","Randomisation","Pitch envelope"};
+ "Wave position","Wave movement","Randomisation","Pitch envelope",
+ "Layer blend","WaveShape amount","Step FX amount","Velocity > Blend"};
 static uint8_t jb_uiActive(void) { return jb_screen && menu_activePage<7; }
 static uint8_t jb_uiVoice(void) { uint8_t v=menu_getActiveVoice(); return v>5?5:v; }
 static void jb_uiAdjust(unsigned p,int diff) {
@@ -1547,7 +1548,7 @@ static void jb_uiPaint(void) {
   unsigned n=strlen(label); if(n>16) n=16;
   memcpy(editDisplayBuffer[0],label,n);
   char b[17]; int value=jb_parameters[voice][jb_selected];
-  if(jb_selected>=JB_VMETAL && jb_selected<=JB_VTEXTURE) value-=64;
+  if((jb_selected>=JB_VMETAL && jb_selected<=JB_VTEXTURE) || jb_selected==JB_VBLEND) value-=64;
   if(jb_selected==JB_MODE) {
    static const char *const modes[]={"Original","Orig + Metal","Orig + Wave","Orig + Both"};
    snprintf(b,sizeof(b),"%s",modes[value]);
@@ -1559,7 +1560,7 @@ static void jb_uiPaint(void) {
    unsigned par=base+col; char b[5];
    memcpy(&editDisplayBuffer[0][col*4],jb_short[par],3);
    int value=jb_parameters[voice][par];
-   if(par>=JB_VMETAL && par<=JB_VTEXTURE) value-=64;
+   if((par>=JB_VMETAL && par<=JB_VTEXTURE) || par==JB_VBLEND) value-=64;
    snprintf(b,sizeof(b),"%3d",value);
    memcpy(&editDisplayBuffer[1][col*4],b,3);
    if(par==jb_selected) editDisplayBuffer[0][col*4+3]='<';
@@ -1616,13 +1617,17 @@ static void jb_cpuPaint(void) {
                  (unsigned)jb_audioLoadPercent,(unsigned)jb_audioPeakPercent);
         snprintf(bottom,sizeof(bottom),"LATE%3u RAIL%4u",
                  jb_cap(jb_audioOverruns,999u),jb_cap(jb_audioNearRailHits,9999u));
-    } else {
+    } else if(jb_cpuDetails==1) {
         snprintf(top,sizeof(top),"AVG%3u%% DMA%4u",
                  jb_cap(jb_averageLoad,255u),
                  jb_cap(jb_dmaPendingCount,9999u));
         snprintf(bottom,sizeof(bottom),"KNEE%4u RAIL%3u",
                  jb_cap(jb_layerSaturationHits,9999u),
                  jb_cap(jb_audioNearRailHits,999u));
+    } else {
+        unsigned voice=jb_cpuDetails-2;
+        snprintf(top,sizeof(top),"V%u LAYER PEAK",voice+1);
+        snprintf(bottom,sizeof(bottom),"%lu cycles",(unsigned long)jb_layerPeakCycles[voice]);
     }
     memcpy(editDisplayBuffer[0],top,strlen(top));
     memcpy(editDisplayBuffer[1],bottom,strlen(bottom));
@@ -2876,7 +2881,7 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
 	screensaver_touch();
  if(menu_cpuPageActive()) {
   editModeActive=0;
-  if(inc) jb_cpuDetails=(uint8_t)!jb_cpuDetails;
+  if(inc) jb_cpuDetails=(uint8_t)((jb_cpuDetails+(inc>0?1:7))%8);
   if(btnClicked) jb_audioDiagReset();
   menu_repaintAll(); return;
  }

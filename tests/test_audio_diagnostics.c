@@ -22,7 +22,9 @@ int main(void) {
  jb_audioLoadSample(128); assert(jb_averageLoad==128);
  for(int i=0;i<200;i++) jb_audioLoadSample(64);
  assert(jb_averageLoad>=64 && jb_averageLoad<=68);
+ for(unsigned v=0;v<6;v++) jb_layerPeakCycles[v]=900+v;
  jb_dmaPendingCount=3; jb_audioDiagReset();
+ for(unsigned v=0;v<6;v++) assert(!jb_layerPeakCycles[v]);
  assert(!jb_dmaPendingCount && !jb_averageLoad);
  assert(jb_audioLastCycles==101000 && jb_audioLoadPercent==51);
  assert(jb_audioMaxCycles==0 && jb_audioPeakPercent==0);

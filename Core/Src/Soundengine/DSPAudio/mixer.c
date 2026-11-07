@@ -548,6 +548,18 @@ IN_ITCM_RAM static inline void mixer_addDataToOutput(uint8_t dest, const float p
 }
 //#pragma GCC pop_options
 //-----------------------------------------------------------------------
+static void renderLayer(unsigned voice,int16_t *samples,float voiceGain) {
+ float fader=adc_getFaderVolume(voice);
+#ifndef LXR_EMU
+ uint32_t start=DWT->CYCCNT;
+#endif
+ jb_render(voice,samples,OUTPUT_DMA_SIZE,voiceGain*fader*(voice==5?hatVoice.egValueOscVol:1.f));
+ jb_stageVoice(voice,samples,OUTPUT_DMA_SIZE,fader);
+#ifndef LXR_EMU
+ uint32_t elapsed=DWT->CYCCNT-start;
+ if(elapsed>jb_layerPeakCycles[voice]) jb_layerPeakCycles[voice]=elapsed;
+#endif
+}
 IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 {
 
@@ -603,7 +615,7 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 
 	//calc voice 1
 	calcDrumVoiceSyncBlock(0, sampleData,OUTPUT_DMA_SIZE);
-	jb_render(0, sampleData, OUTPUT_DMA_SIZE, voiceArray[0].vol * adc_getFaderVolume(0));
+	renderLayer(0, sampleData, voiceArray[0].vol);
 	//decimate voice
 	mixer_decimateBlock(0,sampleData);
 	//copy to selected dma buffer
@@ -629,7 +641,7 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 
 	//calc voice 2
 	calcDrumVoiceSyncBlock(1, sampleData,OUTPUT_DMA_SIZE);
-	jb_render(1, sampleData, OUTPUT_DMA_SIZE, voiceArray[1].vol * adc_getFaderVolume(1));
+	renderLayer(1, sampleData, voiceArray[1].vol);
 	//decimate voice
 	mixer_decimateBlock(1,sampleData);
 	//copy to selected dma buffer
@@ -650,7 +662,7 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 #endif
 	//calc voice 3
 	calcDrumVoiceSyncBlock(2, sampleData,OUTPUT_DMA_SIZE);
-	jb_render(2, sampleData, OUTPUT_DMA_SIZE, voiceArray[2].vol * adc_getFaderVolume(2));
+	renderLayer(2, sampleData, voiceArray[2].vol);
 	//decimate voice
 	mixer_decimateBlock(2,sampleData);
 	//copy to selected dma buffer
@@ -670,7 +682,7 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 #endif
 	//calc snare
 	Snare_calcSyncBlock(sampleData,OUTPUT_DMA_SIZE);
-	jb_render(3, sampleData, OUTPUT_DMA_SIZE, snareVoice.vol * adc_getFaderVolume(3));
+	renderLayer(3, sampleData, snareVoice.vol);
 	//decimate voice
 	mixer_decimateBlock(3,sampleData);
 	//copy to selected dma buffer
@@ -686,7 +698,7 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 #endif
 	//calc cymbal
 	Cymbal_calcSyncBlock(sampleData,OUTPUT_DMA_SIZE);
-	jb_render(4, sampleData, OUTPUT_DMA_SIZE, cymbalVoice.vol * adc_getFaderVolume(4));
+	renderLayer(4, sampleData, cymbalVoice.vol);
 	//decimate voice
 	mixer_decimateBlock(4,sampleData);
 	//copy to selected dma buffer
@@ -703,7 +715,7 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 
 	//calc HiHat
 	HiHat_calcSyncBlock(sampleData,OUTPUT_DMA_SIZE);
-	jb_render(5, sampleData, OUTPUT_DMA_SIZE, hatVoice.vol * adc_getFaderVolume(5) * hatVoice.egValueOscVol);
+	renderLayer(5, sampleData, hatVoice.vol);
 	//decimate voice
 	mixer_decimateBlock(5,sampleData);
 	//copy to selected dma buffer

@@ -12,6 +12,7 @@ typedef struct {
  float decay, transientDecay, velocity, random, last, tail;
  uint32_t rng;
  uint8_t table, restart;
+ float hitVelocity;
 } Layer;
 static Layer layers[JB_VOICES];
 volatile uint32_t jb_layerSaturationHits;
@@ -74,7 +75,7 @@ void jb_adjust(unsigned v, unsigned p, int delta) {
 }
 void jb_defaults(uint8_t *kit) {
  static const uint8_t defaults[JB_PARAMS]={0,64,64,48, 32,0,0,0, 64,64,64,64,
- 48,24,32,0, 64,0,64,20, 0,0,0,127, 0,0,0,64};
+ 48,24,32,0, 64,0,64,20, 0,0,0,127, 0,0,0,64, 127,64,127,64};
  for(unsigned v=0;v<JB_VOICES;v++) memcpy(kit+v*JB_PARAMS,defaults,JB_PARAMS);
 }
 void jb_silence(void) { uint32_t m=lock(); memset(layers,0,sizeof(layers)); unlock(m); }
@@ -93,6 +94,7 @@ void jb_trigger(uint8_t v,uint8_t velocity,uint8_t note,uint8_t open) {
  s->rng=seed; s->restart=1;
  s->carrier=s->modulator=s->wave=.25f;
  float vel=unit(velocity>127?127:velocity);
+ s->hitVelocity=vel;
  s->metal=clamp(unit(p[JB_METAL])+(p[JB_VMETAL]-64)/63.f*vel,0,1);
  s->noise=clamp(unit(p[JB_NOISE])+(p[JB_VNOISE]-64)/63.f*vel,0,1);
  s->aggression=clamp(unit(p[JB_AGGRESSION])+(p[JB_VAGGRESSION]-64)/63.f*vel,0,1);
@@ -114,12 +116,35 @@ void jb_trigger(uint8_t v,uint8_t velocity,uint8_t note,uint8_t open) {
  /* Expensive coefficient math runs with interrupts enabled. Publish one bounded state. */
  uint32_t m=lock(); next.last=layers[v].last; layers[v]=next; unlock(m);
 }
+static float blend(unsigned v) {
+ const uint8_t *p=jb_parameters[v];
+ float depth=(p[JB_VBLEND]-64)/64.f;
+ float velocity=layers[v].hitVelocity;
+ return unit(p[JB_BLEND])*(1.f-(depth>=0?depth*(1.f-velocity):-depth*velocity));
+}
+static float activeLevel(const uint8_t *p) {
+ return fmaxf((p[JB_MODE]&1)?unit(p[JB_METAL_LEVEL]):0,
+              (p[JB_MODE]&2)?unit(p[JB_WAVE_LEVEL]):0);
+}
+/* Fixed fader law before summing. Depends on control positions only. */
+void jb_stageVoice(uint8_t v,int16_t *samples,unsigned size,float fader) {
+ if(fader<=.161f || !jb_parameters[v][JB_MODE]) return;
+ float active=fminf(1.f,activeLevel(jb_parameters[v])*2)*unit(jb_parameters[v][JB_BLEND]);
+ if(!active) return;
+ float staged=.161f+.04f*(fader-.161f);
+ float trim=1.f-active*(1.f-staged/fader);
+ for(unsigned i=0;i<size;i++) samples[i]=(int16_t)(samples[i]*trim);
+}
 void jb_render(uint8_t v,int16_t *buffer,unsigned size,float gain) {
  if(v>=JB_VOICES) return;
  Layer *s=&layers[v]; const uint8_t *p=jb_parameters[v];
  if(!p[JB_MODE]) { s->envelope=0; s->tail=0; s->last=0; return; } // bit-exact buffer bypass
  float fmGain=(p[JB_MODE]&1)?unit(p[JB_METAL_LEVEL]):0;
  float wtGain=(p[JB_MODE]&2)?unit(p[JB_WAVE_LEVEL]):0;
+ float mix=blend(v);
+ if((fmGain==0 && wtGain==0) || mix==0) { s->last=s->tail=s->envelope=0; return; }
+ float shape=fminf(1.f,p[JB_SHAPE]/64.f);
+ float extraShape=fmaxf(0.f,(p[JB_SHAPE]-64)/63.f);
  float drive=1+unit(p[JB_DRIVE])*12+s->aggression*15;
  float crush=1+(unsigned)(unit(p[JB_BITS])*11+s->aggression*3);
  float steps=(float)(1u<<(unsigned)clamp(16-crush,2,15));
@@ -161,8 +186,8 @@ void jb_render(uint8_t v,int16_t *buffer,unsigned size,float gain) {
     * increases phase asymmetry even when the overdrive is disabled.
     * Texture adds bipolar movement synchronized to the internal motion. */
    const float warp=clamp(character*.82f+s->texture*.15f*movement,-.88f,.88f);
-   float shaped=wave(jb_phaseWarp(s->wave,warp),scan,s->table);
-   const float foldDepth=s->aggression;
+   float shaped=wave(jb_phaseWarp(s->wave,warp*shape+(.88f-warp)*extraShape),scan,s->table);
+   const float foldDepth=s->aggression*shape+(1.f-s->aggression)*extraShape;
    if(foldDepth>0.f) {
     const float fold=jb_waveFold(shaped,1.f+foldDepth*5.5f);
     shaped+=(fold-shaped)*(foldDepth*.95f);
@@ -185,7 +210,7 @@ void jb_render(uint8_t v,int16_t *buffer,unsigned size,float gain) {
   s->envelope*=s->decay; s->transient*=s->transientDecay;
   /* Spend the headroom on the side of the dry waveform the layer moves
      toward. A silent layer therefore preserves even full-scale dry audio. */
-  float added=out*gain*15500.f;
+  float added=out*gain*15500.f*mix;
   float mag=fabsf(added);
   if(mag>24000.f) {
    ++jb_layerSaturationHits;
@@ -207,7 +232,7 @@ void jb_preFilterNoise(uint8_t v,int16_t *buffer,unsigned size) {
  if(!p[JB_MODE]) return;
  Layer *s=&layers[v];
  if(s->envelope<.00003f) return;
- float level=fmaxf(unit(p[JB_NOISE_LEVEL]),s->noise);
+ float level=fmaxf(unit(p[JB_NOISE_LEVEL]),s->noise)*fminf(1.f,2.f*activeLevel(p))*blend(v);
  if(level<=0.f) return;
  const float colour=clamp(unit(p[JB_COLOUR]),0.f,1.f);
  const float smooth=.015f+.38f*colour;

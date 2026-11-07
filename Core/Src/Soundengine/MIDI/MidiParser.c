@@ -20,6 +20,8 @@
 #include "Soundengine/config.h"
 #include "Soundengine/DSPAudio/HiHat.h"
 #include "Soundengine/StepFX.h"
+#include "Soundengine/DSPAudio/Jimbones.h"
+#include "Preset/PresetManager.h"
 #include "Soundengine/DSPAudio/CymbalVoice.h"
 #include "Soundengine/MIDI/Uart.h"
 #include "Soundengine/Sequencer/sequencer.h"
@@ -33,6 +35,23 @@
 
 #include "Soundengine/MIDI/MidiMessages.h"
 
+/* Reserved high banks select the destination voice explicitly on shared channels. */
+static uint8_t jbBank[16], jbIndex[16];
+static int jb_control(unsigned ch,unsigned cc,unsigned value) {
+ if(cc==99) { jbBank[ch]=value; jbIndex[ch]=127; return value>=96 && value<102; }
+ if(cc==100 || cc==101) { jbBank[ch]=0; return 0; }
+ unsigned bank=jbBank[ch];
+ if(bank<96 || bank>=102) return 0;
+ if(cc==98) { jbIndex[ch]=value; return 1; }
+ if(cc!=6) return 0;
+ unsigned v=bank-96,p=jbIndex[ch];
+ if(p<JB_PARAMS && (ch==midi_MidiChannels[7] || ch==midi_MidiChannels[v] ||
+     (v==5 && ch==midi_MidiChannels[6]))) {
+  jb_parameters[v][p]=value>jb_limit(p)?jb_limit(p):value;
+  preset_touchTimer(PRESET_KIT_TIMER);
+ }
+ return 1;
+}
 static uint16_t midiParser_activeNrpnNumber = 0;
 
 uint8_t midiParser_originalCcValues[0xff];
@@ -1879,6 +1898,7 @@ void midiParser_parseMidiMessage(MidiMsg msg)
 		} else if(msgonly==MIDI_CC){
 
 
+			if((midiParser_txRxFilter & MIDI_FILTER_CC) && jb_control(chanonly,msg.data1,msg.data2)) return;
 			uint8_t voiceNr = midiParser_cc2voiceNr(msg.data1);
 
 			if(voiceNr==0 || voiceNr >= 7) //any set midi channel

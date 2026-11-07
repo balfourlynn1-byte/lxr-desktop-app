@@ -8,6 +8,7 @@ extern volatile uint8_t jb_audioLoadPercent, jb_audioPeakPercent;
 extern volatile uint32_t jb_audioNearRailHits;
 extern volatile uint32_t jb_layerSaturationHits;
 extern volatile uint32_t jb_dmaPendingCount, jb_averageLoad;
+extern volatile uint32_t jb_layerPeakCycles[6];
 void jb_audioLoadSample(uint32_t load);
 void jb_audioDiagScan(const int16_t *out1,const int16_t *out2,unsigned frames);
 void jb_audioDiagReset(void);

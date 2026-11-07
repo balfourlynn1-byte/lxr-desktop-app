@@ -10,10 +10,13 @@ enum { JB_MODE, JB_METAL_LEVEL, JB_WAVE_LEVEL, JB_DECAY,
  JB_PITCH, JB_RATIO, JB_DEPTH, JB_FEEDBACK,
  JB_DETUNE, JB_NOISE_LEVEL, JB_COLOUR, JB_TRANSIENT,
  JB_DRIVE, JB_CHARACTER, JB_BITS, JB_VELOCITY,
- JB_POSITION, JB_MOVEMENT, JB_RANDOM, JB_PITCH_ENV, JB_PARAMS };
+ JB_POSITION, JB_MOVEMENT, JB_RANDOM, JB_PITCH_ENV,
+ JB_BLEND, JB_SHAPE, JB_FX_AMOUNT, JB_VBLEND, JB_PARAMS };
+#define JB_EXTENDED_CONTROLS 1
 #define JB_VOICES 6
 #define JB_KIT_BYTES (JB_VOICES * JB_PARAMS)
 extern uint8_t jb_parameters[JB_VOICES][JB_PARAMS];
+void jb_stageVoice(uint8_t voice,int16_t *samples,unsigned size,float fader);
 void jb_defaults(uint8_t *kit);
 void jb_init(void);
 void jb_loadKit(const uint8_t *kit);

@@ -23,6 +23,16 @@ static void storage(void) {
   assert(!jb_unpack(dst,rec,i)); assert(!memcmp(dst,def,sizeof(dst)));
   memcpy(bad,rec,sizeof(rec)); bad[i]^=1; assert(!jb_unpack(dst,bad,sizeof(bad))); assert(!memcmp(dst,def,sizeof(dst)));
  }
+ uint8_t legacy[180]={'J','B','9','1',1,6,28,0};
+ for(unsigned v=0;v<6;v++) memcpy(legacy+8+28*v,src+v*JB_PARAMS,28);
+ uint32_t hash=2166136261u;
+ for(unsigned i=0;i<176;i++) hash=(hash^legacy[i])*16777619u;
+ for(unsigned i=0;i<4;i++) legacy[176+i]=hash>>(8*i);
+ assert(jb_unpack(dst,legacy,sizeof(legacy)));
+ for(unsigned v=0;v<6;v++){
+  assert(!memcmp(dst+v*JB_PARAMS,src+v*JB_PARAMS,28));
+  assert(!memcmp(dst+v*JB_PARAMS+28,def+v*JB_PARAMS+28,4));
+ }
  src[JB_MODE]=127; jb_pack(rec,src); assert(!jb_unpack(dst,rec,sizeof(rec)));
  puts("PASS kit roundtrip; every truncation and single-byte corruption defaults OFF; invalid ranges rejected");
 }
