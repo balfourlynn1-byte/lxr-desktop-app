@@ -19,7 +19,7 @@
 #include <time.h>
 static void click(int b){lxr_button_click(b);lxr_idle_blocks(8);}
 int main(int argc,char **argv){
- assert(argc==4);int mode=atoi(argv[2]);assert(lxr_init(123,128)==0);lxr_set_jacks(3);lxr_idle_blocks(1600);
+ assert(argc==4 || argc==7);int mode=atoi(argv[2]);assert(lxr_init(123,128)==0);lxr_set_jacks(3);lxr_idle_blocks(1600);
  if(!strcmp(argv[1],"ui")){
 #ifdef TEST_STEPFX
   click(BUT_MODE2);assert(jb_perfui_page()==0);click(BUT_MODE2);assert(jb_perfui_page()==1);click(BUT_MODE2);assert(menu_stepFxPageActive());
@@ -35,18 +35,32 @@ int main(int argc,char **argv){
  /* Fixed moderate faders retain mix headroom; max-level stress is separate. */
  for(int v=0;v<6;v++)lxr_set_fader(v,mode==4?1:.4f);
 #ifdef TEST_METAL
- for(int v=0;v<6;v++){jb_parameters[v][JB_MODE]=mode==4?3:mode;jb_parameters[v][JB_DECAY]=127;}
+ int count=argc==7?atoi(argv[4]):6;
+ assert(count>=0 && count<=6);
+ for(int v=0;v<count;v++){jb_parameters[v][JB_MODE]=mode==4?3:mode;jb_parameters[v][JB_DECAY]=127;
+ if(argc==7 && atoi(argv[6])) {jb_parameters[v][JB_CHARACTER]=110; jb_parameters[v][JB_AGGRESSION]=78;}
+}
 #endif
 #ifdef TEST_STEPFX
- if(mode) {stepfx_select(15);for(int v=0;v<6;v++)stepfx_include(v,1);}
+ int slot=argc==7?atoi(argv[5]):(mode?15:0); assert(slot>=0 && slot<=15);
+ if(slot) {stepfx_select(slot);for(int v=0;v<6;v++)stepfx_include(v,1);}
 #endif
  lxr_idle_blocks(16);FILE *events=fopen(argv[1],"r"),*out=fopen(argv[3],"wb");assert(events&&out);
  unsigned at=0,status=0,note=0,vel=0;int have=fscanf(events,"%u %u %u %u",&at,&status,&note,&vel)==4;
  unsigned total=44140*12,rendered=0;clock_t start=clock();
+ struct timespec before,after; double peakUs=0,sumUs=0; unsigned blocks=0;
  while(rendered<total){
   while(have&&at==rendered){uint8_t msg[]={status,note,vel};lxr_midi_in(msg,3);have=fscanf(events,"%u %u %u %u",&at,&status,&note,&vel)==4;}
   unsigned n=total-rendered;if(n>64)n=64;if(have&&at>rendered&&at-rendered<n)n=at-rendered;
-  int16_t samples[128];assert(lxr_render_i16(samples,n,2)==(int)n);fwrite(samples,2,n*2,out);rendered+=n;
+  int16_t samples[128];clock_gettime(CLOCK_MONOTONIC,&before);assert(lxr_render_i16(samples,n,2)==(int)n);
+  clock_gettime(CLOCK_MONOTONIC,&after);
+  if(n==64) {
+   double us=(after.tv_sec-before.tv_sec)*1e6+(after.tv_nsec-before.tv_nsec)/1e3;
+   if(us>peakUs)peakUs=us;
+   sumUs+=us; blocks++;
+  }
+  fwrite(samples,2,n*2,out);rendered+=n;
  }
+ printf("Host 64-frame calls %u mean_us %.3f peak_us %.3f\n",blocks,sumUs/blocks,peakUs);
  fclose(out);fclose(events);printf("Rendered %u frames, desktop CPU %.3fs (not ARM timing)\n",rendered,(double)(clock()-start)/CLOCKS_PER_SEC);return 0;
 }

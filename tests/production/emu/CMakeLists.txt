@@ -113,7 +113,9 @@ set(FW_SOURCES
     FATFS/App/fatfs.c
 )
 list(TRANSFORM FW_SOURCES PREPEND ${FW}/)
-list(APPEND FW_SOURCES ${FW}/Core/Src/Soundengine/DSPAudio/RetriggerSmoother.c)
+if(EXISTS ${FW}/Core/Src/Soundengine/DSPAudio/RetriggerSmoother.c)
+ list(APPEND FW_SOURCES ${FW}/Core/Src/Soundengine/DSPAudio/RetriggerSmoother.c)
+endif()
 if(EXISTS ${FW}/Core/Src/Soundengine/AudioDiagnostics.c)
  list(APPEND FW_SOURCES ${FW}/Core/Src/Soundengine/AudioDiagnostics.c)
 endif()
