@@ -56,6 +56,10 @@ void stepfx_send_set_enabled(uint8_t enabled) {
     __atomic_store_n(&send_enabled, (uint8_t)(enabled != 0), __ATOMIC_RELAXED);
 }
 
+uint8_t stepfx_send_is_enabled(void) {
+    return __atomic_load_n(&send_enabled, __ATOMIC_RELAXED);
+}
+
 void stepfx_send_set_mask(uint8_t mask) {
     __atomic_store_n(&send_mask, (uint8_t)(mask & 0x3fu), __ATOMIC_RELAXED);
 }

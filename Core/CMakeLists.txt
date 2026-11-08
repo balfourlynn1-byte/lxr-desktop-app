@@ -116,6 +116,7 @@ add_library(lxr_engine OBJECT
     Src/Soundengine/StepFXRuntime.c
     Src/Soundengine/StepFxSend.c
     Src/Soundengine/StepFxSendMix.c
+    Src/Soundengine/DubDelaySync.c
     Src/Soundengine/TriggerOut.c
 )
 

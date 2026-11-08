@@ -12,6 +12,7 @@
 #include "menu/JimbonesPerfUI.h"
 #include "Soundengine/StepFX.h"
 #include "Soundengine/StepFxSend.h"
+#include "Soundengine/DubDelaySync.h"
 #include "Soundengine/AudioDiagnostics.h"
 #include "Soundengine/DSPAudio/Jimbones.h"
 #include <string.h>
@@ -1588,13 +1589,20 @@ static void jb_stepfxPaint(void)
     char top[17], bottom[17];
     memset(editDisplayBuffer, ' ', sizeof(editDisplayBuffer));
     const uint8_t active=(uint8_t)(jb_perfui_active()==index);
-    snprintf(top,sizeof(top),"FX%02u%c%.6s %2u%%", index+1u,active?'*':' ',name,jb_audioLoadPercent);
     if(index==0u) {
-        snprintf(bottom,sizeof(bottom),"1/%u V%u%c %3u %s",
+        /* FX01 DUB SEND: echo time is a separate tempo subdivision from
+         * the short sample gate. LONG / SHORT / CLK / NOFX never silently
+         * masquerade as a valid synced delay time. */
+        snprintf(top,sizeof(top),"DUB%c %-4s %s",
+                 active?'*':' ',dub_delay_division_name(),
+                 dub_delay_status_name());
+        snprintf(bottom,sizeof(bottom),"G1/%u V%u%c %03u",
                  stepfx_send_division(),jb_fxVoice+1u,
                  (stepfx_send_mask() & (1u<<jb_fxVoice))?'+':'-',
-                 stepfx_send_level(jb_fxVoice),active?"ON":"--");
+                 stepfx_send_level(jb_fxVoice));
     } else {
+        snprintf(top,sizeof(top),"FX%02u%c%.6s %2u%%",
+                 index+1u,active?'*':' ',name,jb_audioLoadPercent);
         snprintf(bottom,sizeof(bottom),"1/%u V%u%c %3u%% %s",
                  stepfx_divisor(),jb_fxVoice+1u,
                  (stepfx_mask() & (1u<<jb_fxVoice))?'+':'-',
@@ -4133,7 +4141,12 @@ uint8_t menu_parseKnobValue(uint8_t potNr, int16_t diff)
    int i=(int)jb_perfui_selected()+(diff>0?1:-1);
    jb_perfui_focus((uint8_t)(i<0?0:(i>15?15:i)));
   } else if(jb_perfui_selected()==0u) {
-   if(potNr==1)stepfx_send_adjust_division(diff);
+   if(potNr==1){
+    /* SHIFT + second knob changes the echo interval; unshifted edits
+     * the short snippet gate. No extra DSP allocation. */
+    if(buttonHandler_getShift())dub_delay_adjust_division(diff);
+    else stepfx_send_adjust_division(diff);
+   }
    else if(potNr==2 && diff) {
     int level=(int)stepfx_send_level(jb_fxVoice)+diff;
     stepfx_send_set_level(jb_fxVoice,(uint8_t)(level<0?0:(level>127?127:level)));

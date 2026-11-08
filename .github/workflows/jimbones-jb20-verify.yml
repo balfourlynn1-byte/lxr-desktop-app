@@ -1,0 +1,47 @@
+name: JB-20 Tempo Dub Delay Verification
+on:
+  push:
+    branches:
+      - agents/jb-20-dub-delay-sync-v184
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  host:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Timing and tail lifecycle host tests (GCC)
+        run: sh tests/run_dub_delay_sync.sh
+      - name: Standalone FX send and UI regressions
+        run: |
+          sh tests/run_stepfx_send.sh
+          sh tests/run_stepfx_send_mix.sh
+          sh tests/run_stepfx_ui.sh
+          python3 tests/test_dub_delay_source.py
+      - name: Full host regression (Clang)
+        env:
+          CC: clang
+        run: sh tests/run_host.sh
+  arm-build:
+    needs: host
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ARM compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build python3 gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
+      - name: Experimental source revision
+        run: |
+          echo "JB-20 EXPERIMENTAL -- DO NOT FLASH"
+          git rev-parse HEAD
+      - name: ARM compile, no firmware publication
+        run: |
+          cmake --preset release
+          cmake --build --preset release --parallel 2
+      - name: ELF sections
+        run: |
+          find build/release -type f -name '*.elf' -exec arm-none-eabi-size {} \;

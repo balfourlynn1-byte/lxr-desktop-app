@@ -14,6 +14,7 @@
 
 
 #include "Soundengine/FxBus.h"
+#include "Soundengine/DubDelaySync.h"
 #include "Soundengine/DSPAudio/BufferTools.h"
 #include "Soundengine/DSPAudio/mixer.h"
 INDTCMZ FxBus fxBus;
@@ -30,6 +31,7 @@ void FxBus_init()
 	Ringmod_init(&fxBus.ringmod);
 	Compressor_init(&fxBus.compressor);
 	Delay_init(&fxBus.delay);
+	dub_delay_init();
 
 
 
@@ -44,6 +46,8 @@ IN_ITCM_RAM void FxBus_process(int16_t *fxBuffer, int16_t* outL,int16_t* outR,in
 	int16_t* out2 = NULL;
 	// < MIXER_ROUTING_DAC1_L -> stereo 1 or 2
 	const uint8_t channels = fxBus.audioRouting < MIXER_ROUTING_DAC1_L ? 2 : 1;
+	/* One shared check, not duplicated inside mono/pingpong branches. */
+	const float delayWet = dub_delay_wet_only()?1.f:fxBus.dryWet;
 	switch(fxBus.audioRouting)
 	{
 	default:
@@ -117,11 +121,13 @@ IN_ITCM_RAM void FxBus_process(int16_t *fxBuffer, int16_t* outL,int16_t* outR,in
 	case FX_DELAY:
 		if(fxBus.delay.delayType == DELAY_NORMAL)
 		{
-			Delay_process(&fxBus.delay, fxBuffer, out, out2, size, channels, fxBus.dryWet);
+			Delay_process(&fxBus.delay, fxBuffer, out, out2, size, channels,
+			             dub_delay_wet_only()?1.f:fxBus.dryWet);
 		}
 		else
 		{
-			Delay_processPingPong(&fxBus.delay, fxBuffer, out, out2, size, channels, fxBus.dryWet);
+			Delay_processPingPong(&fxBus.delay, fxBuffer, out, out2, size, channels,
+			                     dub_delay_wet_only()?1.f:fxBus.dryWet);
 		}
 		break;
 #if USE_REVERB
@@ -173,6 +179,7 @@ IN_ITCM_RAM void FxBus_updateParameter()
 		Delay_setDelayTime(&fxBus.delay, fxBus.parameter[0]);
 		Delay_setFilter(&fxBus.delay, fxBus.parameter[2]);
 		Delay_setFeedback(&fxBus.delay, fxBus.parameter[3]);
+		dub_delay_mark_dirty();
 
 		break;
 #if USE_REVERB
