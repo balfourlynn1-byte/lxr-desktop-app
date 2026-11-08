@@ -1,65 +1,50 @@
-# START_HERE — JIMBONES Codex single-job packet
+# CODEX START — JB-28A (single execution contract)
 
-**One task only: JB-28A.** Do not spend this run researching the whole JIMBONES roadmap. Read this page, then the donor Comb design and only the files below. If a detail conflicts, prefer current code and test evidence; ask rather than inventing a mapping.
+**Read this file + `docs/CODEX_CHECKPOINT_JB28A.md` only.** For exact external references use `docs/CODEX_SOURCE_REGISTER.md`; open `docs/CODEX_COMPREHENSIVE_HANDOVER.md` **only for a specific unresolved question**. Do not scan the whole repository, read all docs, or start queued jobs.
 
-## Mandatory remote checkpointing — FIRST ACTION, then every milestone
+## Goal
+Transplant **Comb only** from [PR #15](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/15), pinned donor `cb27f684a108a3fe257ac4e4dfe437a041fbe40b`, into `agents/jb-28-full-integration-v186` (JB-26/#17 lineage). Do **not** merge the donor branch wholesale. Output one draft PR targeting `agents/jb-26-skull-screensaver-v185`; produce **v1.8.07 HARDWARE_UNVERIFIED** image only if all gates pass. Never merge, flash, or overwrite known-good v1.8.04.
 
-**Before researching anything:** read [persistence protocol](CODEX_PERSISTENCE_PROTOCOL.md), [active queue](JIMBONES_WORK_QUEUE.md) and [JB-28A checkpoint](CODEX_CHECKPOINT_JB28A.md). Record the base SHA and next action, then **commit and PUSH** the checkpoint. Repeat after source mapping, after meaningful code changes, **before** full tests/CI, after failures, and before stopping. Update `docs/JIMBONES_WORK_QUEUE.md` as the branch-local workload tree. The canonical tree on `agents/wavetable-research` is a different branch: do not assume a working-branch edit updates it. A local-only file is **not saved**. Future Codex sessions resume from the last pushed checkpoint and avoid redoing research.
+## First 3 commands / actions
+1. `git status --short && git rev-parse HEAD && git log -3 --oneline` — verify correct branch, clean tree, actual SHA. If dirty, inspect before modifying.
+2. Read last pushed checkpoint; determine whether source mapping or implementation is already complete. **Do not repeat finished work.**
+3. Write stage, actual SHA and next action to checkpoint; `git add docs/CODEX_CHECKPOINT_JB28A.md docs/JIMBONES_WORK_QUEUE.md && git commit -m 'docs: checkpoint JB-28A start' && git push`. If no change, do not make an empty commit. Verify remote push; if push fails twice, report NOT PERSISTED.
 
-## Review package and source register
+## Scope — minimum file set
+Donor: `Core/{Src,Inc}/Soundengine/DSPAudio/CombFilter.{c,h}` (check actual paths), `tests/run_jb12_comb.sh`, `tests/test_jb12_comb.c`, `tests/test_jb12_comb_source.py`, `docs/agents/jb12_comb_filter.md`. Target: `Core/{Src,Inc}/Soundengine/DSPAudio/ResonantFilter.{c,h}`, `Core/Inc/menu/MenuText.h`, `Core/CMakeLists.txt`, `tests/run_host.sh`. Open extra files only on a specific dependency.
 
-For a comprehensive review, consult [engineering handover](CODEX_COMPREHENSIVE_HANDOVER.md), [verified repositories/PRs/source map](CODEX_SOURCE_REGISTER.md) and [physical acceptance checklist](JIMBONES_HARDWARE_ACCEPTANCE.md). Run `sh scripts/codex_review_inventory.sh` for a **read-only** branch/commit/file inventory. These are **reference files**: do not load them all for routine JB-28A implementation unless needed. The JB-27 native wave-scan branch already contains experimental code; do not reimplement it as part of JB-28A.
+**Contract:** existing filter IDs 0–7 unchanged; Comb ID 8; six independent bounded delay histories; existing Freq/Reso/Drive; Reso=0 exact PCM bypass; no dynamic allocation in render; no unrelated Step FX, dub, wavetable, skull, preset-format or original-FM edits. Metallic FM stays disabled. Verify actual source symbols and voice mapping, don't assume.
 
-## Desired outcome
-On `agents/jb-28-full-integration-v186`, integrate **existing Comb implementation from PR #15** into the latest skull/LCD and dub branch. Produce a **v1.8.07 hardware-unverified TEST ONLY** image *only if* host, ARM, >=512 B ITCM free, checksum/integrity all pass. Open draft PR against `agents/jb-26-skull-screensaver-v185`. Stop. **No JB-29, wavetable rewrite, or unrelated feature.**
-
-## Known source of truth
-- Comb donor: PR #15, commit `cb27f684a108a3fe257ac4e4dfe437a041fbe40b`, branch `agents/jb-12-comb-filter-v184`; donor test `tests/run_jb12_comb.sh`; donor design `docs/agents/jb12_comb_filter.md` **on donor branch**.
-- Target: current branch `agents/jb-28-full-integration-v186`, descended from JB-26 skull branch; do not merge the donor branch wholesale.
-- Existing working **on physical hardware**: Step FX audio core and dub delay/effect; keep untouched. Metallic FM remains disabled. v1.8.04 partial physical check: DSP ~62%, no reported crunch. v1.8.05/06, skull, combined Comb, full wavetable **not accepted on hardware**.
-- Existing CI evidence: JB-26 560 B free ITCM; donor Comb 528 B free ITCM **on a different older branch**. Do not add these values or infer combined headroom.
-
-## Minimum source map
-| Concern | Inspect first |
+## Six checkpoints / gates
+| Stage | Required output, then PUSH |
 |---|---|
-| Comb DSP | donor `Core/Src/Soundengine/DSPAudio/CombFilter.c`, `Core/Inc/Soundengine/DSPAudio/CombFilter.h` |
-| Existing filter dispatcher | `Core/Src/Soundengine/DSPAudio/ResonantFilter.c`, `Core/Inc/Soundengine/DSPAudio/ResonantFilter.h` |
-| FILTER type menu | `Core/Inc/menu/MenuText.h` |
-| ARM inclusion | `Core/CMakeLists.txt` (`lxr_dsp` source list) |
-| Host test entry | `tests/run_host.sh` (currently calls StepFX/dub/wave/skull suites) |
-| Comb focused tests | donor `tests/run_jb12_comb.sh`, `tests/test_jb12_comb.c`, `tests/test_jb12_comb_source.py` |
-| Regression guard | current `tests/run_stepfx_ui.sh`, `tests/run_dub_delay_sync.sh`, `tests/run_jb26_skull.sh` |
-| Image workflow/version | inspect current workflow and top-level CMake version only when packaging |
+| 0 START | Branch SHA, donor SHA, next action |
+| 1 MAP | Donor changed-file diff, exact target symbols, minimal transplant plan, risk |
+| 2 PATCH | Small Comb-only source commit, WIP status if incomplete |
+| 3 FOCUSED | `sh tests/run_jb12_comb.sh` PASS; record command/result |
+| 4 FULL | `sh tests/run_host.sh` with GCC + Clang, ARM cross-link, >=512 bytes free ITCM, updater checksum/integrity; record actual commands and results |
+| 5 DELIVER | Only if all gates green: SHA256/size/source SHA for v1.8.07, draft PR, hardware NOT TESTED, next physical checklist |
 
-**Search discipline:** use `git diff --name-only`, `git diff -- <path>`, `rg -n 'specific_symbol' Core tests`. Do not dump all code, entire history or all PRs. Do not reread long plans.
+**Before every expensive full build**, commit/push source and checkpoint. **After any failed test**, push concise failure and next action. Maximum two attempts on the same error; then BLOCKED, no image. Do not weaken gates. Never label CI PASS as device PASS.
 
-## Execute in this order
-1. Record exact base/donor SHAs and changed-file list. Inspect donor patch **by path**; transfer Comb-specific code only.
-2. Keep existing filter IDs 0–7; Comb becomes ID 8. Reuse existing Freq/Reso/Drive; Reso=0 exact bypass; independent six-voice state; no audio-thread allocations. Verify no modifications to StepFX/dub/LCD beyond necessary integration.
-3. Run **focused** `sh tests/run_jb12_comb.sh`. Fix a targeted failure, no broad refactor.
-4. Run `sh tests/run_host.sh` with supported GCC and Clang setups; run ARM build and image integrity workflow. Fail if >=512 B ITCM free gate is not met. Do not weaken checks.
-5. Package v1.8.07 only if green; include exact source SHA, image SHA256, bytes, ITCM used/free, test results, rollback to known-good v1.8.04.
-6. Open one draft PR, report concise results using template below, and **STOP**. Hardware testing is a separate user action.
+## Physical truth
+User reports v1.8.04 boots, ~62% DSP after Metallic FM removal, existing Step FX effects and dub work. Pitch Step FX musically limited; targeting not implemented. New Comb, five dub timing pads, skull and native scan not physically accepted. Old Metallic branch crunched at 94–101% DSP. Preserve known-good audio and kick protection.
 
-## Fail-fast
-At most two attempts on the same concrete error. If still failing, stop with exact command, 10–20 relevant error lines, smallest proposed fix, and no image. Don't hide failures, invent test results, silently switch to another branch, overwrite known-good image or merge to main.
-
-## Response template
-```
-JOB: JB-28A
-STATE: BLOCKED | CODE_READY_HARDWARE_UNVERIFIED
-BRANCH/COMMIT:
-DONOR COMMIT:
-CHANGED FILES:
-FOCUSED HOST:
-FULL HOST GCC/CLANG:
-ARM:
-ITCM USED/FREE:
-IMAGE FILENAME / SIZE / SHA256: (only if validated)
+## Required end report (<=15 lines)
+```text
+JOB JB-28A | STATE BLOCKED / CODE_READY_HARDWARE_UNVERIFIED
+BRANCH + PUSHED SHA:
+DONOR SHA:
+FILES CHANGED:
+FOCUSED:
+HOST GCC/CLANG:
+ARM + ITCM FREE:
+IMAGE SHA256 + BYTES: [only if fully validated]
 DRAFT PR:
-HARDWARE ACCEPTANCE: NOT TESTED
-RISKS / NEXT ACTION: (max 3 bullets)
+CHECKPOINT PUSHED SHA:
+HARDWARE: NOT TESTED
+BLOCKER / EXACT NEXT ACTION:
 ```
 
-## Queued, not this run
-JB-28B hardware regression and JB-29A Step FX three-group voice mask, then JB-29B four-knob RATE/DEPTH/CHAR. The user-approved UI spec lives on `agents/wavetable-research` in `docs/JIMBONES_JOB_TREE_V184.md`. Keep the scope isolated to avoid another compile-only feature iteration.
+## Resume / other work
+Resume from the last **pushed** checkpoint, not this chat. Detailed persistence rules: `docs/CODEX_PERSISTENCE_PROTOCOL.md`. Branch-local queue: `docs/JIMBONES_WORK_QUEUE.md`; historical master tree is on `agents/wavetable-research` and does not sync automatically. **Queued, not this run:** JB-28B hardware validation; JB-29A per-slot voice masks; JB-29B four-knob UI; separate existing JB-27 native wave branch.
