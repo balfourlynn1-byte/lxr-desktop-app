@@ -25,6 +25,7 @@ static uint8_t menuIndex,menu_activePage,editModeActive;
 static uint8_t jb_screen,jb_selected=JB_METAL,jb_oscArmed;
 enum { JB_EXT_NONE=0, JB_EXT_MORPH, JB_EXT_HAT, JB_EXT_SNARE, JB_EXT_VELOCITY, JB_EXT_FMDRUM, JB_EXT_CLICK, JB_EXT_BASS, JB_EXT_COMB, JB_EXT_COMB_ROUTE, JB_EXT_TAPE, JB_EXT_LOFI, JB_EXT_CLUSTER, JB_EXT_METAL, JB_EXT_WAVE };
 static uint8_t jb_extPage,jb_extArmed,jb_extSlot;
+static void jb_extSyncKit(void) {}
 static uint8_t jb_extCount(uint8_t n) { if(n==0||n==5)return 3; if(n==2)return 4; if(n==7)return 2; return (n==3||n==4)?1:0; }
 static uint8_t jb_extSelect(uint8_t n,unsigned slot) { static const uint8_t mod[]={JB_EXT_MORPH,JB_EXT_HAT,JB_EXT_SNARE,JB_EXT_VELOCITY}; static const uint8_t filter[]={JB_EXT_BASS,JB_EXT_COMB,JB_EXT_COMB_ROUTE}; static const uint8_t mix[]={JB_EXT_TAPE,JB_EXT_LOFI}; static const uint8_t osc[]={JB_EXT_METAL,JB_EXT_WAVE,JB_EXT_CLUSTER}; if(n==0)return osc[slot%3u];if(n==2)return mod[slot%4u];if(n==3)return JB_EXT_FMDRUM;if(n==4)return JB_EXT_CLICK;if(n==5)return filter[slot%3u];if(n==7)return mix[slot%2u];return JB_EXT_NONE; }
 static uint8_t menu_getSubPage(void) { return (menuIndex&MASK_PAGE)>>PAGE_SHIFT; }
