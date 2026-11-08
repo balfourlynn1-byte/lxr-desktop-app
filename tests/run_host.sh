@@ -10,6 +10,7 @@ python3 tests/test_dub_delay_source.py
 sh tests/run_jb22_metallic_off.sh
 python3 tests/test_jb22_integration.py
 sh tests/run_jb24_waveui.sh
+sh tests/run_jb12_comb.sh
 ${CC:-cc} -std=c11 -O2 -g -Wall -Wextra -Werror -fsanitize=address,undefined,float-cast-overflow \
  -Itests/host -ICore/Inc tests/test_jimbones.c \
  Core/Src/Soundengine/DSPAudio/Jimbones.c Core/Src/Soundengine/DSPAudio/wavetable.c \
