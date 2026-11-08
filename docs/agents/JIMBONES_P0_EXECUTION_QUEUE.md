@@ -21,3 +21,11 @@ JB-21 must submit actual reproducer and fix first; JB-22 can instrument in paral
 - No Clip remains UNVERIFIED until physical LXR-02 listening and rail/deadline measurement. Any unintended crunch/clipping/pops/dropout is FAIL.
 
 **Operational limitation:** these branches and assignments do not start autonomous background workers. Code and test work must be performed in a live development session or by connected collaborators. No GitHub issue or assignee was created because Issues are disabled in this repository.
+
+## P0 reinforcement — JB-27 through JB-30
+- **JB-27 Mixer-path instrumentation** (`agents/jb-27-specialist`): native voice → filter → FX → DAC peak/overflow diagnostics. Pairs with JB-21 and reviewed by JB-23.
+- **JB-28 Real-time CPU diagnostics** (`agents/jb-28-specialist`): DWT peak cycles, deadline misses and 4-voice long-tail profiling. Pairs with JB-22 and reviewed by JB-24.
+- **JB-29 Golden-master PCM QA** (`agents/jb-29-specialist`): dry parity, multi-voice modulation and transition-click assertions. Pairs with JB-23 and cross-reviewed by JB-20.
+- **JB-30 CI/ARM gate** (`agents/jb-30-specialist`): exact-commit host DSP/menu and ARM compile, artifacts and memory checks. Pairs with JB-24 and JB-20.
+
+On workflow run 42462017630, host-menu succeeded; ARM compiler installation and configure succeeded, ARM build was in progress at observation. Do not label ARM build PASS until job completes. Four specialist work-order branches are created but not independently running workers.
