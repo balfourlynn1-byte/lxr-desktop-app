@@ -1,0 +1,46 @@
+name: JB-21 Step FX Toggle and Dub Send Verification
+on:
+  push:
+    branches:
+      - agents/jb-21-stepfx-toggle-dub-ui-v184
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  host:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify compiler
+        run: cc --version | head -1
+      - name: Step FX button and dub send host tests
+        run: sh tests/run_stepfx_ui.sh
+      - name: Original StepFX scheduler regression
+        run: bash tests/run_combined_stepfx.sh
+      - name: All host regression tests
+        env:
+          CC: clang
+        run: sh tests/run_host.sh
+  arm-build:
+    needs: host
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ARM cross toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build python3 gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
+      - name: Record source and guard experimental status
+        run: |
+          echo "JB-21 experimental, no flashable artifact"
+          git rev-parse HEAD
+          git status --short
+      - name: Cross-compile
+        run: |
+          cmake --preset release
+          cmake --build --preset release --parallel 2
+      - name: ARM memory sections
+        run: |
+          find build/release -type f -name '*.elf' -exec arm-none-eabi-size {} \;
