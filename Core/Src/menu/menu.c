@@ -3353,7 +3353,8 @@ void menu_switchSubPage(uint8_t subPageNr, uint8_t toggle)
   if(jb_oscArmed && menu_getSubPage()==0) {
    if(!jb_screen) { jb_screen=1; jb_selected=0; }
    else {
-    unsigned bank=(unsigned)(jb_selected/4)+1u;
+    unsigned bank=(jb_selected==JB_WAVEUI_INTERP) ?
+      JB_WAVEUI_BANKS+1u : (unsigned)(jb_selected/4u)+1u;
     if(bank > JB_WAVEUI_BANKS) { jb_screen=0; jb_selected=0; }
     else if(bank == JB_WAVEUI_BANKS) jb_selected=JB_WAVEUI_INTERP;
     else jb_selected=(uint8_t)(bank*4u);
