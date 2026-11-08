@@ -46,9 +46,9 @@ Updated 2026-11-08. **All percentages are engineering estimates of end-to-end re
 | Seeded snare variation | 10% | Assignment; full trigger-only engine switching unverified |
 | Bass HPF/LPF + Octatrack comb | 10% | Design; stable integrated implementation unverified |
 | FM Drum body/noise | 10% | Implementation branch/work order; no validated new engine |
-| Velocity modulation matrix | 10% | Existing individual velocity parameters; matrix unimplemented |
+| Velocity modulation matrix | 15% | Bounded velocity-route prototype and host fixture on JB-16 branch; not yet in live DSP |
 | Comb+/− and routing | 5% | Assignment; unimplemented |
-| Per-voice bit/SRR | 45% | Existing JB_BITS quantisation; requested independent SRR not verified |
+| Per-voice bit/SRR | 48% | Existing JB_BITS quantisation plus JB-18 sample-hold prototype/test; SRR not integrated |
 | Detuned oscillator cluster | 5% | Assignment; unimplemented |
 | CLICK custom transient samples | 5% | Requirement only; sample format/storage unresolved |
 | UI double-press / performance page | 20% | UI work order; full menu hardware validation absent |
@@ -56,3 +56,9 @@ Updated 2026-11-08. **All percentages are engineering estimates of end-to-end re
 | Four-channel USB multitrack | Deferred | Excluded from this candidate by design |
 
 **These are rough readiness estimates, not percent of lines coded or pass probabilities.** Prioritize stability and working test image over attempting all features at once. Every feature needs implementation, independent review, CI, ARM build, hardware test; defer costly features explicitly rather than silently drop them. The new JB-14 draft PR is https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/4 ; its CI run 42459381928 host-regression and firmware jobs passed, but CLICK UI is not connected and no device test occurred.
+
+## Implementation update — 2026-11-08
+- JB-14: additional four-voice/long-tail/rail regression committed on feature branch; latest commit `406712daea264a7d2aff0b54cd41828ad07945a2`. Prior CI success predates this new test; reverify before merge.
+- JB-16: `JimbonesVelocityMatrix.h` and `test_velocity_matrix.c` plus host runner, latest commit `70cafd6db9e38e8d2dacf260077c14dd798fac1a`. Isolated primitive only, no live DSP routing.
+- JB-18: `JimbonesSampleRateReducer.h` and `test_sample_rate_reducer.c` plus host runner, latest commit `ff5a63cf03a93c3e6ad7731a258af19406f013ea`. Isolated primitive only, no live DSP routing.
+- Percentages changed conservatively. CI for latest commits and device verification must be checked separately.
