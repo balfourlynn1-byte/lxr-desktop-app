@@ -1519,6 +1519,45 @@ static void menu_displayModTargetShort(uint8_t curParmVal, char *valueAsText, ch
 /* OSC extension is separate from packed legacy menuIndex and does not alter the sequencer. */
 extern volatile uint8_t jb_audioLoadPercent;
 static uint8_t jb_screen=0, jb_selected=JB_METAL, jb_oscArmed=0;
+/* JB-13 native subpage extensions: index 4 is CLICK/transient, index 7 MIX/LOFI.
+ * Legacy page and original parameter bank remain first; next press opens extension.
+ * No kit serialization is claimed: these controls are TEMP until versioned storage.
+ */
+static uint8_t jb_extPage=0, jb_extArmed=0;
+static int8_t jb_extAttack[JB_VOICES],jb_extSustain[JB_VOICES];
+static uint8_t jb_extSrr[JB_VOICES];
+static uint8_t jb_extActive(void) { return jb_extPage && menu_activePage<7; }
+static void jb_extPaint(void) {
+ unsigned v=menu_getActiveVoice(); if(v>=JB_VOICES)v=JB_VOICES-1;
+ char top[17],bottom[17];
+ memset(editDisplayBuffer,' ',sizeof(editDisplayBuffer));
+ if(jb_extPage==5) {
+  snprintf(top,sizeof(top),"CLICK+ TRANS TEMP");
+  snprintf(bottom,sizeof(bottom),"V%u A%+3d S%+3d",v+1,(int)jb_extAttack[v],(int)jb_extSustain[v]);
+ } else {
+  snprintf(top,sizeof(top),"MIX+ LOFI TEMP");
+  snprintf(bottom,sizeof(bottom),"V%u SRR %2u OFF=%u",v+1,(unsigned)jb_extSrr[v],(unsigned)(jb_extSrr[v]<2));
+ }
+ memcpy(editDisplayBuffer[0],top,strlen(top));
+ memcpy(editDisplayBuffer[1],bottom,strlen(bottom));
+ editDisplayBuffer[0][16]=0;editDisplayBuffer[1][16]=0;
+}
+static void jb_extPot(unsigned pot,int diff) {
+ unsigned v=menu_getActiveVoice();if(v>=JB_VOICES)v=JB_VOICES-1;
+ if(jb_extPage==5 && pot<2) {
+  int x=(pot==0?jb_extAttack[v]:jb_extSustain[v])+diff;
+  if(x>64)x=64;if(x< -64)x= -64;
+  if(pot==0)jb_extAttack[v]=(int8_t)x;else jb_extSustain[v]=(int8_t)x;
+  jb_setTransient(v,jb_extAttack[v],jb_extSustain[v]);
+ } else if(jb_extPage==8 && pot==0) {
+  int x=(int)jb_extSrr[v]+diff;
+  if(x<0)x=0;if(x>32)x=32;
+  jb_extSrr[v]=(uint8_t)x;
+  jb_setSampleRateReduction(v,jb_extSrr[v]);
+ }
+ menu_repaintAll();
+}
+
 static const char *const jb_short[JB_PARAMS]={
  "Mod","FML","WTL","Dec", "Met","Noi","Agg","Tex",
  "vMt","vNo","vAg","vTx", "Pit","Rat","Dep","Fbk",
@@ -1648,6 +1687,7 @@ void menu_repaintGeneric()
 {
  if(menu_cpuPageActive()) { jb_cpuPaint(); return; }
  if(menu_stepFxPageActive()) { jb_stepfxPaint(); return; }
+ if(jb_extActive()) { jb_extPaint(); return; }
  if(jb_uiActive()) { jb_uiPaint(); return; }
 	//first get the active sub-page and parameter from the menuIndex
 	const uint8_t activeParameter	= menuIndex & MASK_PARAMETER; // this will be 0 to 7 for the 4 columns
@@ -2901,6 +2941,7 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
   if(btnClicked)stepfx_include(jb_fxVoice,!(stepfx_mask()&(1u<<jb_fxVoice)));
   menu_repaintAll(); return;
  }
+ if(jb_extActive() && copyClear_Mode==MODE_NONE) { if(inc) jb_extPot(jb_extPage==5?0:0,inc); return; }
  if(jb_uiActive() && copyClear_Mode==MODE_NONE) {
   if(jb_selected==JB_PARAMS) {
    if(inc || btnClicked) jb_setWaveInterpolation(inc?inc>0:!jb_getWaveInterpolation());
@@ -3316,6 +3357,17 @@ void menu_resetSaveParameters()
 // if its the global menu, and there are multiple pages will toggle to the next page
 void menu_switchSubPage(uint8_t subPageNr, uint8_t toggle)
 {
+ /* CLICK is native subpage 4; MIX is native subpage 7 on all voice pages.
+  * A repeated press first opens the extra screen; another closes it.
+  */
+ if(menu_activePage<7 && toggle && (subPageNr==4 || subPageNr==7)) {
+  if(jb_extArmed && menu_getSubPage()==subPageNr) {
+   jb_extPage=jb_extPage?0:(uint8_t)(subPageNr+1);
+   editModeActive=0;return;
+  }
+  jb_extArmed=1; jb_extPage=0;
+ } else { jb_extArmed=0; jb_extPage=0; }
+
  if(menu_activePage<7 && subPageNr==0 && toggle) {
   if(jb_oscArmed && menu_getSubPage()==0) {
    if(!jb_screen) { jb_screen=1; jb_selected=JB_MODE; }
@@ -3396,6 +3448,7 @@ void menu_switchPage(uint8_t pageNr)
  /* A voice-page reselect must not erase the OSC extension's position.
   * Otherwise the extra banks become inaccessible on repeated button presses. */
  if(pageNr >= 7u || pageNr != menu_activePage) {
+  jb_extPage=0; jb_extArmed=0;
   jb_screen=0;
   jb_oscArmed=0;
  }
@@ -4115,6 +4168,7 @@ uint8_t menu_parseKnobValue(uint8_t potNr, int16_t diff)
   else if(potNr==3 && diff)stepfx_include(jb_fxVoice,diff>0);
   screensaver_touch();menu_repaintAll();return 1;
  }
+ if(jb_extActive() && copyClear_Mode==MODE_NONE && potNr<4) { screensaver_touch();jb_extPot(potNr,diff);return 1; }
  if(jb_uiActive() && copyClear_Mode==MODE_NONE && potNr<4) {
   if(jb_selected==JB_PARAMS) {
    if(potNr==0 && diff) jb_setWaveInterpolation(diff>0);
