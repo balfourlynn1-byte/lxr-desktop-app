@@ -4116,6 +4116,10 @@ uint8_t menu_parseKnobValue(uint8_t potNr, int16_t diff)
   screensaver_touch();menu_repaintAll();return 1;
  }
  if(jb_uiActive() && copyClear_Mode==MODE_NONE && potNr<4) {
+  if(jb_selected==JB_PARAMS) {
+   if(potNr==0 && diff) jb_setWaveInterpolation(diff>0);
+   screensaver_touch(); editModeActive=0; menu_repaintAll(); return 1;
+  }
   screensaver_touch(); editModeActive=0;
   jb_selected=(jb_selected/4)*4+potNr;
   jb_uiAdjust(jb_selected,diff); return 1;
