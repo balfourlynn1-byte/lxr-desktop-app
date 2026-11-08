@@ -126,7 +126,9 @@ void modNode_originalValueChanged(uint16_t idx)
 	modNode_setOriginalValueChanged(&hatVoice.lfo.modTarget,idx);
 }
 //-----------------------------------------------------------------------
-IN_ITCM_RAM void modNode_resetTargets()
+/* JB-27: control-rate reset once per sample block. Flash is suitable;
+ * keep scarce ITCM for the actual per-sample oscillator render loops. */
+__attribute__((noinline)) void modNode_resetTargets()
 {
 	jb_native_wave_reset_all();
 	uint8_t i;
