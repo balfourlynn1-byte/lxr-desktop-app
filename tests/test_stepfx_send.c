@@ -48,7 +48,7 @@ int main(void) {
     block(3);
     const uint16_t after = sample(3);
     assert(after >= before);
-    assert(after - before < 1000u);
+    assert(after - before < 1000);
 
     /* A close command fades out (does not touch delay feedback). */
     stepfx_send_gate(3, 0u);
