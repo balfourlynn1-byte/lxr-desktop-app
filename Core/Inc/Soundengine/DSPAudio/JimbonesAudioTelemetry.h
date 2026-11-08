@@ -38,9 +38,15 @@ static inline void jb_audio_telemetry_queue(jb_audio_telemetry *m,
  uint32_t free_slots,uint32_t capacity) {
  if(!capacity) return;
  if(free_slots>capacity) free_slots=capacity;
- uint8_t p=(uint8_t)(100u-(free_slots*100u/capacity));
+ uint8_t p=(uint8_t)(100u-(uint32_t)(((uint64_t)free_slots*100u)/capacity));
  if(p>m->peak_pressure_percent) m->peak_pressure_percent=p;
- m->pressure_sum+=p;
- ++m->pressure_samples;
+ /* Avoid overflow during long-running sessions without adding ISR cost. */
+ if(m->pressure_samples==UINT32_MAX || m->pressure_sum>UINT32_MAX-(uint32_t)p) {
+  m->pressure_sum=(uint32_t)p;
+  m->pressure_samples=1;
+ } else {
+  m->pressure_sum+=(uint32_t)p;
+  ++m->pressure_samples;
+ }
 }
 #endif
