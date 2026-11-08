@@ -29,3 +29,6 @@ JB-21 must submit actual reproducer and fix first; JB-22 can instrument in paral
 - **JB-30 CI/ARM gate** (`agents/jb-30-specialist`): exact-commit host DSP/menu and ARM compile, artifacts and memory checks. Pairs with JB-24 and JB-20.
 
 On workflow run 42462017630, host-menu succeeded; ARM compiler installation and configure succeeded, ARM build was in progress at observation. Do not label ARM build PASS until job completes. Four specialist work-order branches are created but not independently running workers.
+
+## No Clip ARM candidate: JB-31–42 atomic queue
+Twelve smaller P0 tasks are now defined in `docs/agents/NO_CLIP_ARM_TEST_BUILD_EXECUTION.md` and `docs/agents/no-clip/JB-31.md` through `JB-42.md`. Prioritize JB-31 native mixer trace, JB-32 native telemetry, JB-34 two-voice reproducer and JB-33 CPU probe. Gate fix on measured cause; don't generate a hardware-test release without exact-commit CI, review and rollback procedure. These are assignments, not autonomously running workers.
