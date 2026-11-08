@@ -40,6 +40,7 @@ void jb_audioDiagReset(void) {
     hasAverage=0;
     jb_averageLoad=0;
     jb_dmaPendingCount=0;
+    jb_audioTelemetryResetCounters();
     jb_audioMaxCycles=0;
     jb_audioPeakPercent=0;
     jb_audioOverruns=0;

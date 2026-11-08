@@ -12,4 +12,6 @@ extern volatile uint32_t jb_layerPeakCycles[6];
 void jb_audioLoadSample(uint32_t load);
 void jb_audioDiagScan(const int16_t *out1,const int16_t *out2,unsigned frames);
 void jb_audioDiagReset(void);
+/* Clear the private render-cycle telemetry while interrupts are masked. */
+void jb_audioTelemetryResetCounters(void);
 #endif

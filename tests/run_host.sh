@@ -19,3 +19,22 @@ ${CC:-cc} -std=c11 -O2 -g -Wall -Wextra -Werror -fsanitize=address,undefined,flo
  Core/Src/Soundengine/DSPAudio/Jimbones.c Core/Src/Soundengine/DSPAudio/wavetable.c \
  -lm -o build/host/test_texture_noise
 build/host/test_texture_noise
+
+# JB-03 deterministic four-voice modulation fixture
+${CC:-cc} -std=c11 -O2 -g -Wall -Wextra -Werror -fsanitize=address,undefined,float-cast-overflow \
+ -Itests/host -ICore/Inc tests/test_four_voice_modulation.c \
+ Core/Src/Soundengine/DSPAudio/Jimbones.c Core/Src/Soundengine/DSPAudio/wavetable.c \
+ -lm -o build/host/test_four_voice_modulation
+build/host/test_four_voice_modulation
+
+# JB-03 isolated summed PCM headroom diagnostic
+${CC:-cc} -std=c11 -O2 -g -Wall -Wextra -Werror -fsanitize=address,undefined,float-cast-overflow \
+ -Itests/host -ICore/Inc tests/test_four_voice_sum.c \
+ Core/Src/Soundengine/DSPAudio/Jimbones.c Core/Src/Soundengine/DSPAudio/wavetable.c \
+ -lm -o build/host/test_four_voice_sum
+build/host/test_four_voice_sum
+
+# JB-02 wrap-safe CPU render telemetry regression
+${CC:-cc} -std=c11 -O2 -g -Wall -Wextra -Werror -fsanitize=address,undefined \
+ -ICore/Inc tests/test_audio_telemetry.c -o build/host/test_audio_telemetry
+build/host/test_audio_telemetry

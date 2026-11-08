@@ -1,0 +1,99 @@
+name: JIMBONES v1.8.03 ARM test build
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - jimbones-v1.8.01
+      - jimbones-v1.8.03-hardware-test
+  push:
+    branches:
+      - jimbones-v1.8.03-hardware-test
+permissions:
+  contents: read
+jobs:
+  host-regression:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Host regression suite
+        env:
+          CC: clang
+        run: |
+          bash tests/run_host.sh
+          bash tests/run_waveshaping.sh
+      - name: Upload test audio for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: JIMBONES-v1.8.03-host-results
+          path: build/host/*.s16
+          if-no-files-found: ignore
+          retention-days: 14
+  firmware:
+    needs: host-regression
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build python3 gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
+      - name: Record exact source revision
+        run: |
+          printf 'Branch: %s\nCommit: %s\n' "$GITHUB_REF_NAME" "$GITHUB_SHA" | tee SOURCE_REVISION.txt
+          git status --short
+      - name: Check required merged UI and interpolation code
+        run: |
+          grep -q 'WAVE INTERPOLATE' Core/Src/menu/menu.c || { echo 'STOP: merged UI not present'; exit 1; }
+          grep -q 'jb_setWaveInterpolation' Core/Src/Soundengine/DSPAudio/Jimbones.c || { echo 'STOP: interpolation code not present'; exit 1; }
+      - name: Check isolated version
+        run: |
+          grep -Eq 'VERSION[[:space:]]+1\.8\.03' CMakeLists.txt || { echo 'STOP: v1.8.03 source/version not committed to this branch'; exit 1; }
+      - name: Check cross compiler and memory configuration
+        run: |
+          arm-none-eabi-gcc --version | head -1
+          arm-none-eabi-g++ --version | head -1
+          test -f cmake/arm-none-eabi.cmake
+      - name: Build ARM image
+        run: |
+          set -o pipefail
+          cmake --preset release 2>&1 | tee configure.log
+          cmake --build --preset release --parallel 2 2>&1 | tee build.log
+      - name: Preserve build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: JIMBONES-v1.8.03-build-diagnostics
+          path: |
+            configure.log
+            build.log
+            build/release/CMakeFiles/CMakeConfigureLog.yaml
+            build/release/CMakeCache.txt
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Record ARM memory usage
+        run: |
+          mkdir -p build/release/diagnostics
+          arm-none-eabi-gcc --version | head -1 | tee build/release/diagnostics/toolchain.txt
+          find build/release -type f -name '*.elf' -print > build/release/diagnostics/elf-files.txt
+          while IFS= read -r elf; do
+            arm-none-eabi-size -A "$elf" >> build/release/diagnostics/sections.txt
+          done < build/release/diagnostics/elf-files.txt
+          cat build/release/diagnostics/sections.txt 2>/dev/null || true
+      - name: Validate image name
+        run: |
+          test -s build/release/LXR_V2_V1.8.03.img
+          python3 tests/validate_image.py build/release/LXR_V2_V1.8.03.img
+          sha256sum build/release/LXR_V2_V1.8.03.img > build/release/SHA256SUMS.txt
+          ls -lh build/release/LXR_V2_V1.8.03.img
+          test "$(stat -c%s build/release/LXR_V2_V1.8.03.img)" -gt 10000
+      - uses: actions/upload-artifact@v4
+        with:
+          name: JIMBONES-v1.8.03-ARM-UNTESTED
+          path: |
+            build/release/LXR_V2_V1.8.03.img
+            build/release/SHA256SUMS.txt
+            SOURCE_REVISION.txt
+            build/release/diagnostics/
+          if-no-files-found: error
+          retention-days: 30
