@@ -68,3 +68,9 @@ Each update must include UTC time, pushed commit SHA, stage, files inspected/cha
 - Added `pull_request` trigger for JB-26 target branch to dedicated JB-28 workflow; pushed `4e3b162b731bafdffa08e2eed8cdfc2bdbc8ec47`. Immediately queried PR-triggered runs: none returned yet.
 - Container Git clone blocked by DNS (`Could not resolve host: github.com`); no ARM compiler found. Therefore no local compile, CI results, ITCM, image SHA or test pack verified. No device flash.
 - STATUS: CI EVIDENCE BLOCKED / AWAITING ACTIONS. Next: inspect Actions workflow link and PR #18 checks; obtain actual run ID, host and ARM results; fix only concrete failing gate. Do not claim CODE_READY until all gates green.
+
+### 2026-11-08 UTC — first real CI failure diagnosed and fixed
+- GitHub Actions PR #18 run `42511490948` completed FAILURE. Host job `128825326193`: focused Comb regression PASS (zero-reso, six voices, 384k samples, source checks). Existing send/dub/Metallic-off tests passed before failure.
+- First failing gate: `tests/test_jb22_integration.py:17` hard-coded `VERSION 1.8.06`; target intentionally now `VERSION 1.8.07`. ARM job skipped; no memory/image evidence.
+- Updated that exact assertion to 1.8.07, pushed `442d8be8dfcc22195be2c49b1bededd401c628aa`. No DSP implementation changed in this fix.
+- Next: inspect new PR run for `442d8be8` or later, follow next concrete failure; no image approved.
