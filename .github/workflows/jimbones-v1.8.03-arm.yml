@@ -43,8 +43,8 @@ jobs:
           grep -Eq 'VERSION[[:space:]]+1\.8\.03' CMakeLists.txt || { echo 'STOP: v1.8.03 source/version not committed to this branch'; exit 1; }
       - name: Build ARM image
         run: |
-          cmake --preset release 2>&1 | tee configure.log
           set -o pipefail
+          cmake --preset release 2>&1 | tee configure.log
           cmake --build --preset release --parallel 2 2>&1 | tee build.log
       - name: Preserve build diagnostics
         if: always()
