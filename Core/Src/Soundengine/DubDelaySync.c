@@ -164,8 +164,9 @@ void dub_delay_prepare(struct DelayStruct *delay, uint8_t fx_is_delay,
         __atomic_store_n(&may_send,0u,__ATOMIC_RELAXED);
         if(was_ready){was_ready=0u;tail_frames=DUB_TAIL_FRAMES;}
         if(!fx_is_delay)tail_frames=0u;
-        if(tail_frames && fx_is_delay){
+        if(tail_frames && fx_is_delay)
             tail_frames=(tail_frames>frames)?tail_frames-frames:0u;
+        if(tail_frames && fx_is_delay){
             __atomic_store_n(&wet_only,1u,__ATOMIC_RELAXED);
         }else{
             if(last_samples) {
