@@ -4,7 +4,7 @@
 
 ## Current state
 - Job: JB-28A Comb transplant into JB-26-derived branch
-- Status: SOURCE MAPPING IN PROGRESS (assistant via GitHub connector)
+- Status: PATCHING — PARTIAL, NOT TESTED
 - Last confirmed pushed checkpoint: initial template (prepared by assistant, not Codex)
 - Working branch: `agents/jb-28-full-integration-v186`
 - Current base SHA: prior confirmed docs commit `2cc2d1aa2a6595ec48b7e46cf47ee1eb684268b3`; live HEAD requires verification
@@ -48,3 +48,9 @@ Each update must include UTC time, pushed commit SHA, stage, files inspected/cha
 - PR #15 lists 12 changed paths: CombFilter.{c,h}, ResonantFilter.{c,h}, MenuText.h, Core/CMakeLists.txt, 3 Comb test files, run_host.sh, CI workflow and donor design.
 - Connector access verified; local clean worktree **NOT VERIFIED** (no local clone). No tests run, no firmware generated.
 - Next: inspect donor patch and current target, then checkpoint exact compatibility plan.
+
+### 2026-11-08 UTC — source transplant partial checkpoint
+- Inspected PR #15 complete patch and current target: ResonantFilter.h/.c and MenuText.h target blob SHAs matched PR donor's base blobs, so donor versions transplanted without overwriting later edits to those paths.
+- Pushed CombFilter.h/.c, three focused tests, ResonantFilter.h/.c, MenuText.h (latest source commit `23abbb7d3e32b9bb11db91a48ca2494cd3445aaf`).
+- Remaining integration: Core/CMakeLists.txt add CombFilter.c; tests/run_host.sh add focused suite. Then focused/full/ARM CI. No compilation or hardware test yet; firmware NOT READY.
+- Exact next action: modify the two remaining existing files preserving newer skull test and engine additions; inspect resulting diff, run tests via CI or checked-out build environment.
