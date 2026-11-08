@@ -70,3 +70,56 @@
 
 ## First next task
 **A01** — source-trace the original 3 ms No Clip fade. Preliminary repository commit-message and default-branch code searches did not locate it; inspect older branch/file history and audio trigger/reset symbols. B02 source analysis is complete. Do not start C or E before A and B prerequisites.
+
+
+## Feature-level implementation and sound-quality acceptance tree (added 2026-11-08)
+
+**Scope and status:** These are additional acceptance criteria and future implementation tasks, **not completed claims**. Preserve ordered atomic A–E dependencies above. The Nov 10 18:30 UK handover is a documentation/host-validation target, not permission to ARM-build. Prioritize A/B/D blockers and existing deliverables; any new feature work not verified by then remains TODO for Codex. A feature is DONE only with source evidence, focused host tests, full integrated regression and measured sonic result; hardware-only checks remain pending until approved.
+
+### F01 — Comb filter (linked to D01/D06/D07)
+- [ ] F01.1 Inspect PR #18 comb topology, coefficients, buffer layout and current CI evidence; record exact source SHA.
+- [ ] F01.2 Define tuning/delay, feedback, damping, polarity and wet/dry parameter bounds, UI placement and OFF defaults.
+- [ ] F01.3 Host-test delay-buffer wrap, interpolation, parameter smoothing, silence, zero feedback and extreme resonance; reject runaway feedback, NaNs and denormals.
+- [ ] F01.4 Render tuned ringing, resonant snare, pitched tom, clap and hi-hat reference audio with settings and hashes.
+- [ ] F01.5 Stress 3–4 overlapping hits, fast sweeps and worst-case CPU/memory proxy; verify disabled path matches approved original.
+- [ ] F01.6 Validate presets and full GCC/Clang integration; keep hardware audition pending explicit approval.
+
+### F02 — Dub Step FX / send throws (linked to D02–D04/D06/D07)
+- [ ] F02.1 Map existing five timing toggles, Step 1 LED, Step 16 morph shortcut and exact sequencer control semantics.
+- [ ] F02.2 Design per-slot voice mask and FX send matrix, with kick protected by default; specify dry, send, return, feedback and filtering.
+- [ ] F02.3 Define tempo sync including dotted/triplet divisions, 2/4/8-bar repeats, throw latch/momentary behaviour and tempo-change policy.
+- [ ] F02.4 Host-test independent snare/clap/tom/hat sends, step-boundary and bar-boundary echo tails, rapid toggles and simultaneous throws.
+- [ ] F02.5 Test feedback bounds, zero/maximum sends, delay buffer wrap, silence, preset reload and legacy kit defaults.
+- [ ] F02.6 Verify VOICE/RATE/DEPTH/CHAR UI, Step 1–16 LEDs and no unintended kick send; run integrated host regressions.
+
+### F03 — Native wavetable and audible sound tests (linked to B04–B07/C01–C11)
+- [ ] F03.1 Finish licence-compliant native architecture mapping; do not transplant incompatible upstream code.
+- [ ] F03.2 Pin native wave IDs, interpolation mode, phase, wrap/boundary and reset policy; handle noise/crash/sample separately.
+- [ ] F03.3 Specify per-voice enable, waveform position, LFO scanning, velocity blend/depth and default OFF.
+- [ ] F03.4 Host-render clean, aggressive, noisy, evolving and percussive test patches with settings, reference WAVs and hashes.
+- [ ] F03.5 Compare stepped versus interpolated scanning and velocity 0/64/127 at matched loudness; document whether sonic change justifies cost.
+- [ ] F03.6 Measure discontinuities, clipping, aliasing proxy, 3–4 concurrent long-decay hits, rapid retriggers and No Clip interactions.
+- [ ] F03.7 Confirm zero-depth/default OFF bit-identical legacy output, preset persistence, CPU proxy and integrated GCC/Clang suite.
+
+### F04 — Morph, modulation and velocity (linked to B05/C06–C08)
+- [ ] F04.1 Map velocity to wavetable position plus one approved second destination, with bounded depths and OFF defaults.
+- [ ] F04.2 Design per-voice morph inclusion/exclusion, protected snapshot A and B/C editing at 50% morph.
+- [ ] F04.3 Test LFO target switching/reset, rapid knob changes, zero/mid/max velocity, MIDI ramps and stale-state prevention.
+- [ ] F04.4 Verify UI edit indicators, preset round trips and CPU budget; keep unimplemented controls labelled future work.
+
+### F05 — Filters, drive and routing (future unless already approved)
+- [ ] F05.1 Audit original filter, comb, per-voice drive and FX send order with exact paths.
+- [ ] F05.2 Specify optional movable bass HPF/LPF and tape/tube-style saturation with low-end preservation.
+- [ ] F05.3 Test cutoff/resonance extremes, velocity drive, headroom and bypass exactness; do not silently replace legacy sound.
+- [ ] F05.4 Defer implementation unless dependencies and verified core features are complete.
+
+### F06 — UI, skull, save and regression gates (linked to A03–A05/D05/D07/E01)
+- [ ] F06.1 Pin v1.8.06 bouncing skull assets, LCD update/wake timing and host display tests; preserve unchanged.
+- [ ] F06.2 Verify OSC/FILTER double-press navigation, Step 1 LED, Step 16 shortcut, page contention and live playback.
+- [ ] F06.3 Test new parameter bounds, defaults, legacy kit migration, save/reload and interrupted-save simulation.
+- [ ] F06.4 Run deterministic 132-sample No Clip tests, block splits, int16 saturation, repeated retriggers and three-drum independence.
+- [ ] F06.5 Run exact integrated SHA through host GCC/Clang, full-kit stress, NaN/full-scale/discontinuity checks and CPU work proxy.
+- [ ] F06.6 Publish feature matrix: implemented, host-verified, hardware-unverified, blocked and deferred; record every known defect.
+- [ ] F06.7 Prepare Codex integration order, build commands **for later approved execution only**, acceptance sheet and rollback.
+
+**Feature completion scoring:** Track design, implementation, focused audio evidence, integrated regression and handover separately. Never equate checked design tasks with functional or hardware-accepted implementation. No Metallic FM, ARM compilation, .img packaging, ARM workflow re-enablement or merge to main before explicit approval.
