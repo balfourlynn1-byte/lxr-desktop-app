@@ -1541,6 +1541,13 @@ static void jb_uiAdjust(unsigned p,int diff) {
  menu_repaintAll();
 }
 static void jb_uiPaint(void) {
+ if(jb_selected==JB_PARAMS) {
+  memset(editDisplayBuffer,' ',sizeof(editDisplayBuffer));
+  memcpy(editDisplayBuffer[0],"WAVE INTERPOLATE",16);
+  memcpy(editDisplayBuffer[1],jb_getWaveInterpolation()?"ON  smooth blend":"OFF stepped wave",16);
+  editDisplayBuffer[0][16]=0; editDisplayBuffer[1][16]=0;
+  return;
+ }
  unsigned voice=jb_uiVoice();
  memset(editDisplayBuffer,' ',sizeof(editDisplayBuffer));
  if(editModeActive) {
@@ -2895,11 +2902,15 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
   menu_repaintAll(); return;
  }
  if(jb_uiActive() && copyClear_Mode==MODE_NONE) {
+  if(jb_selected==JB_PARAMS) {
+   if(inc || btnClicked) jb_setWaveInterpolation(inc?inc>0:!jb_getWaveInterpolation());
+   editModeActive=0; menu_repaintAll(); return;
+  }
   if(inc) {
    if(editModeActive) jb_uiAdjust(jb_selected,inc);
    else {
     int next=(int)jb_selected+inc;
-    jb_selected=next<0?JB_PARAMS-1:(next>=JB_PARAMS?0:next);
+    jb_selected=next<0?JB_PARAMS:(next>JB_PARAMS?0:next);
    }
   }
   menu_repaintAll(); return;
@@ -3310,7 +3321,8 @@ void menu_switchSubPage(uint8_t subPageNr, uint8_t toggle)
    if(!jb_screen) { jb_screen=1; jb_selected=JB_MODE; }
    else {
     unsigned bank=(unsigned)(jb_selected/4)+1u;
-    if(bank >= (JB_PARAMS+3u)/4u) { jb_screen=0; jb_selected=JB_MODE; }
+    if(bank > (JB_PARAMS+3u)/4u) { jb_screen=0; jb_selected=JB_MODE; }
+    else if(bank == (JB_PARAMS+3u)/4u) jb_selected=JB_PARAMS;
     else jb_selected=(uint8_t)(bank*4u);
    }
    editModeActive=0; return;
