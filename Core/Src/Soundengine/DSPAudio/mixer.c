@@ -620,9 +620,10 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 	renderLayer(0, sampleData, voiceArray[0].vol);
 	//decimate voice
 	mixer_decimateBlock(0,sampleData);
-	/* Dub throws feed the existing delay, only while FX_DELAY is selected.
+	/* Dub throws feed the existing delay only in fully wet FX_DELAY mode.
+	 * Mixed dry/wet would duplicate dry audio, so disable sends unless wet=100%.
 	 * Dry output remains unchanged; no double-send for FX-only routing. */
-	if(fxBus.fxType==FX_DELAY && mixer_audioRouting[0]!=MIXER_ROUTING_FX_BUS)
+	if(fxBus.fxType==FX_DELAY && fxBus.dryWet>=0.999f && mixer_audioRouting[0]!=MIXER_ROUTING_FX_BUS)
 		stepfx_dubTap(0,sampleData,fxBusData,OUTPUT_DMA_SIZE);
 	//copy to selected dma buffer
 #if USE_SQRT_LUT
@@ -650,9 +651,10 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 	renderLayer(1, sampleData, voiceArray[1].vol);
 	//decimate voice
 	mixer_decimateBlock(1,sampleData);
-	/* Dub throws feed the existing delay, only while FX_DELAY is selected.
+	/* Dub throws feed the existing delay only in fully wet FX_DELAY mode.
+	 * Mixed dry/wet would duplicate dry audio, so disable sends unless wet=100%.
 	 * Dry output remains unchanged; no double-send for FX-only routing. */
-	if(fxBus.fxType==FX_DELAY && mixer_audioRouting[1]!=MIXER_ROUTING_FX_BUS)
+	if(fxBus.fxType==FX_DELAY && fxBus.dryWet>=0.999f && mixer_audioRouting[1]!=MIXER_ROUTING_FX_BUS)
 		stepfx_dubTap(1,sampleData,fxBusData,OUTPUT_DMA_SIZE);
 	//copy to selected dma buffer
 #if USE_SQRT_LUT
@@ -675,9 +677,10 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 	renderLayer(2, sampleData, voiceArray[2].vol);
 	//decimate voice
 	mixer_decimateBlock(2,sampleData);
-	/* Dub throws feed the existing delay, only while FX_DELAY is selected.
+	/* Dub throws feed the existing delay only in fully wet FX_DELAY mode.
+	 * Mixed dry/wet would duplicate dry audio, so disable sends unless wet=100%.
 	 * Dry output remains unchanged; no double-send for FX-only routing. */
-	if(fxBus.fxType==FX_DELAY && mixer_audioRouting[2]!=MIXER_ROUTING_FX_BUS)
+	if(fxBus.fxType==FX_DELAY && fxBus.dryWet>=0.999f && mixer_audioRouting[2]!=MIXER_ROUTING_FX_BUS)
 		stepfx_dubTap(2,sampleData,fxBusData,OUTPUT_DMA_SIZE);
 	//copy to selected dma buffer
 #if USE_SQRT_LUT
@@ -699,9 +702,10 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 	renderLayer(3, sampleData, snareVoice.vol);
 	//decimate voice
 	mixer_decimateBlock(3,sampleData);
-	/* Dub throws feed the existing delay, only while FX_DELAY is selected.
+	/* Dub throws feed the existing delay only in fully wet FX_DELAY mode.
+	 * Mixed dry/wet would duplicate dry audio, so disable sends unless wet=100%.
 	 * Dry output remains unchanged; no double-send for FX-only routing. */
-	if(fxBus.fxType==FX_DELAY && mixer_audioRouting[3]!=MIXER_ROUTING_FX_BUS)
+	if(fxBus.fxType==FX_DELAY && fxBus.dryWet>=0.999f && mixer_audioRouting[3]!=MIXER_ROUTING_FX_BUS)
 		stepfx_dubTap(3,sampleData,fxBusData,OUTPUT_DMA_SIZE);
 	//copy to selected dma buffer
 #if USE_SQRT_LUT
@@ -719,9 +723,10 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 	renderLayer(4, sampleData, cymbalVoice.vol);
 	//decimate voice
 	mixer_decimateBlock(4,sampleData);
-	/* Dub throws feed the existing delay, only while FX_DELAY is selected.
+	/* Dub throws feed the existing delay only in fully wet FX_DELAY mode.
+	 * Mixed dry/wet would duplicate dry audio, so disable sends unless wet=100%.
 	 * Dry output remains unchanged; no double-send for FX-only routing. */
-	if(fxBus.fxType==FX_DELAY && mixer_audioRouting[4]!=MIXER_ROUTING_FX_BUS)
+	if(fxBus.fxType==FX_DELAY && fxBus.dryWet>=0.999f && mixer_audioRouting[4]!=MIXER_ROUTING_FX_BUS)
 		stepfx_dubTap(4,sampleData,fxBusData,OUTPUT_DMA_SIZE);
 	//copy to selected dma buffer
 #if USE_SQRT_LUT
@@ -740,9 +745,10 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 	renderLayer(5, sampleData, hatVoice.vol);
 	//decimate voice
 	mixer_decimateBlock(5,sampleData);
-	/* Dub throws feed the existing delay, only while FX_DELAY is selected.
+	/* Dub throws feed the existing delay only in fully wet FX_DELAY mode.
+	 * Mixed dry/wet would duplicate dry audio, so disable sends unless wet=100%.
 	 * Dry output remains unchanged; no double-send for FX-only routing. */
-	if(fxBus.fxType==FX_DELAY && mixer_audioRouting[5]!=MIXER_ROUTING_FX_BUS)
+	if(fxBus.fxType==FX_DELAY && fxBus.dryWet>=0.999f && mixer_audioRouting[5]!=MIXER_ROUTING_FX_BUS)
 		stepfx_dubTap(5,sampleData,fxBusData,OUTPUT_DMA_SIZE);
 	//copy to selected dma buffer
 #if USE_SQRT_LUT
