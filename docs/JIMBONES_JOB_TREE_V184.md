@@ -3,6 +3,26 @@
 **Updated:** 2026-11-08. **Purpose:** make jobs small and ready for Codex, with clear dependencies and test gates. 
 **Status of this programme:** v1.8.04 has user-reported stable boot, ~62% DSP and no new audible crunch; new 1.8.05–1.8.06 changes remain **untested on hardware**. Exact PK/LATE/RAIL and four-pad stress on v1.8.04 are still unrecorded. CI does not prove realtime headroom. Branch roles in this board are **virtual assignments**, not autonomous active agents. CI passing is not a substitute for physical tests.
 
+## Hardware-truth audit — user correction (2026-11-08)
+
+**Only user-confirmed functional feature so far: existing dub delay / dub effect.** Removing Metallic FM also reduced the reported DSP load to ~62% and apparently removed audible crunch; this is a stability improvement, **not** another delivered feature. The user explicitly reports that the **last seven iterations have delivered only that one working feature**. CI green, code merged into a branch, or an image generated are **not feature acceptance**.
+
+| User request / issue | Device evidence | Acceptance status |
+|---|---|---|
+| Dub delay / dub effect | User reports it works well | **HARDWARE WORKING** (specific modes not exhaustively tested) |
+| Five 1/4, 1/8, 1/8-triplet, 1/16, 1/32 timing buttons | Code in v1.8.05; no user test | **NOT ACCEPTED** |
+| Step 1 LED and each Step FX press-on/press-off | User previously reported LED/toggle bug; code fix not hardware confirmed | **BUG OPEN** |
+| Wavetable and waveform shaping / LFO scanning | User says wavetable not working as demo intended; upstream full engine not ported | **INCOMPLETE / NOT WORKING AS REQUESTED** |
+| Comb in FILTER | Separate CI-passing prototype, no combined physical test | **NOT ACCEPTED** |
+| LCD garbling after screensaver | User provided device photo; fix not device tested | **BUG OPEN** |
+| Bouncing skull screensaver | Source implementation only | **NOT ACCEPTED** |
+| Morph A/B/C, velocity/LFO, protected kick | User requested; not complete | **NOT IMPLEMENTED** |
+| Tape/tube, hi-hat articulation, snare random, independent bass filter, advanced Step FX, USB audio | Requested, incomplete or feasibility only | **NOT IMPLEMENTED** |
+
+**New process:** Every user-requested feature needs (1) explicit expected controls/sound behaviour, (2) host test, (3) integration build, (4) **real hardware demonstration by the user**, (5) measured DSP/PK/LATE/RAIL under relevant stress, and (6) acceptance/bug closure. Report source implementation and hardware acceptance as separate fields. Preserve a known-good rollback. Codex must not declare “fully functioning” or “implemented successfully” solely from CI.
+
+**Revised next Codex instruction:** First review the hardware-truth table and the existing user bug reports; identify missing implementation against each request. Keep the existing working dub path untouched. Integrate Comb only as a **testable candidate**, not a finished feature; do not expand to a large bundle before the user can isolate each change. The actual target is **all requested features working on device**, not merely all feature source files compiling.
+
 ## Active dependency tree — 18:30 Codex handover
 
 **Handoff ready:** [one-page Codex 18:30 instructions](https://github.com/balfourlynn1-byte/lxr-desktop-app/blob/agents/jb-28-full-integration-v186/docs/CODEX_1830_HANDOFF.md) · **Codex starting branch:** `agents/jb-28-full-integration-v186` (forked from JB-26, **Comb not yet transplanted**).
