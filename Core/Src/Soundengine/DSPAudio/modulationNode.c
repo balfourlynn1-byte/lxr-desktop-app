@@ -220,6 +220,19 @@ void modNode_updateValue(ModulationNode* vm, float val)
 	//val is [0:1] make [-1:1] for bipolar modulation around original value
 	float newValue = originalValue + vm->amount * (val*2.f-1.f);
 	newValue = newValue < 0.f ? 0 : newValue > 1.f ? 1.f : newValue;
+	/* Native waveform IDs use units 0..5, unlike typical CC 0..127.
+	 * OFF keeps the original parser bit-for-bit; ON starts the LFO sweep
+	 * from the saved waveform and lets modulation traverse all four
+	 * periodic shapes with fractional positions. */
+	OscInfo *wave=jb_native_wave_target(vm->destination);
+	const uint8_t interpolate=jb_getWaveInterpolation();
+	if(wave && interpolate) {
+		float pos=(float)activeParameters[vm->destination]
+		        +vm->amount*(val*2.f-1.f)*5.f;
+		if(pos<0.f)pos=0.f;
+		if(pos>5.f)pos=5.f;
+		newValue=pos*(1.f/6.f);
+	}
 	if(vm->destination < 128)
 	{
 		/* comes from cortex midi handler
@@ -253,9 +266,8 @@ void modNode_updateValue(ModulationNode* vm, float val)
 	/* LFO wave selection now preserves the fractional position between
 	 * periodic wave IDs in addition to the original rounded MIDI CC state.
 	 * The ordinary rendered wave is bit-identical when this is disabled. */
-	OscInfo *wave=jb_native_wave_target(vm->destination);
 	if(wave) {
-		const uint32_t morph=jb_native_wave_pack(newValue,jb_getWaveInterpolation());
+		const uint32_t morph=jb_native_wave_pack(newValue,interpolate);
 		__atomic_store_n(&wave->waveMorphState,morph,__ATOMIC_RELAXED);
 	}
 
