@@ -1,6 +1,6 @@
 # JIMBONES agent assignment board
 
-**Status (2026-11-08):** JIMBONES **v1.8.04 EXPERIMENTAL** research handover. Agents are virtual responsibilities, **not running autonomous processes**; this tracked board replaces GitHub Issues (API 410). No job is implemented merely by being listed. Codex should take the discrete, researched jobs below, one PR per change.
+**Status (2026-11-08):** JIMBONES **v1.8.04 EXPERIMENTAL** integration and hardware-test handover. Agents are virtual responsibilities, **not running autonomous processes**; this tracked board replaces GitHub Issues (API 410). No job is implemented merely by being listed. Codex should take the discrete, researched jobs below, one PR per change.
 
 **Start here:** [Full dependency job tree](JIMBONES_JOB_TREE_V184.md) · [Codex handover](CODEX_V184_HANDOVER.md) · [Dub-send audit](agents/dub_step_send_v184.md). Official manual: https://www.ericasynths.lv/media/LXR_manual.pdf
 
@@ -145,7 +145,7 @@
 
 - **Next engineering gate:** Independently review [stacked #8–#14](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/14), verify rollback and SD kit backup, and run **on-device** CPU/PK/LATE/RAIL and full dry/wet routing tests of the JB-23 v1.8.04 candidate against a backed-up bootable firmware. GitHub source verification is green, but device verification is outstanding. New FM-free candidate source is **not yet hardware-validated**. Then wavetable cost optimisation and comb-filter feasibility, after headroom is confirmed. Review JB-19A PR #8 before stacked JB-19B PR #9. Dry voice remains untouched. GitHub ARM checks and real-device CPU headroom/hardware acceptance are required; no firmware has been flashed for the new send.
 
-- Earlier v1.8.03 ARM CI passed, AND v1.8.03 subsequently **booted on tester's actual LXR-02**. It is **NOT safe/validated**: DSP crunch/overrun reproduced; idle readings after restart DSP 62%, PK 66%, LATE 0, RAIL 0; under load DSP 101%, PK 105%, LATE 999 (UI cap), RAIL 240. These meter fields have distinct semantics. No v1.8.04 firmware build exists yet.
+- Earlier v1.8.03 ARM CI passed, AND v1.8.03 subsequently **booted on tester's actual LXR-02**. It is **NOT safe/validated**: DSP crunch/overrun reproduced; idle readings after restart DSP 62%, PK 66%, LATE 0, RAIL 0; under load DSP 101%, PK 105%, LATE 999 (UI cap), RAIL 240. These meter fields have distinct semantics. A v1.8.04 GitHub Actions-generated **HARDWARE-UNVERIFIED** firmware test artifact now exists: [run #42487592194](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42487592194), SHA256 `0be1f7553f0fd86adbd8c49891b5de0c2f44a46348642e369b6223a76c741aae`. No on-device tests have been performed for this image.
 - CPU instrumentation and multi-voice crunch are first engineering priorities; any new send must reuse existing FX processing and default OFF. User explicitly shelved Metallic FM and moved wavetable, dub send, step toggle/LED fix and comb-filter feasibility higher. The upstream LXR02Open license is **non-commercial**, not automatically compatible with GPL-3.0-only: study ideas, do not copy source.
 - USB multitrack is a feasibility investigation, not a committed deliverable.
 - Keep v1.8.02 untouched; experimental changes stay on dedicated branches.
