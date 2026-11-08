@@ -18,6 +18,14 @@ jobs:
       - name: Host menu navigation fixture
         run: python3 tests/test_menu.py
 
+  host-dsp:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and execute production DSP host regression
+        run: bash tests/run_jimbones_host.sh
+
   arm-compile:
     runs-on: ubuntu-latest
     timeout-minutes: 35
