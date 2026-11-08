@@ -16,6 +16,8 @@
 ## Sound design and performance
 - Metallic FM and wavetable oscillators **alongside** original engines; optional layering and velocity blend.
 - Wavetable waveshaping and click-transient user samples where feasible without breaking compatibility.
+- **JB-14 Transient Designer is located in the existing LXR-02 CLICK submenu**: optional attack/sustain shaping, click/noise transient layer, and velocity control, retaining native CLICK selection, bypass behavior, old kits and six original voice sounds.
+- JB-15 through JB-19 are implementation workstreams for FM Drum body/noise, velocity routing, Comb+/− filter routing, bit/SRR and detuned oscillator cluster. They remain unimplemented until code, tests, ARM budget and hardware validation are complete.
 - Per-voice tape/tube-like saturation with low-end preservation and velocity drive; do not substitute a global effect.
 - Optional second bass HPF/LPF and **Octatrack-style comb filter**, with resonant feedback, tunable delay/pitch and safe feedback limits.
 - **Dub-style FX sends in Step FX:** per-step send amounts into delay/reverb-style returns, tempo-synchronised throws, optional feedback and kick exclusion. Prefer send/return routing over forcing the effect across the whole mix; benchmark RAM and CPU.
