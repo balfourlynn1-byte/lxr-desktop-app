@@ -20,7 +20,7 @@
 static const char *const names[6] = {"1/16","1/8","1/4","D8","T8","1/32"};
 static uint8_t requested_division=1u; /* default eighth-note echo */
 static uint8_t status=DUB_DELAY_OFF;
-static uint8_t may_send, wet_only, last_mode=255u, was_ready, dirty;
+static uint8_t may_send, wet_only, last_mode=255u, was_ready, dirty, pending_retime;
 static uint32_t tail_frames, last_samples, cooldown_frames;
 static float last_feedback;
 
@@ -32,6 +32,7 @@ void dub_delay_init(void) {
     __atomic_store_n(&dirty,0u,__ATOMIC_RELAXED);
     last_mode=255u;
     was_ready=0u;
+    pending_retime=0u;
     last_samples=0u;
     tail_frames=0u;
     cooldown_frames=DUB_COOLDOWN_FRAMES;
@@ -150,12 +151,20 @@ void dub_delay_prepare(struct DelayStruct *delay, uint8_t fx_is_delay,
          * and retimes are throttled to at most 4 Hz. */
         uint32_t diff=samples>last_samples?samples-last_samples:last_samples-samples;
         const uint8_t changed=(uint8_t)(diff>=(DUB_FS/120u));
-        if(!was_ready || reapply || mode_changed ||
+        if(!was_ready || reapply || mode_changed || pending_retime ||
            (changed && cooldown_frames>=DUB_COOLDOWN_FRAMES)){
-            if(d->range!=1.f)Delay_setRange(d,1.f);
-            Delay_setDelayTime(d,normalized);
-            last_samples=samples;
-            cooldown_frames=0u;
+            /* Delay_setDelayTime ignores requests while its old 10ms
+             * interpolation is still in progress. Preserve the requested
+             * pad timing until that interpolation completes. */
+            if(d->interpValue>0.f && !mode_changed) {
+                pending_retime=1u;
+            }else{
+                if(d->range!=1.f)Delay_setRange(d,1.f);
+                Delay_setDelayTime(d,normalized);
+                last_samples=samples;
+                cooldown_frames=0u;
+                pending_retime=0u;
+            }
         }
         /* The kit's feedback remains user-controlled but cannot self-run at
          * 100% or higher during dub throws. */
@@ -170,6 +179,7 @@ void dub_delay_prepare(struct DelayStruct *delay, uint8_t fx_is_delay,
         __atomic_store_n(&wet_only,1u,__ATOMIC_RELAXED);
     }else{
         __atomic_store_n(&may_send,0u,__ATOMIC_RELAXED);
+        pending_retime=0u;
         if(was_ready){was_ready=0u;tail_frames=DUB_TAIL_FRAMES;}
         if(!fx_is_delay)tail_frames=0u;
         if(tail_frames && fx_is_delay)
