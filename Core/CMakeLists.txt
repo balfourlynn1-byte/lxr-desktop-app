@@ -114,6 +114,7 @@ add_library(lxr_engine OBJECT
     Src/Soundengine/AudioDiagnostics.c
     Src/Soundengine/StepFX.c
     Src/Soundengine/StepFXRuntime.c
+    Src/Soundengine/StepFxSend.c
     Src/Soundengine/TriggerOut.c
 )
 
