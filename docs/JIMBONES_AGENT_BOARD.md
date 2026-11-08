@@ -1,6 +1,6 @@
 # JIMBONES agent assignment board
 
-**Status (2026-11-08):** JIMBONES **v1.8.04 EXPERIMENTAL** integration and hardware-test handover. Agents are virtual responsibilities, **not running autonomous processes**; this tracked board replaces GitHub Issues (API 410). No job is implemented merely by being listed. Codex should take the discrete, researched jobs below, one PR per change.
+**Status (2026-11-08):** JIMBONES **v1.8.04 hardware-tested in part (~62% DSP, no audible crunch); v1.8.05/1.8.06 EXPERIMENTAL source/CI only**. Do not imply that the latest version has booted on the LXR-02. Agents are virtual responsibilities, **not running autonomous processes**; this tracked board replaces GitHub Issues (API 410). No job is implemented merely by being listed. Codex should take the discrete, researched jobs below, one PR per change.
 
 **Start here:** [Full dependency job tree](JIMBONES_JOB_TREE_V184.md) · [Codex handover](CODEX_V184_HANDOVER.md) · [Dub-send audit](agents/dub_step_send_v184.md). Official manual: https://www.ericasynths.lv/media/LXR_manual.pdf
 
@@ -8,17 +8,17 @@
 |---|---|---|---|
 | P0 | Verification + Integration | Baseline parity and release gate | Backlog |
 | P0 | Embedded + DSP | Real-time CPU monitor | Research complete; implementation queued |
-| P0 | Verification (DSP conditional) | JB-03 — post-Metallic DSP load check | **No confirmed v1.8.04 crunch; FM disabled.** Await 2-tom/4-pad readings before any code fix |
+| P0 | Verification (DSP conditional) | JB-03 — post-Metallic DSP load check | **v1.8.04 user reports ~62% DSP, high spikes gone, no audible crunch; RAIL increments only while playing, not idle.** PK/LATE/four-hit measurements still needed. No speculative fix. |
 | P1 | DSP + Embedded | Morph A/B/C, LFO and velocity | Backlog |
 | P1 | DSP + Verification | Per-voice tape/tube saturation | Backlog |
 | P2 | Research + Embedded | USB multitrack feasibility | Deferred until stable audio budget |
 | P0 | DSP + Embedded | Step FX on/off toggle and step 1 LED fix (JB-07/JB-21) | **PR #10 implemented; physical LEDs not yet verified** |
 | HOLD | DSP + Research | Metallic FM layered engine | Compiled OUT in JB-22 draft PR #12; legacy kit format preserved |
-| P1 | DSP + Research | Wavetable oscillators and waveshaping | JB-24 [PR #13](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/13) wave-first OSC UI CI green; hardware unverified |
+| P1 | DSP + Research | Wavetable oscillators and waveshaping | JB-24 PR #13 wave-first UI exists; full upstream waveform-ID/LFO interpolation **not ported**. JB-27 is next scoped DSP job; upstream source licence requires explicit compatibility review. |
 | P2 | Embedded + Verification | Hi-hat articulation and velocity curves | Backlog |
 | P2 | DSP + Embedded | Per-hit snare randomisation | Backlog |
 | P1 | DSP + Embedded | JB-12 — Bass and comb filters | **Comb implemented in [draft PR #15](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/15), [host/ARM CI passed](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42495034632); hardware unverified.** Independent bass filter remains backlog |
-| P1 | Embedded + Verification | UI navigation and performance diagnostics | Source/UI regression green; real LED/display test pending |
+| P1 | Embedded + Verification | UI navigation and performance diagnostics | JB-26 v1.8.06 implements LCD byte latch, exclusive screensaver bus ownership and original animated skull; CI green; device screenshot regression pending |
  
 | P0 | DSP + Embedded | JB-19A — six-lane send gate | **Draft PR #8 implemented; host tests passed locally; ARM/hardware not verified** |
 | P0 | DSP + Embedded | JB-19B — parallel FX mixer tap | **Draft PR #9; GitHub host + ARM CI passed, hardware pending** |
@@ -26,7 +26,10 @@
 | P0 | Embedded + Verification | JB-21 — all 16 buttons toggle and LEDs, per-voice send UI | **Draft PR #10 coded; host+ARM CI green, actual LED/device verification pending** |
 | P0 | Verification + Integration | JB-22 — integrated v1.8.04 release gates | PR #12 host/ARM/image green; **hardware pending** |
 | P1 | Embedded + DSP | JB-24 — wave-first OSC menu; metallic hidden | **[PR #13](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/13), host+ARM passed**; device unverified |
-| P0 | Verification + Integration | JB-23 — SHA-pinned experimental test pack | **[PR #14](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/14), [CI passed](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42487592194), [artifact available](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42487592194/artifacts/13620400602)**; device unverified |
+| P0 | Verification + Integration | JB-23 — SHA-pinned experimental test pack | **[PR #14](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/14), CI passed**, v1.8.04 user has booted with ~62% DSP; a full four-pad stress/PK/LATE record remains. |
+| P1 | Embedded + DSP | JB-25 — five selectable dub echo timings | **[PR #16](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/16)**, host+ARM passed, v1.8.05; physical controls untested. |
+| P0 | Embedded + Verification | JB-26 — garbled LCD/saver wake, bouncing skull | **[PR #17](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/17)**, [host+ARM passed](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42502110203), v1.8.06, 560 B ITCM free; [test-only image artifact](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42502110203/artifacts/13625738707). Hardware untested. |
+| P1 | DSP + Research | JB-27 — fuller upstream waveform-ID/LFO wavetable, waveshaping | Research/scope **only**. Upstream LXR02Open non-commercial terms incompatible with copying into GPL-only public source without permission; independent implementation / permission and DSP profiling required. |
 
 ## Individual work orders
 
@@ -49,7 +52,7 @@
 - **Owners:** DSP + Verification
 - **Scope:** Compare the *FM-free v1.8.04* candidate against the same older 2-tom and 4-pad load scenarios, logging DSP/PK/LATE/RAIL. Only investigate clipping, deadlines or code optimisation if the issue remains on new hardware.
 - **Deliverable:** Research findings with source links and license check, implementation proposal or focused PR, host tests, ARM build, image verification and hardware-test notes.
-- **State:** Previous metallic-enabled **v1.8.03** hardware reproduction confirmed (DSP 94–101%, PK 105%, LATE 999, RAIL 240). Metallic FM render logic is now compiled out in v1.8.04 and hidden from the UI, so its previous CPU cost is not expected to recur. **Do not mark v1.8.04 faulty or claim a precise improvement before device measurements.** Next action is a like-for-like test with the backed-up experimental candidate.
+- **State:** Metallic-enabled v1.8.03 previously produced 94–101% DSP, PK 105, LATE 999, RAIL 240 and audible crunch. User now reports the FM-free **v1.8.04 ~62% DSP**, high spikes apparently gone, **no audible crunch**, functioning dub echo. RAIL rises during sequencer playback but **not while idle**, without audible noise. This supports an improvement but **PK/LATE and same-kit four-hit tests have not been supplied**. No new crunch defect is confirmed; next action is recording actual hardware readings.
 
 ### JB-04 — Morph A/B/C, LFO and velocity
 - **Priority:** P1
