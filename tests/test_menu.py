@@ -23,6 +23,7 @@ fixture=r'''
 static struct { uint8_t top1; } menuPages[20][8];
 static uint8_t menuIndex,menu_activePage,editModeActive;
 static uint8_t jb_screen,jb_selected=JB_METAL,jb_oscArmed;
+static uint8_t jb_extPage,jb_extArmed;
 static uint8_t menu_getSubPage(void) { return (menuIndex&MASK_PAGE)>>PAGE_SHIFT; }
 static int has2ndPage(unsigned p) { return p==2; }
 '''
@@ -42,6 +43,12 @@ int main(void) {
   menu_switchSubPage(2,1); assert(!jb_screen && menuIndex==16);
   menu_switchSubPage(2,1); assert(menuIndex==20);
   menu_switchSubPage(2,1); assert(menuIndex==16);
+  menu_switchSubPage(4,1); assert(menu_getSubPage()==4 && !jb_extPage);
+  menu_switchSubPage(4,1); assert(jb_extPage==5);
+  menu_switchSubPage(4,1); assert(!jb_extPage);
+  menu_switchSubPage(7,1); assert(menu_getSubPage()==7 && !jb_extPage);
+  menu_switchSubPage(7,1); assert(jb_extPage==8);
+  menu_switchSubPage(7,1); assert(!jb_extPage);
  }
  menu_activePage=MENU_MIDI_PAGE; menuIndex=0; menu_switchSubPage(0,1); assert(!jb_screen);
  puts("PASS actual menu transition: first OSC original, eight macro banks plus interpolation bank, exit, six voices plus open-hat page, legacy second page/global behavior");
