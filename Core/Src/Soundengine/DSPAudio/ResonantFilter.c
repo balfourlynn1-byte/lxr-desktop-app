@@ -20,7 +20,8 @@
 //------------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------------
-IN_ITCM_RAM void SVF_setReso(ResonantFilter* filter, float feedback)
+/* Control-rate setter: keep precious audio ITCM for per-sample DSP. */
+void SVF_setReso(ResonantFilter* filter, float feedback)
 {
 	filter->q = 1-feedback;
 	if(filter->q<0.1f)filter->q = 0.02f;
@@ -37,6 +38,7 @@ void SVF_init(ResonantFilter* filter)
 		filter->q = 0.9f;
 
 		filter->drive = 0.315f;
+		jb_comb_init(&filter->comb);
 
 		SVF_directSetFilterValue(filter,0.25f);
 
@@ -49,6 +51,7 @@ void SVF_reset(ResonantFilter* filter)
 {
 	filter->s1 = 0;
 	filter->s2 = 0;
+	jb_comb_reset(&filter->comb);
 
 #if ENABLE_NONLINEAR_INTEGRATORS
 	filter->zi = 0;	//input z^(-1)
@@ -86,7 +89,8 @@ IN_ITCM_RAM void SVF_recalcFreq(ResonantFilter* filter)
 #endif
 }
 //------------------------------------------------------------------------------------
-IN_ITCM_RAM void SVF_setDrive(ResonantFilter* filter,float drive)
+/* Control-rate setter: keep precious audio ITCM for per-sample DSP. */
+void SVF_setDrive(ResonantFilter* filter,float drive)
 {
 #if USE_SHAPER_NONLINEARITY
 	filter->drive = drive;
@@ -97,7 +101,8 @@ IN_ITCM_RAM void SVF_setDrive(ResonantFilter* filter,float drive)
 
 }
 //------------------------------------------------------------------------------------
-IN_ITCM_RAM void SVF_directSetFilterValue(ResonantFilter* filter, float val)
+/* Control-rate setter: keep precious audio ITCM for per-sample DSP. */
+void SVF_directSetFilterValue(ResonantFilter* filter, float val)
 {
 	filter->f = val*(0.5f*0.90f);
 	filter->g  = fastTan(M_PI * filter->f );
@@ -162,7 +167,12 @@ IN_ITCM_RAM void SVF_calcBlockZDF(ResonantFilter* filter, const uint8_t type, in
 	const float R 	= filter->f >= 0.4499f ? 1 : filter->q;
 	const float ff 	= f*f;
 
+	if(type!=FILTER_COMB) filter->comb.active=0u;
 	if(type== FILTER_OFF) return;
+	if(type== FILTER_COMB) {
+		jb_comb_process(&filter->comb,buf,size,filter->f,1.f-filter->q);
+		return;
+	}
 	if(type == FILTER_NAIVE_2_POLE)
 	{
 
@@ -383,7 +393,12 @@ IN_ITCM_RAM void SVF_calcBlockCheapZDF(ResonantFilter* filter, const uint8_t typ
 	const float R 	= filter->f >= 0.4499f ? 1 : filter->q;
 	const float ff 	= f*f;
 
+	if(type!=FILTER_COMB) filter->comb.active=0u;
 	if(type== FILTER_OFF) return;
+	if(type== FILTER_COMB) {
+		jb_comb_process(&filter->comb,buf,size,filter->f,1.f-filter->q);
+		return;
+	}
 	if(type == FILTER_NAIVE_2_POLE)
 	{
 
