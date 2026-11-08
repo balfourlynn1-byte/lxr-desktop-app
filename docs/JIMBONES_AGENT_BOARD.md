@@ -13,7 +13,7 @@
 | P1 | DSP + Verification | Per-voice tape/tube saturation | Backlog |
 | P2 | Research + Embedded | USB multitrack feasibility | Deferred until stable audio budget |
 | P0 | DSP + Embedded | Step FX on/off toggle and step 1 LED fix (JB-07/JB-21) | **PR #10 implemented; physical LEDs not yet verified** |
-| HOLD | DSP + Research | Metallic FM layered engine | Shelved by user: insufficient audible benefit for DSP load |
+| HOLD | DSP + Research | Metallic FM layered engine | Compiled OUT in JB-22 draft PR #12; legacy kit format preserved |
 | P1 | DSP + Research | Wavetable oscillators and waveshaping | Core tables/interpolation found; optimize, audit and regression-gate |
 | P2 | Embedded + Verification | Hi-hat articulation and velocity curves | Backlog |
 | P2 | DSP + Embedded | Per-hit snare randomisation | Backlog |
@@ -24,7 +24,7 @@
 | P0 | DSP + Embedded | JB-19B — parallel FX mixer tap | **Draft PR #9; GitHub host + ARM CI passed, hardware pending** |
 | P1 | DSP + Embedded | JB-20 — tempo-synced dub delay using current FX buffer | **Draft PR #11 implemented; host+ARM CI green; hardware pending** |
 | P0 | Embedded + Verification | JB-21 — all 16 buttons toggle and LEDs, per-voice send UI | **Draft PR #10 coded; host+ARM CI green, actual LED/device verification pending** |
-| P0 | Verification + Integration | JB-22 — baseline/CPU/host/ARM/hardware release gates | **Hardware failure evidence recorded; test implementation needed** |
+| P0 | Verification + Integration | JB-22 — integrated v1.8.04 release gates | **Draft PR #12 coded: host tests pass; strict ARM memory gate under verification; hardware pending** |
 
 ## Individual work orders
 
@@ -137,11 +137,11 @@
 ### JB-22 — Experimental integration and regression gate
 - **Priority:** P0. **Owners:** Verification + Integration.
 - **Scope:** Dry bit-parity bypass, four-pad overlapping hit, echo feedback tail, FX routing, memory, host + ARM CI, v1.8.02 rollback, hardware check.
-- **State:** Test checklist complete, tests and firmware build not yet done; [Codex handoff](CODEX_V184_HANDOVER.md).
+- **State:** Draft [PR #12](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/12) integrates JB-19A/B/JB-21/JB-20, compiles Metallic FM fully out, preserves legacy kit payload mapping, and checks mono/pingpong delays, six-voice output bypass, 16-button UI, Step 1 LED source path, external-clock failures and host/ARM release gates. GCC + Clang host tests passed. ARM cross-link succeeded with ITCM margin optimisation under active rerun; the gate requires >=512 bytes free (vs only 8 bytes before JB-22). **Hardware DSP/PK/LATE/RAIL test and real LED/audio confirmation remain mandatory.** [Verification plan](https://github.com/balfourlynn1-byte/lxr-desktop-app/blob/agents/jb-22-integration-gate-v184/docs/agents/jb22_release_gate.md).
 
 ## Findings and constraints
 
-- **Next engineering gate:** JB-22 integration regression of the stacked PRs, CPU/PK/LATE/RAIL and real output verification on the actual LXR-02, retaining a known-good rollback. Then wavetable cost optimisation and comb-filter feasibility, after headroom is confirmed. Review JB-19A PR #8 before stacked JB-19B PR #9. Dry voice remains untouched. GitHub ARM checks and real-device CPU headroom/hardware acceptance are required; no firmware has been flashed for the new send.
+- **Next engineering gate:** Finish JB-22 ARM memory/headroom verification, then on-device CPU/PK/LATE/RAIL and full dry/wet routing tests against a backed-up bootable firmware. New FM-free candidate source is **not yet hardware-validated**. Then wavetable cost optimisation and comb-filter feasibility, after headroom is confirmed. Review JB-19A PR #8 before stacked JB-19B PR #9. Dry voice remains untouched. GitHub ARM checks and real-device CPU headroom/hardware acceptance are required; no firmware has been flashed for the new send.
 
 - Earlier v1.8.03 ARM CI passed, AND v1.8.03 subsequently **booted on tester's actual LXR-02**. It is **NOT safe/validated**: DSP crunch/overrun reproduced; idle readings after restart DSP 62%, PK 66%, LATE 0, RAIL 0; under load DSP 101%, PK 105%, LATE 999 (UI cap), RAIL 240. These meter fields have distinct semantics. No v1.8.04 firmware build exists yet.
 - CPU instrumentation and multi-voice crunch are first engineering priorities; any new send must reuse existing FX processing and default OFF. User explicitly shelved Metallic FM and moved wavetable, dub send, step toggle/LED fix and comb-filter feasibility higher. The upstream LXR02Open license is **non-commercial**, not automatically compatible with GPL-3.0-only: study ideas, do not copy source.
