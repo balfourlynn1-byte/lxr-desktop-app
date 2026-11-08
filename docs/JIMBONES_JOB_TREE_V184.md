@@ -24,8 +24,8 @@ BASE: known-good LXR-02 firmware (keep untouched + backed up)
                       +-- [CI PASS / REVIEW] JB-24 wave-first
                           |    OSC menu, FM controls hidden   draft PR #13
                           |
-                          +-- [NEXT / BLOCKED] JB-23 device-ready
-                              |   test pack, rollback + checksum
+                          +-- [CI PASS / REVIEW] JB-23 experimental
+                              |   test pack, rollback + checksum   draft PR #14
                               |       |
                               |       +-- JB-03 actual DSP stress
                               |       +-- JB-02 meter verification
@@ -39,7 +39,7 @@ BASE: known-good LXR-02 firmware (keep untouched + backed up)
                               +-- [DEFERRED] other sound engines
 ```
 
-**Review order:** #8 → #9 → #10 → #11 → #12 → #13. These PRs are stacked **on one another**, not six independently mergeable changes into `main`. Never merge or flash just because CI is green.
+**Review order:** #8 → #9 → #10 → #11 → #12 → #13 → #14. These PRs are stacked **on one another**, not six independently mergeable changes into `main`. Never merge or flash just because CI is green.
 
 ## Work queue and status
 
@@ -51,7 +51,7 @@ BASE: known-good LXR-02 firmware (keep untouched + backed up)
 | **JB-20** clocked dub delay | P1 | Host + ARM CI pass; [PR #11](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/11) | Test external clocks, physical FX output and wet tail | DSP / Verification |
 | **JB-22** integration + FM-off | P0 | GCC/Clang, ARM + image validation PASS; **560 B free ITCM** in [run #42485178857](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42485178857); [PR #12](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/12) | Review the combined signal path, unchanged kit format and device risk | Integration / Verification |
 | **JB-24** wave-first OSC UI | P1 | GCC/Clang + ARM + memory/image CI PASS in [run #42486888340](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42486888340); [PR #13](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/13) | Review 7 pages + interpolation on actual 16×2 display, preset legacy modes | Embedded / DSP |
-| **JB-23** device test pack | P0 | Not implemented; no user-distributed v1.8.04 image | Prepare a checksum-pinned experimental artifact and rollback instructions **only after code review**; do not call it safe | Verification / Integration |
+| **JB-23** device test pack | P0 | **[Draft PR #14](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/14), [GCC/Clang + ARM/manifest checks GREEN](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42487592194)**; [UNVERIFIED artifact](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42487592194/artifacts/13620400602) published, 560 B ITCM free, SHA256 `0be1f7553f0fd86adbd8c49891b5de0c2f44a46348642e369b6223a76c741aae` | Independently review stacked PRs, verify working rollback image, then actual supervised hardware tests. No routine use approval. | Verification / Integration |
 | **JB-03** overlapping-tom crunch | P0 | Reproduced on v1.8.03 device (DSP up to 101%, LATE 999); root cause not confirmed; Metallic DSP removed in later source | Test same kit and velocities on reviewed v1.8.04 device build, 2 toms and 4 pads | DSP / Verification |
 | **JB-02** DSP/PK/LATE/RAIL meter | P0 | Present in experimental firmware and hardware readings on earlier build | Confirm semantics and reset behavior on new image; compare idle and loaded cases | Embedded / Verification |
 | **JB-01** baseline parity and rollback | P0 | Source and CI regressions exist; user has booted prior experimental firmware | Verify six original voices, physical outputs, kits and recoverable rollback on device | Integration |
@@ -69,18 +69,18 @@ BASE: known-good LXR-02 firmware (keep untouched + backed up)
 - It does **not** paste or import LXR02Open's non-commercial source into this GPL-only public repository. The user's intended use is personal, but redistribution of code in public GitHub still requires a compatible licence or explicit permission. Existing native DSP wave tables remain.
 - The actual LCD, knob sensitivity and audio result have **not** been tested on the physical synth. The CI checks verify source, host simulations, successful ARM link, a checksum and a >=512 B ITCM slack threshold; they do not measure audio ISR CPU utilisation.
 
-## Ready-to-execute next Codex job — JB-23
+## Next work: hardware sign-off (JB-03 + JB-02 + JB-01)
 
-**Goal:** a reviewable, rollback-safe **testing pack**, not a claim of stable firmware.
+**Goal:** verify the experimental package on the actual unit, using a separately verified known-working rollback image, and gather real DSP/PK/LATE/RAIL readings. JB-23 source and packaging are completed; the test is NOT.
 
-**Read only first:** this tree; `docs/agents/jb22_release_gate.md`; `docs/agents/jb24_waveui.md`; `tests/validate_image.py`; `.github/workflows/jimbones-jb24-waveui.yml`; the exact head of PR #13.
+**Read first:** [JB-23 rollback guide](https://github.com/balfourlynn1-byte/lxr-desktop-app/blob/agents/jb-23-from-waveui-v184/docs/agents/jb23_rollback_and_install.md), [hardware test sheet](https://github.com/balfourlynn1-byte/lxr-desktop-app/blob/agents/jb-23-from-waveui-v184/docs/agents/jb23_hardware_test_sheet.md), the exact source commit `3006145594c731ea842ca4301911ff116a99a045`, and all parent draft PRs.
 
-1. Verify and independently review complete parent PR chain (#8–#13). Resolve any unreviewed integration surprises before making an image public.
-2. Create a test-only workflow that records exact git SHA, ELF/ITCM, firmware version, and SHA256, and uploads a distinctly labelled `UNVERIFIED` experimental image only when build and preflight gates are passing. Never overwrite the last bootable image.
-3. Prepare an explicit device rollback checklist: backup kits and current working image, SD card steps, how to return to working firmware, and checksum comparison. All device claims are **pending hardware tests**.
-4. Prepare a fillable hardware log: idle DSP/PK/LATE/RAIL after reset; 2 overlapping toms; 4 concurrent pad hits; wave interpolation OFF/ON; Step 1 dub throw; mono/pingpong; external clock disconnect; physical LEDs, output routing and feedback tails. Include original v1.8.03 numbers as **historical reference only**.
-5. Stop at a draft PR for human review. **Do not automatically flash, merge main or call hardware stable.**
+1. Independently review parent PR chain (#8–#14), even though CI is green. A GitHub Actions download being available is not a flash recommendation.
+2. Confirm the user retains their currently bootable image and backed-up SD kits **before** experimenting. Verify checksum of that rollback image and the new image.
+3. User-supervised LXR-02 tests begin at low audio volume. Test original voices, output routes and Step 1 LED first; stop immediately on crashes, audible crunch, or increased late counters.
+4. Record idle DSP/PK/LATE/RAIL after reset, 2 overlapping toms, 4 concurrent pad hits, wave interpolation, DUB SEND, clock disconnect, physical LEDs and output routing. v1.8.03 figures are historical reference only.
+5. File any observed device failures as separate GitHub work orders and do not add comb/tape/new oscillators until DSP headroom is measured.
 
 **Release gate:** the user manually reports a stable boot with all six original voices, no new crackle or missed deadlines on four-hit stress, satisfactory headroom, and successful rollback. Only then reconsider comb/wavetable expansion.
 
-**Codex start prompt:** `Read docs/JIMBONES_JOB_TREE_V184.md and docs/agents/jb22_release_gate.md. Start JB-23 on a separate branch from PR #13. Add a checksum-pinned, rollback-safe experimental hardware test pack and no automatic release. Produce a draft PR with CI proof and list any device tests that remain outstanding.`
+**Codex next-start prompt:** `Read docs/JIMBONES_JOB_TREE_V184.md and PR #14. Use the existing JB-23 checksum-pinned artifact and device checklist. Don't assume hardware tests have been done; when actual device readings arrive, compare them to historical v1.8.03 baseline, identify DSP bottlenecks, and make separate minimal reviewable PRs. Preserve backup/rollback.`
