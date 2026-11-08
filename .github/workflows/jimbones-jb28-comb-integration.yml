@@ -28,6 +28,8 @@ jobs:
       - name: Standalone Step FX
         run: bash tests/run_combined_stepfx.sh
   arm-and-test-artifact:
+    # Explicit user hold: do not compile ARM or produce firmware until candidate is feature-frozen and approved.
+    if: ${{ false }}
     needs: host
     runs-on: ubuntu-24.04
     timeout-minutes: 35
