@@ -19,6 +19,7 @@ void stepfx_send_init(void);
 
 /* Control/UI/MIDI context: one producer per voice, atomic 32-bit request. */
 void stepfx_send_set_enabled(uint8_t enabled);
+uint8_t stepfx_send_is_enabled(void);
 void stepfx_send_set_mask(uint8_t voice_mask);
 void stepfx_send_set_level(uint8_t voice, uint8_t level); /* 0..127 */
 void stepfx_send_gate(uint8_t voice, uint32_t hold_frames); /* 0 = release */
