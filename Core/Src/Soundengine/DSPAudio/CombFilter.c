@@ -18,6 +18,7 @@ void jb_comb_reset(JbCombFilter *c)
     for(uint32_t i=0; i<JB_COMB_TAPS; ++i) c->history[i]=0;
     c->write=0u;
     c->delay=0u;
+    c->active=0u;
 }
 void jb_comb_init(JbCombFilter *c) { jb_comb_reset(c); }
 
@@ -44,8 +45,15 @@ void jb_comb_process(JbCombFilter *c, int16_t *samples, uint8_t frames,
     const uint16_t target=comb_delay(normalizedFreq);
     const uint16_t feedback=comb_feedback(normalizedReso);
     if(!feedback) { /* exactly bit-identical bypass at zero resonance */
+        c->active=0u; /* next activation flushes stale echoes once */
         c->delay=target;
         return;
+    }
+    if(!c->active) {
+        for(uint32_t k=0;k<JB_COMB_TAPS;k++) c->history[k]=0;
+        c->write=0u;
+        c->delay=target;
+        c->active=1u;
     }
     /* Discrete delay selection is smoothed at one sample/block. This
      * limits sudden flams during knob moves without a float per-sample
