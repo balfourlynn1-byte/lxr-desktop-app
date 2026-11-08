@@ -102,3 +102,7 @@ Each update must include UTC time, pushed commit SHA, stage, files inspected/cha
 ### 2026-11-08 UTC — atomic A02 source comparison
 - Compared historical baseline with JB-26 skull lineage and JB-28 current branch: identical smoother C/header blobs, enabled config, three-drum call sites; JIMBONES `jb_trigger` and `jb_preFilterNoise` added around the original path.
 - Full SHA/line references in `docs/CODEX_HANDOVER_2026-11-10.md`. Source-only DONE, audio tests NOT RUN; no ARM/image activity. Next: A03 132-sample focused host regression; A01 earliest introducing commit remains unresolved.
+
+### 2026-11-08 — B04 oscillator compatibility research checkpoint
+- Pushed source-only compatibility map `docs/JB_B04_OSCILLATOR_COMPATIBILITY_MAP.md` at `ed00f8c97fa952935115d6f14a38df94edd4bf27`. Erica PWM=5 conflicts with upstream CRASH=5; `OscInfo` layouts, sample caches, and native modulation paths are not binary-compatible.
+- Test ledger: source audit VERIFIED via exact GitHub file blobs; native GCC/Clang, WAV, ARM and hardware NOT RUN. Next B05 velocity destination routing, bounds and default-OFF tests. ARM hold unchanged.
