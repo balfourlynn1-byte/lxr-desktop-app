@@ -6,9 +6,5 @@ mkdir -p build/host
 # The new stepfx engine safely defaults to snare and hi-hat, so exercise
 # its current grid/phrase/voice-mask regression instead.
 bash tests/run_combined_stepfx.sh
-${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror -fsanitize=undefined \
-  -Itests/host -ICore/Inc tests/test_perfui.c \
-  Core/Src/Soundengine/StepFX.c Core/Src/menu/JimbonesPerfUI.c \
-  -o build/host/test_perfui
-build/host/test_perfui
+sh tests/run_stepfx_ui.sh
 sh tests/retrigger/run_tests_mac.sh
