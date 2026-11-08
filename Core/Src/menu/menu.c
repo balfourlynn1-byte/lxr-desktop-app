@@ -826,6 +826,7 @@ void menu_fastRefreshDisplay()
 /** compare the currentDisplayBuffer with the editDisplayBuffer and send all differences to the display*/
 
 static volatile uint8_t refresh_i, refresh_j;
+static uint8_t refresh_latched_char; /* one complete LCD byte, stable across nibbles */
 
 uint8_t sendDisplayBuffer()
 {
@@ -889,12 +890,12 @@ uint8_t sendDisplayBuffer()
 		{
 			//something has changed
 
-			//we have to omit the zero termination sign
-			if(editDisplayBuffer[refresh_i][refresh_j] == '\0')
-			{
-				//make a clear space out of zero termination
-				editDisplayBuffer[refresh_i][refresh_j] = ' ';
-			}
+			/* Latch the byte before sending either 4-bit nibble. LCD writes
+			 * are asynchronous: a repaint can change editDisplayBuffer
+			 * between the upper/lower nibble and create junk characters.
+			 * NUL is a terminator, not a printable LCD glyph. */
+			refresh_latched_char=(uint8_t)editDisplayBuffer[refresh_i][refresh_j];
+			if(refresh_latched_char==0u)refresh_latched_char=' ';
 			display_refresh_state++;
 		}
 		else
@@ -935,19 +936,11 @@ uint8_t sendDisplayBuffer()
 
 	case 4:
 		//send the new character
-		if(lcd_data_nonBlock(editDisplayBuffer[refresh_i][refresh_j]))
+		if(lcd_data_nonBlock(refresh_latched_char))
 		{
-			//update currentDisplayBuffer
-			//No idea why it happens that a zero termination slips through to here,
-			//but it is sometimes the case and leads to wrong signs on the display!
-			//probably when a menu_repaint() happens when sendDisplaybuffer is running...
-			//but this seems an appropriate fix.
-			if(editDisplayBuffer[refresh_i][refresh_j] == '\0')
-			{
-				//make a clear space out of zero termination
-				editDisplayBuffer[refresh_i][refresh_j] = ' ';
-			}
-			currentDisplayBuffer[refresh_i][refresh_j] = editDisplayBuffer[refresh_i][refresh_j];
+			/* Record exactly what reached the LCD, not a different value
+			 * written to editDisplayBuffer during the nonblocking transfer. */
+			currentDisplayBuffer[refresh_i][refresh_j]=(char)refresh_latched_char;
 
 			refresh_j++;
 			if(refresh_j>=16)
@@ -991,6 +984,9 @@ uint8_t sendDisplayBuffer()
 //-----------------------------------------------------------------
 void menu_tick()
 {
+	/* Screensaver owns LCD transfers until clean exit; avoid the
+	 * normal menu refresh interleaving with CGRAM skull updates. */
+	if(screensaver_Active)return;
 
 	if((menu_activePage == PATTERN_SAVE_PAGE_OK) || (menu_activePage == KIT_SAVE_PAGE_OK))
 	{
