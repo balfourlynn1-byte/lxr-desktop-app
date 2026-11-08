@@ -18,6 +18,7 @@
 #include "Soundengine/USB/usb_manager.h"
 #include "Soundengine/DSPAudio/Jimbones.h"
 #include "Soundengine/StepFX.h"
+#include "Soundengine/StepFxSend.h"
 #include "Soundengine/AudioDiagnostics.h"
 void stepfx_audioBlock(void);
 #include "Soundengine/MIDI/Uart.h"
@@ -71,6 +72,8 @@ void soundengine_init()
     DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
 #endif
 	stepfx_init();
+	/* JB-19B: optional parallel send stays OFF until explicitly enabled. */
+	stepfx_send_init();
 	jb_init();
 	mixer_init();
 

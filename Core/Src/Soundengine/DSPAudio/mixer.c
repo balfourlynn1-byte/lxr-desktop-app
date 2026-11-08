@@ -27,6 +27,7 @@
 #include "Soundengine/TriggerOut.h"
 #include "menu/menu.h"
 #include "Soundengine/FxBus.h"
+#include "Soundengine/StepFxSendMix.h"
 
 	uint8_t r2_Available;
 	uint8_t l1_Available;
@@ -560,6 +561,32 @@ static void renderLayer(unsigned voice,int16_t *samples,float voiceGain) {
  if(elapsed>jb_layerPeakCycles[voice]) jb_layerPeakCycles[voice]=elapsed;
 #endif
 }
+/* JB-19B: tap a copy AFTER voice DSP/decimation, BEFORE legacy MIX routing.
+ * Preserve the original mono sample buffer and physical dry output.
+ * The send gates return before any sample loop when idle (default).
+ * Global FX OFF is intentionally excluded to avoid a second dry signal.
+ */
+static void mixer_stepfx_send(unsigned v, const int16_t *samples,
+                             unsigned pan, float triggeredL, float triggeredR,
+                             int16_t *fxInput)
+{
+#if USE_SQRT_LUT
+    const float l = squareRootLut[127u-pan];
+    const float r = squareRootLut[pan];
+#elif USE_TRIGGERED_PAN
+    (void)pan;
+    const float l = triggeredL;
+    const float r = triggeredR;
+#else
+    (void)triggeredL; (void)triggeredR;
+    const float l = sqrtf((127.f-(float)pan)/127.f);
+    const float r = sqrtf((float)pan/127.f);
+#endif
+    stepfx_send_mix_voice((uint8_t)v,
+            (uint8_t)(mixer_audioRouting[v] == MIXER_ROUTING_FX_BUS),
+            (uint8_t)(fxBus.fxType != FX_OFF),
+            samples, OUTPUT_DMA_SIZE, l, r, fxInput);
+}
 IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 {
 
@@ -619,6 +646,7 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 	renderLayer(0, sampleData, voiceArray[0].vol);
 	//decimate voice
 	mixer_decimateBlock(0,sampleData);
+	mixer_stepfx_send(0, sampleData, voiceArray[0].pan, voiceArray[0].triggeredPanL, voiceArray[0].triggeredPanR, fxBusData);
 	//copy to selected dma buffer
 #if USE_SQRT_LUT
 	mixer_addDataToOutput(mixer_audioRouting[0],squareRootLut[127-voiceArray[0].pan] ,squareRootLut[voiceArray[0].pan], sampleData,&output[pos],&output[pos+1],&output2[pos],&output2[pos+1], fxBusData);
@@ -645,6 +673,7 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 	renderLayer(1, sampleData, voiceArray[1].vol);
 	//decimate voice
 	mixer_decimateBlock(1,sampleData);
+	mixer_stepfx_send(1, sampleData, voiceArray[1].pan, voiceArray[1].triggeredPanL, voiceArray[1].triggeredPanR, fxBusData);
 	//copy to selected dma buffer
 #if USE_SQRT_LUT
 	mixer_addDataToOutput(mixer_audioRouting[1],squareRootLut[127-voiceArray[1].pan] ,squareRootLut[voiceArray[1].pan], sampleData,&output[pos],&output[pos+1],&output2[pos],&output2[pos+1], fxBusData);
@@ -666,6 +695,7 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 	renderLayer(2, sampleData, voiceArray[2].vol);
 	//decimate voice
 	mixer_decimateBlock(2,sampleData);
+	mixer_stepfx_send(2, sampleData, voiceArray[2].pan, voiceArray[2].triggeredPanL, voiceArray[2].triggeredPanR, fxBusData);
 	//copy to selected dma buffer
 #if USE_SQRT_LUT
 	mixer_addDataToOutput(mixer_audioRouting[2],squareRootLut[127-voiceArray[2].pan] ,squareRootLut[voiceArray[2].pan], sampleData,&output[pos],&output[pos+1],&output2[pos],&output2[pos+1], fxBusData);
@@ -686,6 +716,7 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 	renderLayer(3, sampleData, snareVoice.vol);
 	//decimate voice
 	mixer_decimateBlock(3,sampleData);
+	mixer_stepfx_send(3, sampleData, snareVoice.pan, snareVoice.triggeredPanL, snareVoice.triggeredPanR, fxBusData);
 	//copy to selected dma buffer
 #if USE_SQRT_LUT
 	mixer_addDataToOutput(mixer_audioRouting[3],squareRootLut[127-snareVoice.pan], squareRootLut[snareVoice.pan], sampleData,&output[pos],&output[pos+1],&output2[pos],&output2[pos+1], fxBusData);
@@ -702,6 +733,7 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 	renderLayer(4, sampleData, cymbalVoice.vol);
 	//decimate voice
 	mixer_decimateBlock(4,sampleData);
+	mixer_stepfx_send(4, sampleData, cymbalVoice.pan, cymbalVoice.triggeredPanL, cymbalVoice.triggeredPanR, fxBusData);
 	//copy to selected dma buffer
 #if USE_SQRT_LUT
 	mixer_addDataToOutput(mixer_audioRouting[4],squareRootLut[127-cymbalVoice.pan],	squareRootLut[cymbalVoice.pan], sampleData,&output[pos],&output[pos+1],&output2[pos],&output2[pos+1], fxBusData);
@@ -719,6 +751,7 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 	renderLayer(5, sampleData, hatVoice.vol);
 	//decimate voice
 	mixer_decimateBlock(5,sampleData);
+	mixer_stepfx_send(5, sampleData, hatVoice.pan, hatVoice.triggeredPanL, hatVoice.triggeredPanR, fxBusData);
 	//copy to selected dma buffer
 #if USE_SQRT_LUT
 	mixer_addDataToOutput(mixer_audioRouting[5],squareRootLut[127-hatVoice.pan],squareRootLut[hatVoice.pan], sampleData,&output[pos],&output[pos+1],&output2[pos],&output2[pos+1], fxBusData);
