@@ -19,3 +19,8 @@ ${CC:-cc} -std=c11 -O2 -g -Wall -Wextra -Werror -fsanitize=address,undefined,flo
  Core/Src/Soundengine/DSPAudio/Jimbones.c Core/Src/Soundengine/DSPAudio/wavetable.c \
  -lm -o build/host/test_texture_noise
 build/host/test_texture_noise
+
+# JB-02 audio deadline / queue telemetry host test
+${CC:-cc} -std=c11 -O2 -g -Wall -Wextra -Werror -fsanitize=address,undefined \\
+ -ICore/Inc tests/test_audio_telemetry.c -o build/host/test_audio_telemetry
+build/host/test_audio_telemetry
