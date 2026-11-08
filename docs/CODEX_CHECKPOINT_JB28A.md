@@ -41,4 +41,4 @@ Each update must include UTC time, pushed commit SHA, stage, files inspected/cha
 3. Resume from the exact pending step below, do not redo completed research without a concrete inconsistency.
 4. If a code change is incomplete, mark it PARTIAL and give the next specific edit/test. Never mark hardware accepted from CI.
 
-**Next action:** inspect donor PR #15 changed paths and map minimal transplant into current branch.
+**Next action:** read the six-gate contract in `docs/CODEX_START_HERE.md`, verify current branch/SHA, then inspect donor PR #15 changed paths and map minimal transplant. No Codex work has been run by this documentation update.
