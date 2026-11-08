@@ -41,3 +41,12 @@ Pinned `Core/DSPAudio/modulationNode.c` blob `e3a811bae6dfcb333601b0254095694487
 - Lines 253–305: `modNode_updateValue()` for `TYPE_UINT8` computes modulated value from current destination, amount and input; clamps negative. If global interpolation ON and destination matches one of six mapped oscillators and active budget remains, clamps max waveform ID, writes integer base to parameter, stores next waveform and fractional part on oscillator, tags current generation and increments active count. Otherwise falls back to integer cast (stepped wave selection).
 - **Engineering implication:** interpolation is both *destination-gated* and *per-block-budgeted*, with generation checks to prevent stale state. The source uses current parameter value in the modulation formula, so we must explicitly test repeated updates and reset ordering when adapting. The audit does not prove full per-mod-oscillator coverage or audio parity.
 - No upstream code copied into JIMBONES. No host or ARM test performed in this source-analysis task.
+
+## B03 — upstream oscillator renderer audit COMPLETE (2026-11-08)
+Pinned `Core/DSPAudio/Oscillator.c` blob `5c1bf056b8016ff1a43a87f7f72ae6bf59bb4467`.
+- Lines 98–105: **two static DTCM scratch buffers** of `OUTPUT_DMA_SIZE` int16 samples; comments specify 32-frame block interpolation. No per-hit heap allocation in this path.
+- Lines 106–155: interpolation clear helper, sample metadata cache with generation invalidation, activation gate checks global enabled flag, generation equality, fraction strictly between 0 and 1, adjacent increasing IDs and sample-bound max.
+- Lines 186–211: clone oscillator state twice, disable interpolation in clones, render base and next waves into separate scratch buffers, linearly mix, advance parent oscillator phase once. **Important review point:** scratch buffers are global, so verify non-reentrancy and nested calls before reuse.
+- Lines 229–253: analogous FM pair rendering with the same modulation input and blend. Native FM differs from the shelved experimental Metallic FM.
+- Lines 552–590: interpolation fast-path if active; otherwise native dispatcher handles SINE, SAW, TRI, REC, NOISE, CRASH and sample playback. Sample cache uses flash-backed SampleMemory generation to invalidate stale pointers.
+- Risks: two full render paths per interpolating voice; rough cross-class transitions, shared scratch-buffer concurrency, sample ID bounds and sample-cache validity. This is source evidence, **not** a measured CPU or audible quality pass.
