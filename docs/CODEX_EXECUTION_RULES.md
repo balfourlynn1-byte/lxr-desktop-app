@@ -1,6 +1,6 @@
 # CODEX_EXECUTION_RULES — JIMBONES lean build protocol
 
-**Read this after `docs/CODEX_1830_HANDOFF.md`.** This is a time/compute budget protocol, not evidence of hardware acceptance.
+**Quick entrypoint: [`CODEX_START_HERE.md`](CODEX_START_HERE.md). Read this longer policy only if clarification is needed.** This is a time/compute budget protocol, not evidence of hardware acceptance.
 
 ## Single-job contract and strict scope
 - **Current job: JB-28A ONLY** — transplant Comb from PR #15 into current JB-26-derived branch, run checks, package v1.8.07 TEST ONLY, draft PR, stop. Do not implement JB-29, pitch changes or new engines in this session.
