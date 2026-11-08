@@ -34,6 +34,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake ninja-build python3 gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
+      - name: Record exact source revision
+        run: |
+          printf 'Branch: %s\nCommit: %s\n' "$GITHUB_REF_NAME" "$GITHUB_SHA" | tee SOURCE_REVISION.txt
+          git status --short
       - name: Check required merged UI and interpolation code
         run: |
           grep -q 'WAVE INTERPOLATE' Core/Src/menu/menu.c || { echo 'STOP: merged UI not present'; exit 1; }
@@ -80,6 +84,7 @@ jobs:
           path: |
             build/release/LXR_V2_V1.8.03.img
             build/release/SHA256SUMS.txt
+            SOURCE_REVISION.txt
             build/release/diagnostics/
           if-no-files-found: error
           retention-days: 30
