@@ -45,6 +45,15 @@ jobs:
         run: |
           cmake --preset release
           cmake --build --preset release --parallel 2
+      - name: Record ARM memory usage
+        run: |
+          mkdir -p build/release/diagnostics
+          arm-none-eabi-gcc --version | head -1 | tee build/release/diagnostics/toolchain.txt
+          find build/release -type f -name '*.elf' -print > build/release/diagnostics/elf-files.txt
+          while IFS= read -r elf; do
+            arm-none-eabi-size -A "$elf" >> build/release/diagnostics/sections.txt
+          done < build/release/diagnostics/elf-files.txt
+          cat build/release/diagnostics/sections.txt 2>/dev/null || true
       - name: Validate image name
         run: |
           test -s build/release/LXR_V2_V1.8.03.img
@@ -58,5 +67,6 @@ jobs:
           path: |
             build/release/LXR_V2_V1.8.03.img
             build/release/SHA256SUMS.txt
+            build/release/diagnostics/
           if-no-files-found: error
           retention-days: 30
