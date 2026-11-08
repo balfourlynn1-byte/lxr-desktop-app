@@ -12,6 +12,7 @@ fixture=r'''
 #include <assert.h>
 #include <stdio.h>
 #include "Soundengine/DSPAudio/Jimbones.h"
+#include "menu/JimbonesWaveUI.h"
 #define MASK_PARAMETER 7
 #define MASK_PAGE 0xf8
 #define PAGE_SHIFT 3
@@ -22,7 +23,7 @@ fixture=r'''
 #define pgm_read_byte(p) (*(p))
 static struct { uint8_t top1; } menuPages[20][8];
 static uint8_t menuIndex,menu_activePage,editModeActive;
-static uint8_t jb_screen,jb_selected=JB_METAL,jb_oscArmed;
+static uint8_t jb_screen,jb_selected=0,jb_oscArmed;
 static uint8_t menu_getSubPage(void) { return (menuIndex&MASK_PAGE)>>PAGE_SHIFT; }
 static int has2ndPage(unsigned p) { return p==2; }
 '''
@@ -32,8 +33,8 @@ int main(void) {
   menu_activePage=voice; menuIndex=3<<3; jb_screen=jb_oscArmed=0;
   menu_switchSubPage(0,1); assert(!jb_screen && menuIndex==0);
   menu_switchSubPage(0,1); assert(jb_screen && jb_selected==JB_MODE);
-  for(unsigned page=1;page<JB_PARAMS/4;page++) { menu_switchSubPage(0,1); assert(jb_screen && jb_selected==page*4); }
-  menu_switchSubPage(0,1); assert(jb_screen && jb_selected==JB_PARAMS); /* ninth wave interpolation page */
+  for(unsigned page=1;page<JB_WAVEUI_BANKS;page++) { menu_switchSubPage(0,1); assert(jb_screen && jb_selected==page*4); }
+  menu_switchSubPage(0,1); assert(jb_screen && jb_selected==JB_WAVEUI_INTERP); /* eighth interpolation page */
   menu_switchSubPage(0,1); assert(!jb_screen);
   menu_switchSubPage(0,1); assert(jb_screen && jb_selected==JB_MODE);
   menu_switchSubPage(1,1); assert(!jb_screen && !jb_oscArmed && menu_getSubPage()==1);
@@ -44,7 +45,7 @@ int main(void) {
   menu_switchSubPage(2,1); assert(menuIndex==16);
  }
  menu_activePage=MENU_MIDI_PAGE; menuIndex=0; menu_switchSubPage(0,1); assert(!jb_screen);
- puts("PASS actual menu transition: first OSC original, eight macro banks plus interpolation bank, exit, six voices plus open-hat page, legacy second page/global behavior");
+ puts("PASS actual menu transition: first OSC original, seven wave-only macro banks plus interpolation bank, exit, six voices plus open-hat page, legacy second page/global behavior");
 }
 '''
 out=root/'build/host/menu_fixture.c'; out.write_text(fixture+fn+test)
