@@ -28,6 +28,8 @@ void stepfx_send_gate(uint8_t voice, uint32_t hold_frames); /* 0 = release */
  * Gates do not touch a delay buffer or stop existing effect feedback tails.
  */
 void stepfx_send_begin_block(uint8_t voice);
+/* Audio-thread-only fast path: no per-sample work for idle/bypassed lanes. */
+uint8_t stepfx_send_active(uint8_t voice);
 uint16_t stepfx_send_next_gain_q15(uint8_t voice);
 
 #endif
