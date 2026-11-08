@@ -19,3 +19,10 @@ ${CC:-cc} -std=c11 -O2 -g -Wall -Wextra -Werror -fsanitize=address,undefined,flo
  Core/Src/Soundengine/DSPAudio/Jimbones.c Core/Src/Soundengine/DSPAudio/wavetable.c \
  -lm -o build/host/test_texture_noise
 build/host/test_texture_noise
+
+# JB-03 deterministic 1-4 voice modulation fixture
+${CC:-cc} -std=c11 -O2 -g -Wall -Wextra -Werror -fsanitize=address,undefined,float-cast-overflow \\
+ -Itests/host -ICore/Inc tests/test_four_voice_modulation.c \\
+ Core/Src/Soundengine/DSPAudio/Jimbones.c Core/Src/Soundengine/DSPAudio/wavetable.c \\
+ -lm -o build/host/test_four_voice_modulation
+build/host/test_four_voice_modulation
