@@ -4,6 +4,7 @@ cd "$(dirname "$0")/.."
 mkdir -p build/host
 sh tests/run_stepfx_send.sh
 sh tests/run_stepfx_send_mix.sh
+sh tests/run_stepfx_ui.sh
 ${CC:-cc} -std=c11 -O2 -g -Wall -Wextra -Werror -fsanitize=address,undefined,float-cast-overflow \
  -Itests/host -ICore/Inc tests/test_jimbones.c \
  Core/Src/Soundengine/DSPAudio/Jimbones.c Core/Src/Soundengine/DSPAudio/wavetable.c \
