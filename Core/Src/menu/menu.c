@@ -1528,6 +1528,8 @@ static uint8_t jb_uiSigned(uint8_t p) {
 static void jb_uiAdjust(unsigned index,int diff) {
  const uint8_t p=jb_waveui_param((uint8_t)index);
  if(p>=JB_PARAMS || !diff)return;
+ /* No inert knob controls when this optional layer is disabled. */
+ if(p!=JB_MODE && !(jb_parameters[jb_uiVoice()][JB_MODE]&2u))return;
  if(p==JB_MODE) {
   /* Legacy presets keep raw modes; write ONLY OFF=0 / WAVETABLE=2. */
   jb_setControl(jb_uiVoice(),JB_MODE,diff>0?2u:0u);
@@ -1546,6 +1548,14 @@ static void jb_uiPaint(void) {
   return;
  }
  const unsigned voice=jb_uiVoice();
+ if(!(jb_parameters[voice][JB_MODE]&2u)) {
+  const char *title="WAVE LAYER OFF";
+  const char *hint="KNOB1 + TO ENABLE";
+  memcpy(editDisplayBuffer[0],title,strlen(title));
+  memcpy(editDisplayBuffer[1],hint,strlen(hint));
+  editDisplayBuffer[0][16]=0;editDisplayBuffer[1][16]=0;
+  return;
+ }
  const uint8_t par=jb_waveui_param(jb_selected);
  if(par>=JB_PARAMS){editDisplayBuffer[0][16]=0;editDisplayBuffer[1][16]=0;return;}
  if(editModeActive) {
@@ -2941,7 +2951,10 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
   if(inc) {
    if(editModeActive) jb_uiAdjust(jb_selected,inc);
    else {
-    jb_selected=jb_waveui_next(jb_selected,inc);
+    if(!(jb_parameters[jb_uiVoice()][JB_MODE]&2u) &&
+       jb_selected<JB_WAVEUI_INTERP)
+      jb_selected=JB_WAVEUI_INTERP;
+    else jb_selected=jb_waveui_next(jb_selected,inc);
    }
   }
   menu_repaintAll(); return;
@@ -3353,6 +3366,10 @@ void menu_switchSubPage(uint8_t subPageNr, uint8_t toggle)
    else {
     unsigned bank=(jb_selected==JB_WAVEUI_INTERP) ?
       JB_WAVEUI_BANKS+1u : (unsigned)(jb_selected/4u)+1u;
+    /* Skip added-wave editing banks when that layer is OFF. */
+    if(bank>0u && bank<JB_WAVEUI_BANKS &&
+       !(jb_parameters[menu_activePage<6u?menu_activePage:5u][JB_MODE]&2u))
+      bank=JB_WAVEUI_BANKS;
     if(bank > JB_WAVEUI_BANKS) { jb_screen=0; jb_selected=0; }
     else if(bank == JB_WAVEUI_BANKS) jb_selected=JB_WAVEUI_INTERP;
     else jb_selected=(uint8_t)(bank*4u);
