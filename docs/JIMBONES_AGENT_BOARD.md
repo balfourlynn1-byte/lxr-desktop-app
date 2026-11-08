@@ -2,29 +2,31 @@
 
 **Status (2026-11-08):** JIMBONES **v1.8.04 EXPERIMENTAL** research handover. Agents are virtual responsibilities, **not running autonomous processes**; this tracked board replaces GitHub Issues (API 410). No job is implemented merely by being listed. Codex should take the discrete, researched jobs below, one PR per change.
 
-**Start here:** [Dub-send technical audit](agents/dub_step_send_v184.md) · [Codex execution handover](CODEX_V184_HANDOVER.md). Official user manual: https://www.ericasynths.lv/media/LXR_manual.pdf
+**Start here:** [Full dependency job tree](JIMBONES_JOB_TREE_V184.md) · [Codex handover](CODEX_V184_HANDOVER.md) · [Dub-send audit](agents/dub_step_send_v184.md). Official manual: https://www.ericasynths.lv/media/LXR_manual.pdf
 
 | Priority | Assigned agent roles | Task | Status |
 |---|---|---|---|
 | P0 | Verification + Integration | Baseline parity and release gate | Backlog |
 | P0 | Embedded + DSP | Real-time CPU monitor | Research complete; implementation queued |
-| P0 | DSP + Verification | Multi-voice modulation crunch | Reproduced by user on hardware; fix and quantify |
+| P0 | DSP + Verification | Multi-voice modulation crunch | Old v1.8.03 reproduced; **v1.8.04 hardware results missing** |
 | P1 | DSP + Embedded | Morph A/B/C, LFO and velocity | Backlog |
 | P1 | DSP + Verification | Per-voice tape/tube saturation | Backlog |
 | P2 | Research + Embedded | USB multitrack feasibility | Deferred until stable audio budget |
 | P0 | DSP + Embedded | Step FX on/off toggle and step 1 LED fix (JB-07/JB-21) | **PR #10 implemented; physical LEDs not yet verified** |
 | HOLD | DSP + Research | Metallic FM layered engine | Compiled OUT in JB-22 draft PR #12; legacy kit format preserved |
-| P1 | DSP + Research | Wavetable oscillators and waveshaping | Core tables/interpolation found; optimize, audit and regression-gate |
+| P1 | DSP + Research | Wavetable oscillators and waveshaping | JB-24 [PR #13](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/13) wave-first OSC UI CI green; hardware unverified |
 | P2 | Embedded + Verification | Hi-hat articulation and velocity curves | Backlog |
 | P2 | DSP + Embedded | Per-hit snare randomisation | Backlog |
 | P1 | DSP + Embedded | Bass and comb filters | Comb: research/source audit required before implementation |
-| P1 | Embedded + Verification | UI navigation and performance diagnostics | Step 1 and modal controls urgent; CPU monitor kept |
+| P1 | Embedded + Verification | UI navigation and performance diagnostics | Source/UI regression green; real LED/display test pending |
  
 | P0 | DSP + Embedded | JB-19A — six-lane send gate | **Draft PR #8 implemented; host tests passed locally; ARM/hardware not verified** |
 | P0 | DSP + Embedded | JB-19B — parallel FX mixer tap | **Draft PR #9; GitHub host + ARM CI passed, hardware pending** |
 | P1 | DSP + Embedded | JB-20 — tempo-synced dub delay using current FX buffer | **Draft PR #11 implemented; host+ARM CI green; hardware pending** |
 | P0 | Embedded + Verification | JB-21 — all 16 buttons toggle and LEDs, per-voice send UI | **Draft PR #10 coded; host+ARM CI green, actual LED/device verification pending** |
-| P0 | Verification + Integration | JB-22 — integrated v1.8.04 release gates | **Draft PR #12: GCC+Clang host, ARM, image integrity, 560B ITCM headroom pass; hardware pending** |
+| P0 | Verification + Integration | JB-22 — integrated v1.8.04 release gates | PR #12 host/ARM/image green; **hardware pending** |
+| P1 | Embedded + DSP | JB-24 — wave-first OSC menu; metallic hidden | **[PR #13](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/13), host+ARM passed**; device unverified |
+| P0 | Verification + Integration | JB-23 — SHA-pinned experimental test pack | **[PR #14](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/14), [CI passed](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42487592194), [artifact available](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42487592194/artifacts/13620400602)**; device unverified |
 
 ## Individual work orders
 
@@ -141,7 +143,7 @@
 
 ## Findings and constraints
 
-- **Next engineering gate:** On-device CPU/PK/LATE/RAIL and full dry/wet routing tests of the JB-22 candidate against a backed-up bootable firmware. GitHub source verification is green, but device verification is outstanding. New FM-free candidate source is **not yet hardware-validated**. Then wavetable cost optimisation and comb-filter feasibility, after headroom is confirmed. Review JB-19A PR #8 before stacked JB-19B PR #9. Dry voice remains untouched. GitHub ARM checks and real-device CPU headroom/hardware acceptance are required; no firmware has been flashed for the new send.
+- **Next engineering gate:** Independently review [stacked #8–#14](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/14), verify rollback and SD kit backup, and run **on-device** CPU/PK/LATE/RAIL and full dry/wet routing tests of the JB-23 v1.8.04 candidate against a backed-up bootable firmware. GitHub source verification is green, but device verification is outstanding. New FM-free candidate source is **not yet hardware-validated**. Then wavetable cost optimisation and comb-filter feasibility, after headroom is confirmed. Review JB-19A PR #8 before stacked JB-19B PR #9. Dry voice remains untouched. GitHub ARM checks and real-device CPU headroom/hardware acceptance are required; no firmware has been flashed for the new send.
 
 - Earlier v1.8.03 ARM CI passed, AND v1.8.03 subsequently **booted on tester's actual LXR-02**. It is **NOT safe/validated**: DSP crunch/overrun reproduced; idle readings after restart DSP 62%, PK 66%, LATE 0, RAIL 0; under load DSP 101%, PK 105%, LATE 999 (UI cap), RAIL 240. These meter fields have distinct semantics. No v1.8.04 firmware build exists yet.
 - CPU instrumentation and multi-voice crunch are first engineering priorities; any new send must reuse existing FX processing and default OFF. User explicitly shelved Metallic FM and moved wavetable, dub send, step toggle/LED fix and comb-filter feasibility higher. The upstream LXR02Open license is **non-commercial**, not automatically compatible with GPL-3.0-only: study ideas, do not copy source.
