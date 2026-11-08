@@ -4,13 +4,13 @@
 
 ## Current state
 - Job: JB-28A Comb transplant into JB-26-derived branch
-- Status: PATCHING — PARTIAL, NOT TESTED
+- Status: CODE PATCH PUSHED — CI PENDING, HARDWARE UNVERIFIED
 - Last confirmed pushed checkpoint: initial template (prepared by assistant, not Codex)
 - Working branch: `agents/jb-28-full-integration-v186`
 - Current base SHA: prior confirmed docs commit `2cc2d1aa2a6595ec48b7e46cf47ee1eb684268b3`; live HEAD requires verification
 - Comb donor SHA: `cb27f684a108a3fe257ac4e4dfe437a041fbe40b`
 - Hardware status: NOT TESTED
-- Latest verified firmware candidate: NONE for combined v1.8.07
+- Latest verified firmware candidate: NONE; v1.8.07 configured, image NOT YET VALIDATED
 
 ## Append-only progress log
 Each update must include UTC time, pushed commit SHA, stage, files inspected/changed, finding or blocker, tests and exact next command. Keep newest entries at bottom. Never erase previous checkpoints.
@@ -54,3 +54,11 @@ Each update must include UTC time, pushed commit SHA, stage, files inspected/cha
 - Pushed CombFilter.h/.c, three focused tests, ResonantFilter.h/.c, MenuText.h (latest source commit `23abbb7d3e32b9bb11db91a48ca2494cd3445aaf`).
 - Remaining integration: Core/CMakeLists.txt add CombFilter.c; tests/run_host.sh add focused suite. Then focused/full/ARM CI. No compilation or hardware test yet; firmware NOT READY.
 - Exact next action: modify the two remaining existing files preserving newer skull test and engine additions; inspect resulting diff, run tests via CI or checked-out build environment.
+
+### 2026-11-08 UTC — Comb integration source and CI gate pushed
+- PR #15 donor mapped; nine source/test files transplanted or adapted. Core/CMakeLists.txt registers CombFilter.c while retaining latest source list; tests/run_host.sh invokes focused Comb and retains skull tests.
+- CMake project version set to 1.8.07; workflow `.github/workflows/jimbones-jb28-comb-integration.yml` added with focused, GCC/Clang, ARM, >=512 B ITCM, updater validation, manifest and hardware-unverified artifact gates.
+- Source and workflow pushed through commit `6bf88b1f4812d29dcfdb3840eb0fbf36c149521f`.
+- Draft PR #18: https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/18 against JB-26 branch.
+- GitHub workflow lookup for that SHA returned zero PR-triggered runs; combined commit statuses returned none. **Tests NOT OBSERVED / NOT PASSED; no firmware image or ITCM evidence yet.** No local clone/compiler was available.
+- Next: inspect https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/workflows/jimbones-jb28-comb-integration.yml for push-triggered run, fix any failure; then verify image and complete device acceptance separately.
