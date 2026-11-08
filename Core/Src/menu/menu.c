@@ -1599,9 +1599,11 @@ static void jb_stepfxPaint(void)
         /* FX01-05 DUB SEND: echo time is a separate tempo subdivision from
          * the short sample gate. LONG / SHORT / CLK / NOFX never silently
          * masquerade as a valid synced delay time. */
-        snprintf(top,sizeof(top),"DUB%c %-4s %s",
-                 active?'*':' ',dub_delay_division_name(),
-                 dub_delay_status_name());
+        /* Show the focused button's fixed time, not the armed button's
+         * time when browsing without changing the active effect. */
+        snprintf(top,sizeof(top),"D%u%c %-4s %s",
+                 index+1u,active?'*':' ',name+4u,
+                 active?dub_delay_status_name():"--");
         snprintf(bottom,sizeof(bottom),"G1/%u V%u%c %03u",
                  stepfx_send_division(),jb_fxVoice+1u,
                  (stepfx_send_mask() & (1u<<jb_fxVoice))?'+':'-',
