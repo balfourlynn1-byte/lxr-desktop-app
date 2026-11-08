@@ -50,3 +50,17 @@ Pinned `Core/DSPAudio/Oscillator.c` blob `5c1bf056b8016ff1a43a87f7f72ae6bf59bb44
 - Lines 229–253: analogous FM pair rendering with the same modulation input and blend. Native FM differs from the shelved experimental Metallic FM.
 - Lines 552–590: interpolation fast-path if active; otherwise native dispatcher handles SINE, SAW, TRI, REC, NOISE, CRASH and sample playback. Sample cache uses flash-backed SampleMemory generation to invalidate stale pointers.
 - Risks: two full render paths per interpolating voice; rough cross-class transitions, shared scratch-buffer concurrency, sample ID bounds and sample-cache validity. This is source evidence, **not** a measured CPU or audible quality pass.
+
+## B01 — immutable upstream source pin (2026-11-08; COMPLETE)
+Resolved `brendanclarke/LXR02Open` branch `prime` directly through GitHub commit lookup: **`c896bfd0efe86a4037418bf9f46f1fcc39255958`**. Re-fetched the files using that *commit*, not the moving branch, and verified these Git blob SHAs:
+
+| File | Git blob SHA |
+|---|---|
+| `LICENSE` | `635ea7ee4e54922c03fad5795ba7c734048857b9` |
+| `Core/DSPAudio/Oscillator.c` | `5c1bf056b8016ff1a43a87f7f72ae6bf59bb4467` |
+| `Core/DSPAudio/Oscillator.h` | `5d8649ffcd062880fdb92b6b72f3f6f3e8817b3a` |
+| `Core/DSPAudio/modulationNode.c` | `e3a811bae6dfcb333601b02540956944873b18ee` |
+| `Core/DSPAudio/modulationNode.h` | `03aa4619922f7e614bba2aa64a6e2cc5f1308b1e` |
+| `knowledge_files/OSC_INTERP_AUDIT.md` | `6771e807239b01055d991d57a36bf0fb000c6e62` |
+
+`LICENSE` explicitly prohibits selling code or commercial use and requires modified redistributions to include complete source and reproduce its terms. This is **not an unrestricted GPL-compatible grant**; personal-only user intent does not waive redistribution conditions of a public project. B07 must select a compliant route before incorporating code. These pins are research evidence only, not a test pass or permission to redistribute.
