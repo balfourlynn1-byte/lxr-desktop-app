@@ -5,6 +5,7 @@
 #include "menu/JimbonesPerfUI.h"
 #include "Soundengine/StepFX.h"
 #include "Soundengine/StepFxSend.h"
+#include "Soundengine/StepFxSendMix.h"
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -97,6 +98,23 @@ int main(void) {
     jb_perfui_next();jb_perfui_next();jb_perfui_leave();
     assert(jb_perfui_page()==JB_PERF_PAGE_MAIN);
     assert(jb_perfui_active()==2u); /* leaving page does not stop live FX */
-    puts("PASS JB-21: all 16 toggle parity (including Step 1), exclusive active state, knob focus, snare dub gate and kick protection, note division, legacy FX, page navigation");
+    /* Full production UI -> gated mixer copy (FX select is an argument).
+     * This simulates an actual Step 1 armed hit without synthesizing audio. */
+    assert(jb_perfui_select(0u));
+    assert(jb_perfui_active()==0u);
+    int16_t dry[64], fx[128];
+    for(unsigned i=0;i<64u;i++)dry[i]=12000;
+    memset(fx,0,sizeof fx);
+    stepfx_send_on_note(3u,100u,120u);
+    stepfx_send_mix_voice(3u,0u,1u,dry,64u,1.0f,0.5f,fx);
+    assert(fx[2u*63u]>0);
+    assert(fx[2u*63u]>fx[2u*63u+1u]);
+    for(unsigned i=0;i<64u;i++)assert(dry[i]==12000);
+    assert(jb_perfui_select(0u));
+    memset(fx,0,sizeof fx);
+    stepfx_send_mix_voice(3u,0u,1u,dry,64u,1.0f,0.5f,fx);
+    for(unsigned i=0;i<128u;i++)assert(fx[i]==0);
+
+    puts("PASS JB-21: all 16 toggle parity (including Step 1), exclusive state, UI-to-FX-bus copy, dry parity, protected kick, note divisions and pages");
     return 0;
 }
