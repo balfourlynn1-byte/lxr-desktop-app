@@ -12,6 +12,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake ninja-build python3 gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
+      - name: Check required merged UI and interpolation code
+        run: |
+          grep -q 'WAVE INTERPOLATE' Core/Src/menu/menu.c || { echo 'STOP: merged UI not present'; exit 1; }
+          grep -q 'jb_setWaveInterpolation' Core/Src/Soundengine/DSPAudio/Jimbones.c || { echo 'STOP: interpolation code not present'; exit 1; }
       - name: Check isolated version
         run: |
           grep -Eq 'VERSION[[:space:]]+1\\.8\\.03' CMakeLists.txt || { echo 'STOP: v1.8.03 source/version not committed to this branch'; exit 1; }
