@@ -54,3 +54,8 @@ These are assignments and estimates, not running background agents. No peer revi
 - **JB-03/JB-21:** no root-cause fix for the original hardware crunch; 15%/5% unchanged. A conservative PCM mixer fixture cannot prove hardware mixer integrity.
 - **JB-13/JB-20:** corrected a misleading kit-revision test label; UI reset still requires actual end-to-end test. Progress unchanged.
 - **Next:** compile and run `tests/test_jimbones.c` and menu fixture for exact commit, then inspect audio peaks and compare with actual LXR mixer; no ARM image or hardware PASS yet.
+
+## Progress update — host test reliability pass
+- **JB-23:** fixed the four-voice PCM regression's C diagnostic newline escape. Source updated; no host run has been executed.
+- **JB-13/JB-24:** `tests/test_menu.py` now creates `build/host` before writing its extracted C fixture. This removes a deterministic fresh-checkout failure mode; compilation and runtime still unverified.
+- **Release gate:** no physical LXR-02 audio proof, no verified latest host/ARM CI, no independent approvals. Keep next ARM candidate blocked pending those gates.
