@@ -132,3 +132,20 @@ uint8_t stepfx_dubThrowMask(void){return dubThrowMask;}
 uint8_t stepfx_dubEffectiveMask(void){
  return dubEnabled?(uint8_t)(dubSendMask&dubThrowMask):0u;
 }
+
+/* Low-cost mono-to-stereo send tap. No separate delay memory and no changes
+ * when master is disabled. Deliberately fixed -12 dB send to leave headroom.
+ * Existing FX delay remains responsible for feedback and tail processing. */
+void stepfx_dubTap(uint8_t voice,const int16_t *samples,int16_t *fxStereo,unsigned frames) {
+ if(voice>=6u || !samples || !fxStereo || !(stepfx_dubEffectiveMask()&(1u<<voice)))return;
+ for(unsigned i=0;i<frames;i++) {
+  const int32_t add=(int32_t)samples[i]/4;
+  for(unsigned ch=0;ch<2;ch++) {
+   const unsigned k=2u*i+ch;
+   int32_t mixed=(int32_t)fxStereo[k]+add;
+   if(mixed>32767)mixed=32767;
+   else if(mixed< -32768)mixed=-32768;
+   fxStereo[k]=(int16_t)mixed;
+  }
+ }
+}
