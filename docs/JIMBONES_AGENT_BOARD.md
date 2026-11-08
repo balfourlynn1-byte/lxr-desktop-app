@@ -2,7 +2,7 @@
 
 **Status (2026-11-08):** JIMBONES **v1.8.04 EXPERIMENTAL** research handover. Agents are virtual responsibilities, **not running autonomous processes**; this tracked board replaces GitHub Issues (API 410). No job is implemented merely by being listed. Codex should take the discrete, researched jobs below, one PR per change.
 
-**Start here:** [Dub-send technical audit](agents/dub_step_send_v184.md) · [Codex execution handover](../CODEX_V184_HANDOVER.md). Official user manual: https://www.ericasynths.lv/media/LXR_manual.pdf
+**Start here:** [Dub-send technical audit](agents/dub_step_send_v184.md) · [Codex execution handover](CODEX_V184_HANDOVER.md). Official user manual: https://www.ericasynths.lv/media/LXR_manual.pdf
 
 | Priority | Assigned agent roles | Task | Status |
 |---|---|---|---|
@@ -136,7 +136,7 @@
 ### JB-22 — Experimental integration and regression gate
 - **Priority:** P0. **Owners:** Verification + Integration.
 - **Scope:** Dry bit-parity bypass, four-pad overlapping hit, echo feedback tail, FX routing, memory, host + ARM CI, v1.8.02 rollback, hardware check.
-- **State:** Test checklist complete, tests and firmware build not yet done; [Codex handoff](../CODEX_V184_HANDOVER.md).
+- **State:** Test checklist complete, tests and firmware build not yet done; [Codex handoff](CODEX_V184_HANDOVER.md).
 
 ## Findings and constraints
 
