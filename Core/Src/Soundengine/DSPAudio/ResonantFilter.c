@@ -164,6 +164,7 @@ IN_ITCM_RAM void SVF_calcBlockZDF(ResonantFilter* filter, const uint8_t type, in
 	const float R 	= filter->f >= 0.4499f ? 1 : filter->q;
 	const float ff 	= f*f;
 
+	if(type!=FILTER_COMB) filter->comb.active=0u;
 	if(type== FILTER_OFF) return;
 	if(type== FILTER_COMB) {
 		jb_comb_process(&filter->comb,buf,size,filter->f,1.f-filter->q);
@@ -389,6 +390,7 @@ IN_ITCM_RAM void SVF_calcBlockCheapZDF(ResonantFilter* filter, const uint8_t typ
 	const float R 	= filter->f >= 0.4499f ? 1 : filter->q;
 	const float ff 	= f*f;
 
+	if(type!=FILTER_COMB) filter->comb.active=0u;
 	if(type== FILTER_OFF) return;
 	if(type== FILTER_COMB) {
 		jb_comb_process(&filter->comb,buf,size,filter->f,1.f-filter->q);
