@@ -62,3 +62,9 @@ Each update must include UTC time, pushed commit SHA, stage, files inspected/cha
 - Draft PR #18: https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/18 against JB-26 branch.
 - GitHub workflow lookup for that SHA returned zero PR-triggered runs; combined commit statuses returned none. **Tests NOT OBSERVED / NOT PASSED; no firmware image or ITCM evidence yet.** No local clone/compiler was available.
 - Next: inspect https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/workflows/jimbones-jb28-comb-integration.yml for push-triggered run, fix any failure; then verify image and complete device acceptance separately.
+
+### 2026-11-08 UTC — CI execution visibility blocker
+- Checked GitHub PR-triggered runs and commit statuses for `a82d630432b11365fecb65843c8c096e4b9ed9f4`: both empty. This does **not** prove no push-triggered run exists; connector query filters to PR runs.
+- Added `pull_request` trigger for JB-26 target branch to dedicated JB-28 workflow; pushed `4e3b162b731bafdffa08e2eed8cdfc2bdbc8ec47`. Immediately queried PR-triggered runs: none returned yet.
+- Container Git clone blocked by DNS (`Could not resolve host: github.com`); no ARM compiler found. Therefore no local compile, CI results, ITCM, image SHA or test pack verified. No device flash.
+- STATUS: CI EVIDENCE BLOCKED / AWAITING ACTIONS. Next: inspect Actions workflow link and PR #18 checks; obtain actual run ID, host and ARM results; fix only concrete failing gate. Do not claim CODE_READY until all gates green.
