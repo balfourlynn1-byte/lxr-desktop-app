@@ -1,446 +1,160 @@
-/*
- * screensaver.c
+/* SPDX-License-Identifier: GPL-3.0-only
+ * Original screensaver module Copyright (C) 2012-2026 Erica Synths.
+ * JB-26 skull animation and non-blocking wake-up changes for JIMBONES.
  *
- * Created: 25.01.2013 17:08:02
- *  Author: Julian
- *
- * Copyright (C) 2012-2026 Erica Synths
- * SPDX-License-Identifier: GPL-3.0-only
- *
- * This file is part of the LXR firmware. It is licensed under the GNU General
- * Public License version 3, with the additional permission and terms in
- * NOTICE.md. See LICENSE and NOTICE.md in the root of the repository.
- */ 
-//to expand the lifetime of OLED displays, we need a timeout var to go to
-//screensaver mode if the controls are not touched for a while
+ * LCD is a 16x2 character display with only eight 5x8 CGRAM glyph slots.
+ * This implementation uses glyph IDs 4..7; glyph 0 remains BLANK so the
+ * normal menu's historical NUL-character protection still works.
+ */
 #include "lcd.h"
 #include "menu/screensaver.h"
-
+#include "menu/JimbonesSkull.h"
 #include "menu/menu.h"
 #include "delay.h"
-#include "graphic.h"
 #include "Soundengine/Soundengine.h"
+#include <stdint.h>
 
-#define SCREENSAVER_ACTIVE 1
+#define SCREENSAVER_TIMEOUT_MIN 2u
+#define SCREENSAVER_SYSTICK (SCREENSAVER_TIMEOUT_MIN*60u*1000u)
+#define JB_SKULL_FRAME_MS 170u
 
-//stuff for activation logic
-volatile uint32_t screensaver_timer = 0;
-#define SCREENSAVER_TIMEOUT 2//[minutes]
-#define SCREENSAVER_SYSTICK (uint32_t)(((SCREENSAVER_TIMEOUT*60) *1000))/// (1.f / ((F_CPU/1024.f)/256.f))))
-volatile uint8_t screensaver_Active=0;
+volatile uint32_t screensaver_timer=0u;
+volatile uint8_t screensaver_Active=0u;
 volatile uint32_t screensaver_Timeout=SCREENSAVER_SYSTICK;
 
-
-//stuff for fancy drawing
-static uint32_t screensaver_processTime = 0;
-#define SCREENSAVER_PROCESS_SPEED 500//((0.5) / (1.f / ((F_CPU/1024.f)/256.f)))
-enum
-{
-	CELL_NEW_POS,
-	CELL_OFF,
-	CELL_OFF_WAIT,
-	CELL_1_SET_CURSOR,
-	CELL_1_PRINT,
-	CELL_1_WAIT,
-	CELL_2_SET_CURSOR,
-	CELL_2_PRINT,
-	CELL_2_WAIT,
-	CELL_3_SET_CURSOR,
-	CELL_3_PRINT,
-	CELL_3_WAIT,
-
-
+enum SkullSaverState {
+    SKULL_DRAIN_MENU=0,   /* complete an in-flight menu LCD nibble safely */
+    SKULL_CLEAR,
+    SKULL_PROGRAM_GLYPHS,
+    SKULL_TOP_CURSOR,
+    SKULL_TOP_LEFT,
+    SKULL_TOP_RIGHT,
+    SKULL_BOTTOM_CURSOR,
+    SKULL_BOTTOM_LEFT,
+    SKULL_BOTTOM_RIGHT,
+    SKULL_HOLD,
+    SKULL_EXIT_CLEAR
 };
 
-uint8_t screensaver_activeCell = 0;
-uint8_t screensaver_cellState = CELL_OFF;
+static uint8_t state=SKULL_DRAIN_MENU;
+static uint8_t glyphs[JB_SKULL_GLYPHS][JB_SKULL_ROWS];
+static uint8_t glyph_index;
+static uint8_t frame_index;
+static uint8_t position=7u;
+static uint8_t redraw_position=1u;
+static uint8_t exit_requested;
+static uint32_t last_frame_ms, frames_rendered;
 
-uint16_t screensaver_rng =  0;	//*<temporary var for rng generation*/
-//------------------------------------------------------------------
-uint8_t screensaver_pseudoRng()
-{
-	screensaver_rng++;
-	screensaver_rng *= 3;
-	return (screensaver_rng >> 2) & 0xFF;
+void screensaver_touch(void) {
+    screensaver_timer=0u;
+    screensaver_Timeout=SCREENSAVER_SYSTICK;
+    /* Do not spin/wait on the LCD! The previous touch handler blocked
+     * here and could corrupt half-written bytes in the shared controller.
+     * It now requests a deferred, single-owner exit at the frame boundary. */
+    if(screensaver_Active) exit_requested=1u;
 }
-//------------------------------------------------------------------
-void screensaver_touch()
-{
-	screensaver_timer = 0;
-	screensaver_Timeout = SCREENSAVER_SYSTICK;
 
-	if(screensaver_Active)
-	{
-		//while(sendDisplayBuffer() != 0); //wrong! we wan't to clean the screensaver pipeline, noit the normal menu one!
-		while(screensaver_process() != 0) soundengine_process();
-		//lcd_turnOn(1,0);
-		screensaver_Active = 0;
-		menu_repaintAll();
-	}	
+static void enter(void) {
+    screensaver_Active=1u;
+    exit_requested=0u;
+    state=SKULL_DRAIN_MENU;
+    glyph_index=0u;
+    frame_index=0u;
+    frames_rendered=0u;
+    position=7u;
+    redraw_position=1u;
+    last_frame_ms=HAL_GetTick();
+    jb_skull_make_frame(frame_index,glyphs);
 }
-//------------------------------------------------------------------
-//draw some fancy stuff on the LCD
 
-
-Framebuffer framebuffer[2][8];
-uint8_t x=0;
-uint8_t y = 0;
-
-uint8_t screensaver_process()
-{
-
-#if PLASMA_SCREENSAVER
-	switch(screensaver_cellState)
-	{
-	case 0:
-		if(lcd_clear_nonblock())
-		{
-			screensaver_cellState++;
-		}
-		break;
-
-	case 1:
-		//print custom characters
-		lcd_home();
-		lcd_clear();
-		lcd_setcursor(0,1);
-		lcd_data(0);
-		lcd_data(1);
-		lcd_data(2);
-		lcd_data(3);
-		lcd_data(0);
-		lcd_data(1);
-		lcd_data(2);
-		lcd_data(3);
-		lcd_data(0);
-		lcd_data(1);
-		lcd_data(2);
-		lcd_data(3);
-		lcd_data(0);
-		lcd_data(1);
-		lcd_data(2);
-		lcd_data(3);
-
-		lcd_setcursor(0,2);
-		lcd_data(4);
-		lcd_data(5);
-		lcd_data(6);
-		lcd_data(7);
-		lcd_data(4);
-		lcd_data(5);
-		lcd_data(6);
-		lcd_data(7);
-		lcd_data(4);
-		lcd_data(5);
-		lcd_data(6);
-		lcd_data(7);
-		lcd_data(4);
-		lcd_data(5);
-		lcd_data(6);
-		lcd_data(7);
-		screensaver_cellState++;
-		break;
-
-	case 2:
-	{
-		graphic_tick();
-		//if(HAL_GetTick() >= screensaver_processTime )
-		{
-		//update framebuffer
-
-		//send framebuffer
-	    // Startposition des Zeichens einstellen
-
-
-			lcd_command( LCD_SET_CGADR | (uint8_t)(0<<3) );
-			// Bitmuster uebertragen
-			for ( uint8_t i=0; i<8; i++ )
-			{
-				lcd_data( framebuffer[0][i].chars.char1 );
-			}
-
-			lcd_command( LCD_SET_CGADR | (uint8_t)(1<<3) );
-			// Bitmuster uebertragen
-			for ( uint8_t i=0; i<8; i++ )
-			{
-				lcd_data( framebuffer[0][i].chars.char2 );
-			}
-
-			lcd_command( LCD_SET_CGADR | (uint8_t)(2<<3) );
-			// Bitmuster uebertragen
-			for ( uint8_t i=0; i<8; i++ )
-			{
-				lcd_data( framebuffer[0][i].chars.char3 );
-			}
-
-			lcd_command( LCD_SET_CGADR | (uint8_t)(3<<3) );
-			// Bitmuster uebertragen
-			for ( uint8_t i=0; i<8; i++ )
-			{
-				lcd_data( framebuffer[0][i].chars.char4 );
-			}
-
-			lcd_command( LCD_SET_CGADR | (uint8_t)(4<<3) );
-			// Bitmuster uebertragen
-			for ( uint8_t i=0; i<8; i++ )
-			{
-				lcd_data( framebuffer[1][i].chars.char1 );
-			}
-
-			lcd_command( LCD_SET_CGADR | (uint8_t)(5<<3) );
-			// Bitmuster uebertragen
-			for ( uint8_t i=0; i<8; i++ )
-			{
-				lcd_data( framebuffer[1][i].chars.char2 );
-			}
-
-			lcd_command( LCD_SET_CGADR | (uint8_t)(6<<3) );
-			// Bitmuster uebertragen
-			for ( uint8_t i=0; i<8; i++ )
-			{
-				lcd_data( framebuffer[1][i].chars.char3 );
-			}
-
-			lcd_command( LCD_SET_CGADR | (uint8_t)(7<<3) );
-			// Bitmuster uebertragen
-			for ( uint8_t i=0; i<8; i++ )
-			{
-				lcd_data( framebuffer[1][i].chars.char4 );
-			}
-
-			screensaver_cellState++;
-		}
-		}
-	break;
-
-	case 3:
-		//generate new gfx
-#if 0
-	{
-
-
-		uint8_t row = y>7?1:0;
-
-		framebuffer[row][y%8].itg |= (1<<(19-x));
-
-		x++;
-		if(x>=20)
-		{
-			x=0;
-			y++;
-			if(y>=16) y=0;
-		}
-	}
-#elif 1
-		for(uint8_t y=0;y<16;y++)
-		{
-			uint8_t row = y>7?1:0;
-
-			for(uint8_t x=0;x<20;x++)
-			{
-
-				uint8_t value = graphic_calcPlasma(x,y);
-				if(value)
-				{
-					//set pixel
-					framebuffer[row][y%8].itg |= (1<<(19-x));
-				}
-				else
-				{
-					//remove pixel
-					framebuffer[row][y%8].itg &= ~(1<<(19-x));
-				}
-			}
-		}
-#else
-		graphic_drawLineArt(framebuffer);
-#endif
-		screensaver_processTime = ( HAL_GetTick() + SCREENSAVER_PROCESS_SPEED);
-
-
-		screensaver_cellState = 2;
-		break;
-
-	}
-
-
-
-
-
-#else
-	char text[2];
-	text[1] = 0;
-
-	while(sendDisplayBuffer() != 0);
-
-	switch(screensaver_cellState)
-	{
-		default:
-			break;
-
-		case CELL_NEW_POS:
-			if(HAL_GetTick() >= screensaver_processTime )
-			{
-				screensaver_processTime = ( HAL_GetTick() + SCREENSAVER_PROCESS_SPEED);
-
-
-				screensaver_activeCell = screensaver_pseudoRng()&0x1f; //value between 0 and 31
-
-				screensaver_cellState = CELL_OFF;
-				return 0;
-			}
-			break;
-
-			case CELL_OFF:
-				//lcd_clear();
-				if(lcd_clear_nonblock())
-				{
-					screensaver_processTime = ( HAL_GetTick() + SCREENSAVER_PROCESS_SPEED);
-					screensaver_cellState = CELL_OFF_WAIT;
-					return 0;
-				}
-				break;
-
-			case CELL_OFF_WAIT:
-				if(HAL_GetTick() >= screensaver_processTime )
-				{
-					screensaver_cellState = CELL_1_SET_CURSOR;
-					return 0;
-				}
-				break;
-
-			case CELL_1_SET_CURSOR:
-				if(screensaver_activeCell>15)
-				{
-					if(lcd_setcursor_nonBlock((uint8_t)(screensaver_activeCell-16),2))
-					{
-						screensaver_cellState = CELL_1_PRINT;
-						return 0;
-					}
-				}
-				else
-				{
-					if(lcd_setcursor_nonBlock(screensaver_activeCell,1))
-					{
-						screensaver_cellState = CELL_1_PRINT;
-						return 0;
-					}
-				}
-			break;
-
-			case CELL_1_PRINT:
-				text[0] = '.'; //.
-				//lcd_string(text);
-				if(lcd_data_nonBlock(text[0]))
-				{
-					screensaver_processTime = ( HAL_GetTick() + SCREENSAVER_PROCESS_SPEED);
-					screensaver_cellState = CELL_1_WAIT;
-					return 0;
-				}
-				break;
-
-			case CELL_1_WAIT:
-				if(HAL_GetTick() >= screensaver_processTime )
-				{
-					screensaver_cellState = CELL_2_SET_CURSOR;
-					return 0;
-				}
-				break;
-
-			case CELL_2_SET_CURSOR:
-				if(screensaver_activeCell>15)
-				{
-					if(lcd_setcursor_nonBlock((uint8_t)(screensaver_activeCell-16),2))
-					{
-						screensaver_cellState = CELL_2_PRINT;
-						return 0;
-					}
-				}
-				else
-				{
-					if(lcd_setcursor_nonBlock(screensaver_activeCell,1))
-					{
-
-						screensaver_cellState = CELL_2_PRINT;
-						return 0;
-					}
-				}
-			break;
-
-			case CELL_2_PRINT:
-				text[0] = 'o'; //o
-				//lcd_string(text);
-				if(lcd_data_nonBlock(text[0]))
-				{
-					screensaver_processTime = ( HAL_GetTick() + SCREENSAVER_PROCESS_SPEED);
-					screensaver_cellState = CELL_2_WAIT;
-					return 0;
-				}
-
-			break;
-
-			case CELL_2_WAIT:
-				if(HAL_GetTick() >= screensaver_processTime )
-				{
-					screensaver_cellState = CELL_3_SET_CURSOR;
-					return 0;
-				}
-				break;
-
-			case CELL_3_SET_CURSOR:
-				if(screensaver_activeCell>15)
-				{
-					if(lcd_setcursor_nonBlock((uint8_t)(screensaver_activeCell-16),2))
-					{
-						screensaver_cellState = CELL_3_PRINT;
-						return 0;
-					}
-				}
-				else
-				{
-					if(lcd_setcursor_nonBlock(screensaver_activeCell,1))
-					{
-						screensaver_cellState = CELL_3_PRINT;
-						return 0;
-					}
-				}
-			break;
-
-			case CELL_3_PRINT:
-			text[0] = '*'; //pop
-			//lcd_string(text);
-			if(lcd_data_nonBlock(text[0]))
-			{
-				screensaver_processTime = ( HAL_GetTick() + SCREENSAVER_PROCESS_SPEED);
-				screensaver_cellState = CELL_NEW_POS;
-				return 0;
-			}
-
-			break;
-	}
-
-
-	return 1;
-#endif
+/* Called only from the UI/main loop; no allocation or audio DSP work.
+ * All CGRAM and DDRAM transfers use the existing nonblocking LCD API. */
+uint8_t screensaver_process(void) {
+    if(!screensaver_Active) return 0u;
+    switch(state) {
+    case SKULL_DRAIN_MENU:
+        /* menu_tick() yields LCD ownership while screensaver is active.
+         * Advance, rather than busy-wait, an already started menu write. */
+        if(sendDisplayBuffer()==0u)state=SKULL_CLEAR;
+        break;
+    case SKULL_CLEAR:
+        if(lcd_clear_nonblock())state=SKULL_PROGRAM_GLYPHS;
+        break;
+    case SKULL_PROGRAM_GLYPHS:
+        if(lcd_generatechar_nonBlock((uint8_t)(4u+glyph_index),glyphs[glyph_index])) {
+            glyph_index++;
+            if(glyph_index==JB_SKULL_GLYPHS) {
+                glyph_index=0u;
+                state=redraw_position?SKULL_TOP_CURSOR:SKULL_HOLD;
+            }
+        }
+        break;
+    case SKULL_TOP_CURSOR:
+        if(lcd_setcursor_nonBlock(position,1u))state=SKULL_TOP_LEFT;
+        break;
+    case SKULL_TOP_LEFT:
+        if(lcd_data_nonBlock(4u))state=SKULL_TOP_RIGHT;
+        break;
+    case SKULL_TOP_RIGHT:
+        if(lcd_data_nonBlock(5u))state=SKULL_BOTTOM_CURSOR;
+        break;
+    case SKULL_BOTTOM_CURSOR:
+        if(lcd_setcursor_nonBlock(position,2u))state=SKULL_BOTTOM_LEFT;
+        break;
+    case SKULL_BOTTOM_LEFT:
+        if(lcd_data_nonBlock(6u))state=SKULL_BOTTOM_RIGHT;
+        break;
+    case SKULL_BOTTOM_RIGHT:
+        if(lcd_data_nonBlock(7u)) {
+            redraw_position=0u;
+            state=SKULL_HOLD;
+            last_frame_ms=HAL_GetTick();
+        }
+        break;
+    case SKULL_HOLD:
+        if(exit_requested){state=SKULL_EXIT_CLEAR;break;}
+        if((uint32_t)(HAL_GetTick()-last_frame_ms)>=JB_SKULL_FRAME_MS) {
+            last_frame_ms=HAL_GetTick();
+            frame_index=(uint8_t)((frame_index+1u)%JB_SKULL_FRAMES);
+            frames_rendered++;
+            /* Very slow horizontal drift avoids illuminating the same
+             * OLED columns throughout a long idle screensaver session. */
+            if(frames_rendered%24u==0u){
+                position=(uint8_t)(3u+((frames_rendered/24u)%10u));
+                redraw_position=1u;
+            }
+            jb_skull_make_frame(frame_index,glyphs);
+            glyph_index=0u;
+            state=redraw_position?SKULL_CLEAR:SKULL_PROGRAM_GLYPHS;
+        }
+        break;
+    case SKULL_EXIT_CLEAR:
+        /* A complete clear removes the skull before normal menu buffer
+         * ownership resumes. CGRAM slot 0 was never touched. */
+        if(lcd_clear_nonblock()){
+            screensaver_Active=0u;
+            exit_requested=0u;
+            state=SKULL_DRAIN_MENU;
+            menu_repaintAll(); /* invalidate both 16-column cached rows */
+        }
+        break;
+    default:
+        state=SKULL_EXIT_CLEAR;
+        break;
+    }
+    return screensaver_Active;
 }
-//------------------------------------------------------------------
-void screensaver_check()
-{
-	if(activeParameters[PAR_SCREENSAVER_ON_OFF])
-	{
-		if( (!screensaver_Active) )
-		{
-			if(screensaver_timer >= screensaver_Timeout)
-			{
-				//lcd_turnOn(0,0);
-				screensaver_Active = 1;	
-				screensaver_cellState = 0;
-			}
-		}
-		else
-		{
-			screensaver_process();
-		}	
-	}
-};
-//------------------------------------------------------------------
+
+void screensaver_check(void) {
+    if(!activeParameters[PAR_SCREENSAVER_ON_OFF]) {
+        if(screensaver_Active) {
+            exit_requested=1u;
+            screensaver_process();
+        }
+        return;
+    }
+    if(!screensaver_Active) {
+        if(screensaver_timer>=screensaver_Timeout)enter();
+    }
+    if(screensaver_Active)screensaver_process();
+}
