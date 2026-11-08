@@ -117,5 +117,21 @@ static void audio(const char *path) {
  }
  fclose(f);
 }
-int main(int argc,char **argv) { interpolation_audio();
+static void transient_integration(void) {
+ int16_t baseline[2048],bypass[2048],boost[2048];
+ jb_init();jb_parameters[1][JB_MODE]=1;
+ jb_trigger(1,100,48,0);render(1,baseline,2048);
+ jb_init();jb_parameters[1][JB_MODE]=1;
+ jb_setTransient(1,0,0);jb_trigger(1,100,48,0);render(1,bypass,2048);
+ assert(memcmp(baseline,bypass,sizeof(baseline))==0);
+ jb_init();jb_parameters[1][JB_MODE]=1;
+ jb_setTransient(1,64,0);jb_trigger(1,100,48,0);render(1,boost,2048);
+ assert(memcmp(baseline,boost,sizeof(baseline))!=0);
+ jb_setTransient(9,64,64);jb_setTransient(1,100,0);
+ jb_init();jb_parameters[1][JB_MODE]=1;
+ jb_trigger(1,100,48,0);render(1,bypass,2048);
+ assert(memcmp(baseline,bypass,sizeof(baseline))==0);
+ puts("PASS transient default-off bit identity, optional audio change, init reset");
+}
+int main(int argc,char **argv) { transient_integration(); interpolation_audio();
  interpolation_control(); bypass(); storage(); voices(); reproducible(); stress(); if(argc>1) audio(argv[1]); return 0; }
