@@ -17,7 +17,7 @@
 #define DUB_MAX_PINGPONG ((uint32_t)(FX_BUFFER_SIZE * 48u / 100u))
 #define DUB_COOLDOWN_FRAMES (DUB_FS / 4u)
 
-static const char *const names[5] = {"1/16","1/8","1/4","D8","T8"};
+static const char *const names[6] = {"1/16","1/8","1/4","D8","T8","1/32"};
 static uint8_t requested_division=1u; /* default eighth-note echo */
 static uint8_t status=DUB_DELAY_OFF;
 static uint8_t may_send, wet_only, last_mode=255u, was_ready, dirty;
@@ -40,13 +40,21 @@ void dub_delay_init(void) {
 uint8_t dub_delay_division(void) {
     return __atomic_load_n(&requested_division,__ATOMIC_RELAXED);
 }
+void dub_delay_set_division(uint8_t division) {
+    if (division>=6u) return;
+    if (dub_delay_division()==division) return;
+    __atomic_store_n(&requested_division,division,__ATOMIC_RELAXED);
+    /* A physical Step FX button change should retime on the next block.
+     * Do not wait for the ordinary 250ms BPM-jitter cooldown. */
+    dub_delay_mark_dirty();
+}
 void dub_delay_adjust_division(int delta) {
     if(!delta)return;
     const uint8_t current=dub_delay_division();
     uint8_t next=current;
-    if(delta>0 && next<4u)next++;
+    if(delta>0 && next<5u)next++;
     if(delta<0 && next>0u)next--;
-    __atomic_store_n(&requested_division,next,__ATOMIC_RELAXED);
+    dub_delay_set_division(next);
 }
 const char *dub_delay_division_name(void){return names[dub_delay_division()];}
 uint8_t dub_delay_status(void){return __atomic_load_n(&status,__ATOMIC_RELAXED);}
@@ -66,9 +74,9 @@ void dub_delay_mark_dirty(void){__atomic_store_n(&dirty,1u,__ATOMIC_RELAXED);}
 
 uint8_t dub_delay_plan(uint16_t bpm,uint8_t mode,uint8_t division,
                        uint32_t *samples,float *normalized) {
-    static const uint8_t numerator[5]={1u,1u,1u,3u,1u};
-    static const uint8_t denominator[5]={4u,2u,1u,4u,3u};
-    if (bpm<10u || bpm>400u || division>=5u || mode>1u)
+    static const uint8_t numerator[6]={1u,1u,1u,3u,1u,1u};
+    static const uint8_t denominator[6]={4u,2u,1u,4u,3u,8u};
+    if (bpm<10u || bpm>400u || division>=6u || mode>1u)
         return DUB_DELAY_NO_CLOCK;
     const uint64_t num=(uint64_t)DUB_FS*60u*numerator[division];
     const uint32_t den=(uint32_t)bpm*denominator[division];
