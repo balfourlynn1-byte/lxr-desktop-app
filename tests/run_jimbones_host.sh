@@ -23,3 +23,5 @@ ${CC:-cc} -std=gnu11 -O2 -Wall -Wextra \
   tests/test_stepfx_ui.c Core/Src/menu/JimbonesPerfUI.c \
   Core/Src/Soundengine/StepFX.c -o build/host/test_stepfx_ui
 build/host/test_stepfx_ui
+
+python3 tests/test_dub_mixer_routing.py
