@@ -24,6 +24,16 @@
 
 **Avoid reading the entire repo.** Required files: [Comb design](https://github.com/balfourlynn1-byte/lxr-desktop-app/blob/agents/jb-12-comb-filter-v184/docs/agents/jb12_comb_filter.md), [LCD/skull design](https://github.com/balfourlynn1-byte/lxr-desktop-app/blob/agents/jb-26-skull-screensaver-v185/docs/agents/jb26_skull_and_lcd.md), current `Core/CMakeLists.txt`, `tests/run_host.sh`, `Core/Src/Soundengine/DSPAudio/ResonantFilter.c`, `Core/Inc/Soundengine/DSPAudio/ResonantFilter.h`, `Core/Inc/menu/MenuText.h`, and PR #15 patch. Read further only to resolve a concrete failure.
 
+## Approved follow-on UI job — JB-29 (DO NOT MIX INTO JB-28A)
+
+The user confirms existing Step FX effects work; they lack musical usefulness due to nonselective pitch up/down and no per-voice routing. **Preserve working Step FX and dub audio engines.** Full specification: [JB-29 four-knob UI and voice-group selector](https://github.com/balfourlynn1-byte/lxr-desktop-app/blob/agents/wavetable-research/docs/JIMBONES_JOB_TREE_V184.md#jb-29-ui-specification--approved-design-2026-11-08).
+
+- **Knob 1 VOICE:** OFF, SNR (snare+clap), TOM (tom1+tom2), HAT, S+T, S+H, T+H, ALL. Kick protected/excluded. SHIFT+Knob1 advanced six-bit per-voice mask for snare-only, clap-only, any combination. Confirm actual voice IDs from source.
+- **Knob 2 RATE**, **Knob 3 DEPTH**, **Knob 4 CHAR** (pitch range / dub feedback / retrigger variation according to slot). Four jobs remain consistent across all effects.
+- Each of **16 Step FX slots** recalls its own voice mask and knob settings; avoid value jumps based on actual encoder/pot hardware. Keep backward kit compatibility, existing five dub timings, existing dry audio and LEDs.
+- **JB-29A:** minimal selector+mask+send/trigger gating only, with eight preset + advanced mask + per-slot recall + dry/kick + 4-hit tests. **JB-29B:** effect-specific RATE/DEPTH/CHAR and improved bounded pitch-up/down controls only after JB-29A validation. Do not label accepted without user device confirmation.
+- **Do not implement this in the current Comb integration job**; it is next after the combined candidate is available, to keep the Codex workload small and regressions isolatable.
+
 ## AFTER JB-28A green — separate small tasks
 
 **JB-28B — full candidate regression + hardware-test sheet (P0, no new sound engine).** Combine six original voices, default-off dry parity, Step FX 1–16 on/off + LED1, 5 dub timing buttons, global FX wet tails, Comb on/off + all six voices, native wavetable, skull wake, kit save/load and rollback. Run GCC+Clang, 4-hit host stress, ARM, memory and image checksum. Produce a 10-minute **physical test checklist** and safe rollback instructions; user performs the actual LXR-02 test and supplies DSP/PK/LATE/RAIL at idle, two toms, four simultaneous pads, Comb active and echo active. **Do not declare fully functioning until physical pass.**
