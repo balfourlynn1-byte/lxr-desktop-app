@@ -115,7 +115,7 @@ void jb_silence(void) { uint32_t m=lock(); memset(layers,0,sizeof(layers)); unlo
 void jb_loadKit(const uint8_t *kit) {
  uint32_t m=lock(); memcpy(jb_parameters,kit,JB_KIT_BYTES);
  memset(layers,0,sizeof(layers));
- memset(jb_attack,0,sizeof(jb_attack));memset(jb_sustain,0,sizeof(jb_sustain)); unlock(m);
+ memset(jb_attack,0,sizeof(jb_attack));memset(jb_sustain,0,sizeof(jb_sustain));memset(jb_srrFactor,0,sizeof(jb_srrFactor)); unlock(m);
 }
 void jb_init(void) { jb_defaults(&jb_parameters[0][0]); memset(jb_attack,0,sizeof(jb_attack));memset(jb_sustain,0,sizeof(jb_sustain));memset(jb_srrFactor,0,sizeof(jb_srrFactor));jb_silence(); }
 void jb_trigger(uint8_t v,uint8_t velocity,uint8_t note,uint8_t open) {
