@@ -7,6 +7,7 @@ ${CC:-cc} -std=c11 -O2 -g -Wall -Wextra -Werror -fsanitize=undefined \
   Core/Src/Soundengine/StepFX.c \
   Core/Src/Soundengine/StepFxSend.c \
   Core/Src/Soundengine/StepFxSendMix.c \
+  Core/Src/Soundengine/DubDelaySync.c \
   Core/Src/menu/JimbonesPerfUI.c \
   -o build/host/test_perfui
 build/host/test_perfui
