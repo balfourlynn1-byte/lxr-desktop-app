@@ -116,7 +116,7 @@ uint16_t stepfx_send_next_gain_q15(uint8_t voice) {
                                            ? s->target_level : raised);
     } else if (s->smoothed_level > s->target_level) {
         s->smoothed_level = (uint16_t)(
-            s->smoothed_level - s->target_level > SEND_LEVEL_STEP
+            ((uint32_t)s->smoothed_level - s->target_level) > SEND_LEVEL_STEP
                 ? s->smoothed_level - SEND_LEVEL_STEP
                 : s->target_level);
     }
