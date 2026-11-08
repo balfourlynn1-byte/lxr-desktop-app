@@ -38,3 +38,8 @@ build/host/test_four_voice_sum
 ${CC:-cc} -std=c11 -O2 -g -Wall -Wextra -Werror -fsanitize=address,undefined \
  -ICore/Inc tests/test_audio_telemetry.c -o build/host/test_audio_telemetry
 build/host/test_audio_telemetry
+
+# JB-07B independent Step FX button/LED state regression
+${CC:-cc} -std=c11 -O2 -g -Wall -Wextra -Werror -fsanitize=address,undefined \
+ -ICore/Inc tests/test_stepfx_ui_state.c -o build/host/test_stepfx_ui_state
+build/host/test_stepfx_ui_state
