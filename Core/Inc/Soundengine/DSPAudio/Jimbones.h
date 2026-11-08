@@ -32,6 +32,8 @@ extern volatile uint32_t jb_layerSaturationHits;
 uint8_t jb_limit(unsigned parameter);
 void jb_setControl(unsigned voice,unsigned parameter,uint8_t value);
 void jb_adjust(unsigned voice, unsigned parameter, int delta);
+/* Opt-in runtime SRR; factor 0/1 bypass, 2..32 hold length. */
+void jb_setSampleRateReduction(unsigned voice,uint8_t factor);
 void jb_setWaveInterpolation(uint8_t enabled);
 uint8_t jb_getWaveInterpolation(void);
 #endif
