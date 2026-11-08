@@ -27,6 +27,7 @@
 #include "Soundengine/TriggerOut.h"
 #include "menu/menu.h"
 #include "Soundengine/FxBus.h"
+#include "Soundengine/StepFX.h"
 
 	uint8_t r2_Available;
 	uint8_t l1_Available;
@@ -619,6 +620,10 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 	renderLayer(0, sampleData, voiceArray[0].vol);
 	//decimate voice
 	mixer_decimateBlock(0,sampleData);
+	/* Dub throws feed the existing delay, only while FX_DELAY is selected.
+	 * Dry output remains unchanged; no double-send for FX-only routing. */
+	if(fxBus.fxType==FX_DELAY && mixer_audioRouting[0]!=MIXER_ROUTING_FX_BUS)
+		stepfx_dubTap(0,sampleData,fxBusData,OUTPUT_DMA_SIZE);
 	//copy to selected dma buffer
 #if USE_SQRT_LUT
 	mixer_addDataToOutput(mixer_audioRouting[0],squareRootLut[127-voiceArray[0].pan] ,squareRootLut[voiceArray[0].pan], sampleData,&output[pos],&output[pos+1],&output2[pos],&output2[pos+1], fxBusData);
@@ -645,6 +650,10 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 	renderLayer(1, sampleData, voiceArray[1].vol);
 	//decimate voice
 	mixer_decimateBlock(1,sampleData);
+	/* Dub throws feed the existing delay, only while FX_DELAY is selected.
+	 * Dry output remains unchanged; no double-send for FX-only routing. */
+	if(fxBus.fxType==FX_DELAY && mixer_audioRouting[1]!=MIXER_ROUTING_FX_BUS)
+		stepfx_dubTap(1,sampleData,fxBusData,OUTPUT_DMA_SIZE);
 	//copy to selected dma buffer
 #if USE_SQRT_LUT
 	mixer_addDataToOutput(mixer_audioRouting[1],squareRootLut[127-voiceArray[1].pan] ,squareRootLut[voiceArray[1].pan], sampleData,&output[pos],&output[pos+1],&output2[pos],&output2[pos+1], fxBusData);
@@ -666,6 +675,10 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 	renderLayer(2, sampleData, voiceArray[2].vol);
 	//decimate voice
 	mixer_decimateBlock(2,sampleData);
+	/* Dub throws feed the existing delay, only while FX_DELAY is selected.
+	 * Dry output remains unchanged; no double-send for FX-only routing. */
+	if(fxBus.fxType==FX_DELAY && mixer_audioRouting[2]!=MIXER_ROUTING_FX_BUS)
+		stepfx_dubTap(2,sampleData,fxBusData,OUTPUT_DMA_SIZE);
 	//copy to selected dma buffer
 #if USE_SQRT_LUT
 	mixer_addDataToOutput(mixer_audioRouting[2],squareRootLut[127-voiceArray[2].pan] ,squareRootLut[voiceArray[2].pan], sampleData,&output[pos],&output[pos+1],&output2[pos],&output2[pos+1], fxBusData);
@@ -686,6 +699,10 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 	renderLayer(3, sampleData, snareVoice.vol);
 	//decimate voice
 	mixer_decimateBlock(3,sampleData);
+	/* Dub throws feed the existing delay, only while FX_DELAY is selected.
+	 * Dry output remains unchanged; no double-send for FX-only routing. */
+	if(fxBus.fxType==FX_DELAY && mixer_audioRouting[3]!=MIXER_ROUTING_FX_BUS)
+		stepfx_dubTap(3,sampleData,fxBusData,OUTPUT_DMA_SIZE);
 	//copy to selected dma buffer
 #if USE_SQRT_LUT
 	mixer_addDataToOutput(mixer_audioRouting[3],squareRootLut[127-snareVoice.pan], squareRootLut[snareVoice.pan], sampleData,&output[pos],&output[pos+1],&output2[pos],&output2[pos+1], fxBusData);
@@ -702,6 +719,10 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 	renderLayer(4, sampleData, cymbalVoice.vol);
 	//decimate voice
 	mixer_decimateBlock(4,sampleData);
+	/* Dub throws feed the existing delay, only while FX_DELAY is selected.
+	 * Dry output remains unchanged; no double-send for FX-only routing. */
+	if(fxBus.fxType==FX_DELAY && mixer_audioRouting[4]!=MIXER_ROUTING_FX_BUS)
+		stepfx_dubTap(4,sampleData,fxBusData,OUTPUT_DMA_SIZE);
 	//copy to selected dma buffer
 #if USE_SQRT_LUT
 	mixer_addDataToOutput(mixer_audioRouting[4],squareRootLut[127-cymbalVoice.pan],	squareRootLut[cymbalVoice.pan], sampleData,&output[pos],&output[pos+1],&output2[pos],&output2[pos+1], fxBusData);
@@ -719,6 +740,10 @@ IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 	renderLayer(5, sampleData, hatVoice.vol);
 	//decimate voice
 	mixer_decimateBlock(5,sampleData);
+	/* Dub throws feed the existing delay, only while FX_DELAY is selected.
+	 * Dry output remains unchanged; no double-send for FX-only routing. */
+	if(fxBus.fxType==FX_DELAY && mixer_audioRouting[5]!=MIXER_ROUTING_FX_BUS)
+		stepfx_dubTap(5,sampleData,fxBusData,OUTPUT_DMA_SIZE);
 	//copy to selected dma buffer
 #if USE_SQRT_LUT
 	mixer_addDataToOutput(mixer_audioRouting[5],squareRootLut[127-hatVoice.pan],squareRootLut[hatVoice.pan], sampleData,&output[pos],&output[pos+1],&output2[pos],&output2[pos+1], fxBusData);
