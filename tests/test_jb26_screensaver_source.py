@@ -16,7 +16,13 @@ assert "SKULL_EXIT_CLEAR" in saver
 assert "menu_repaintAll()" in saver
 assert "while(sendDisplayBuffer()" not in saver
 assert "while(screensaver_process()" not in saver
+driver = (r/"Core/Src/lcd.c").read_text(encoding="latin1")
+assert "static uint8_t lcd_data_latched, lcd_command_latched;" in driver
+assert "lcd_data_latched = data;" in driver
+assert "lcd_command_latched = data;" in driver
+assert "data = lcd_data_latched & 0x0fu;" in driver
+assert "data = lcd_command_latched & 0x0fu;" in driver
 assert "lcd_data_nonBlock(4u)" in saver
 assert "lcd_data_nonBlock(7u)" in saver
 assert "Src/menu/JimbonesSkull.c" in (r/"Core/CMakeLists.txt").read_text()
-print("PASS JB-26 source: stable LCD nibbles, non-blocking skull, dedicated LCD owner, clean wake repaint, no blocking loop")
+print("PASS JB-26 source: stable command/data nibbles, LCD ownership, non-blocking skull, clean wake repaint")
