@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - jimbones-v1.8.01
+      - jimbones-v1.8.03-hardware-test
   push:
     branches:
       - jimbones-v1.8.03-hardware-test
