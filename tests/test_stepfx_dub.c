@@ -1,34 +1,41 @@
-/* Host regression for Step FX dub send controller; does not claim audio routing. */
+/* Host regression for per-voice dub send and click-free throw ramps.
+ * This does not prove the native delay's audible tails or hardware timing. */
 #include "Soundengine/StepFX.h"
 #include <assert.h>
+#include <stdint.h>
+#include <string.h>
 int main(void) {
+ int16_t src[64],bus[128];
+ for(unsigned i=0;i<64;i++)src[i]=16000;
+ memset(bus,0,sizeof(bus));
  stepfx_init();
- int16_t src[4]={4000,-4000,32767,-32768};
- int16_t bus[8]={0};
- stepfx_dubTap(1,src,bus,4);
- for(unsigned i=0;i<8;i++)assert(bus[i]==0); /* default OFF */
  assert(stepfx_dubEnabled()==0);
  assert(stepfx_dubSendMask()==0x3eu); /* kick excluded */
- assert(stepfx_dubEffectiveMask()==0);
+ stepfx_dubTap(1,src,bus,64);
+ for(unsigned i=0;i<128;i++)assert(bus[i]==0);
  stepfx_dubThrow(1,1);
  assert(stepfx_dubEffectiveMask()==0);
  stepfx_dubEnable(1);
  assert(stepfx_dubEffectiveMask()==2);
- stepfx_dubTap(1,src,bus,4);
- assert(bus[0]==1000 && bus[1]==1000);
- assert(bus[2]==-1000 && bus[3]==-1000);
- assert(bus[4]==8191 && bus[5]==8191);
- assert(bus[6]==-8192 && bus[7]==-8192);
- stepfx_dubVoice(1,0);
- assert(stepfx_dubEffectiveMask()==0);
- stepfx_dubTap(1,src,bus,4);
- assert(bus[0]==1000); /* no input after throw-off */
- stepfx_dubVoice(1,1);
- assert(stepfx_dubEffectiveMask()==2);
+ stepfx_dubTap(1,src,bus,64);
+ assert(bus[0]==62 && bus[1]==62);
+ assert(bus[126]==4000 && bus[127]==4000);
+ for(unsigned i=1;i<64;i++)assert(bus[2*i]>=bus[2*(i-1)]);
+ /* Disabling the throw ramps down new sends, not a hard cut. */
  stepfx_dubThrow(1,0);
  assert(stepfx_dubEffectiveMask()==0);
+ memset(bus,0,sizeof(bus));
+ stepfx_dubTap(1,src,bus,64);
+ assert(bus[0]>0 && bus[0]<4000);
+ assert(bus[126]==0 && bus[127]==0);
+ for(unsigned i=1;i<64;i++)assert(bus[2*i]<=bus[2*(i-1)]);
+ memset(bus,0,sizeof(bus));
+ stepfx_dubTap(1,src,bus,64);
+ for(unsigned i=0;i<128;i++)assert(bus[i]==0);
+ stepfx_dubThrow(0,1);
+ assert((stepfx_dubEffectiveMask()&1u)==0u); /* kick protected */
  stepfx_dubThrow(7,1);
- assert(stepfx_dubThrowMask()==0);
+ assert(stepfx_dubThrowMask()==1u);
  stepfx_dubEnable(0);
  assert(stepfx_dubEffectiveMask()==0);
  stepfx_init();
