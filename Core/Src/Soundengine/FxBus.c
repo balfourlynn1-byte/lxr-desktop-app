@@ -46,6 +46,8 @@ IN_ITCM_RAM void FxBus_process(int16_t *fxBuffer, int16_t* outL,int16_t* outR,in
 	int16_t* out2 = NULL;
 	// < MIXER_ROUTING_DAC1_L -> stereo 1 or 2
 	const uint8_t channels = fxBus.audioRouting < MIXER_ROUTING_DAC1_L ? 2 : 1;
+	/* One shared check, not duplicated inside mono/pingpong branches. */
+	const float delayWet = dub_delay_wet_only()?1.f:fxBus.dryWet;
 	switch(fxBus.audioRouting)
 	{
 	default:
