@@ -14,7 +14,7 @@ r=read("CMakeLists.txt")
 assert "#define JB_METALLIC_ENABLED 0" in h
 assert "#if JB_METALLIC_ENABLED" in j
 assert "if(!(p[JB_MODE]&2u))" in j
-assert 'VERSION 1.8.04' in r
+assert 'VERSION 1.8.05' in r
 assert "IN_ITCM_RAM void FxBus_process" in fx
 assert "IN_ITCM_RAM void FxBus_updateParameter" not in fx
 assert "IN_ITCM_RAM void FxBus_setParameter" not in fx
@@ -26,4 +26,4 @@ assert "jb_perfui_active(void)" in ui
 assert "menu_stepFxActive()<16u" in button
 assert "dub_delay_wet_only()" in fx
 assert "DUB_DELAY_TOO_LONG" in delay
-print("PASS JB-22: 1.8.04 isolation, Metallic disabled, 6-voice mixer/FX/dub/UI linked and control setters out of ITCM")
+print("PASS JB-22: 1.8.05 integration, Metallic disabled, 6-voice mixer/FX/dub/UI linked and control setters out of ITCM")
