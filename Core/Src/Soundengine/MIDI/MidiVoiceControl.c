@@ -19,6 +19,7 @@
 #include "Soundengine/MIDI/MidiMessages.h"
 #include "Soundengine/DSPAudio/CymbalVoice.h"
 #include "Soundengine/Sequencer/sequencer.h"
+#include "Soundengine/StepFxSend.h"
 #include "Soundengine/TriggerOut.h"
 #include "Soundengine/MIDI/Uart.h"
 #include "Soundengine/MIDI/MidiParser.h"
@@ -29,7 +30,10 @@ static uint8_t active_voices=0;	// which voices are currently playing a note
 // this fn assumes a valid voice is sent
 void voiceControl_noteOn(uint8_t voice, uint8_t note, uint8_t vel)
 {
-	active_voices |= (1<<voice);
+	/* One gated copy of each ordinary MIDI/pad/sequencer hit, without
+     * retriggering voices. Open/closed hats share the same synth lane. */
+    stepfx_send_on_note(voice, vel, seq_getBpm());
+    active_voices |= (1<<voice);
 
 	if(voice < 3)
 		Drum_trigger(voice, vel, note);
