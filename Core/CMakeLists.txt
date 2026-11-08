@@ -54,6 +54,7 @@ add_library(lxr_ui OBJECT
     Src/menu/copyClearTools.c
     Src/menu/menu.c
     Src/menu/JimbonesPerfUI.c
+    Src/menu/JimbonesWaveUI.c
     Src/menu/screensaver.c
 )
 
