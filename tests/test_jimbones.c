@@ -175,6 +175,10 @@ static void four_voice_mix_regression(void) {
  }
  assert(active>0);
  assert(rails==0);
+ /* Diagnostic counters are accessible and reset on init; no assertion that
+  * the native mixer or hardware DAC is clipping-free. */
+ jb_init();
+ assert(jb_layerOutputRailHits==0);
  printf("PASS conservative 4-voice PCM mix: %u blocks, %u rail samples (hardware mixer unverified)\n",blocks,rails);
 }
 static void transient_four_voice_stress(void) {
