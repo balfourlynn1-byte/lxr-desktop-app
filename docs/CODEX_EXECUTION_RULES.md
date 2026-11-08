@@ -2,6 +2,9 @@
 
 **Quick entrypoint: [`CODEX_START_HERE.md`](CODEX_START_HERE.md). Read this longer policy only if clarification is needed.** This is a time/compute budget protocol, not evidence of hardware acceptance.
 
+## Persist first and throughout
+Read `docs/CODEX_PERSISTENCE_PROTOCOL.md`; maintain and **push** `docs/CODEX_CHECKPOINT_JB28A.md` and `docs/JIMBONES_WORK_QUEUE.md` at the start, after source mapping, before costly tests and after each milestone. This is mandatory even when the task is incomplete. Do not depend on a final chat response.
+
 ## Single-job contract and strict scope
 - **Current job: JB-28A ONLY** — transplant Comb from PR #15 into current JB-26-derived branch, run checks, package v1.8.07 TEST ONLY, draft PR, stop. Do not implement JB-29, pitch changes or new engines in this session.
 - **Known working device behaviour:** Step FX core works; dub delay/effect works. Preserve both. Metallic FM disabled; preserve original six voices, original kits and protected dry kick.
