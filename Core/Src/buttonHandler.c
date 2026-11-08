@@ -436,7 +436,8 @@ static void buttonHandler_handleModeButtons(uint8_t mode) {
             for(uint8_t step = 0; step < 8u; step++)
                 frontPanel_sendData(SEQ_CC, SEQ_ROLL_ON_OFF, step);
             led_clearSequencerLeds();
-            led_setValue(1, led_idx2StepLed(menu_stepFxSelected()));
+            if(menu_stepFxSelected()!=0u)
+                led_setValue(1, led_idx2StepLed(menu_stepFxSelected()));
         }
 		menu_repaintAll();
 
@@ -843,7 +844,8 @@ static void buttonHandler_seqButtonPressed(uint8_t seqButtonPressed)
        !buttonHandler_getSave() && !buttonHandler_getLoad() && !buttonHandler_getCopy()) {
         menu_stepFxSelect(seqButtonPressed);
         led_clearSequencerLeds();
-        led_setValue(1,led_idx2StepLed(menu_stepFxSelected()));
+        if(menu_stepFxSelected()!=0u)
+            led_setValue(1,led_idx2StepLed(menu_stepFxSelected()));
         return;
     }
 
