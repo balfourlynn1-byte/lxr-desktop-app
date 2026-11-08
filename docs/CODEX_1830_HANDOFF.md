@@ -1,6 +1,6 @@
 # CODEX 18:30 UK — JIMBONES full-build handoff (2026-11-08)
 
-**Read this file first.** Minimal context. The user wants **one fully functioning LXR-02 firmware build** containing the already implemented features **including the Comb filter**, not another disconnected prototype. Prioritise completing, verifying and packaging existing work; do not restart old jobs or rewrite code that has already passed CI. No automatic flash/merge.
+**Read this file first, then [lean execution rules](CODEX_EXECUTION_RULES.md).** Minimal context. The user wants **one fully functioning LXR-02 firmware build** containing the already implemented features **including the Comb filter**, not another disconnected prototype. Prioritise completing, verifying and packaging existing work; do not restart old jobs or rewrite code that has already passed CI. No automatic flash/merge.
 
 ## Exact starting point
 
