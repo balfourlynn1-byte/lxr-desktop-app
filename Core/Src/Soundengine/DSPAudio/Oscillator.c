@@ -248,8 +248,21 @@ int16_t calcFm(OscInfo* osc, OscInfo* modOsc, const int16_t table[][1024])
 	return oscOut;
 }
 //-----------------------------------------------------------
+/* JB-28 native FM oscillator selector blends the same original
+ * periodic tables as the unmodulated path. This is the regular Erica
+ * drum/synth FM signal path, NOT the disabled experimental Metallic layer.
+ * The exceptional morph route is in flash; normal FM is unchanged. */
+__attribute__((noinline)) static void jb_native_morph_fm_block(
+    OscInfo *osc,const int16_t *modbuf,int16_t *buf,
+    uint8_t size,float gain,uint32_t morph);
+
 IN_ITCM_RAM void calcNextOscSampleFmBlock(OscInfo* osc, int16_t* modBuffer, int16_t* buf, uint8_t size ,const float gain, const float pwm)
 {
+    const uint32_t morph=__atomic_load_n(&osc->waveMorphState,__ATOMIC_RELAXED);
+    if(morph&JB_NATIVE_WAVE_MORPH_ON) {
+        jb_native_morph_fm_block(osc,modBuffer,buf,size,gain,morph);
+        return;
+    }
 	switch(osc->waveform)
 		{
 		case SINE:
@@ -407,6 +420,31 @@ __attribute__((noinline)) static void jb_native_periodic_morph_block(
         const int32_t b=jb_native_periodic_at(next,band,phase);
         const int32_t sample=a+(((b-a)*mix)>>15u);
         buf[i]=(int16_t)(sample*gain);
+        phase+=osc->phaseInc;
+    }
+    osc->phase=phase;
+}
+__attribute__((noinline)) static void jb_native_morph_fm_block(
+    OscInfo *osc,const int16_t *modbuf,int16_t *buf,
+    uint8_t size,float gain,uint32_t morph)
+{
+    const uint8_t a=(uint8_t)((morph>>JB_NATIVE_WAVE_BASE_SHIFT)&3u);
+    const uint8_t b=(uint8_t)((morph>>JB_NATIVE_WAVE_NEXT_SHIFT)&3u);
+    const int32_t factor=(int32_t)(morph&JB_NATIVE_WAVE_Q15_MASK);
+    const uint8_t band=osc->tableOffset>10u?10u:osc->tableOffset;
+    uint32_t phase=osc->phase;
+    for(uint8_t i=0u;i<size;i++) {
+        const int32_t mod=(int32_t)((float)modbuf[i]*osc->fmMod);
+        const uint32_t offset=(uint32_t)mod;
+        /* The existing sine and 1K-table FM use different phase
+         * offsets (17 and 19). Keep their original modulation law
+         * for each source before interpolating their audio samples. */
+        const int32_t wa=jb_native_periodic_at(a,band,
+                               phase+(offset<<(a==SINE?17u:19u)));
+        const int32_t wb=jb_native_periodic_at(b,band,
+                               phase+(offset<<(b==SINE?17u:19u)));
+        const int32_t value=wa+(((wb-wa)*factor)>>15u);
+        buf[i]=(int16_t)(value*gain);
         phase+=osc->phaseInc;
     }
     osc->phase=phase;
