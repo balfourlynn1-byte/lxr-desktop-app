@@ -8,7 +8,7 @@
 |---|---|---|---|
 | P0 | Verification + Integration | Baseline parity and release gate | Backlog |
 | P0 | Embedded + DSP | Real-time CPU monitor | Research complete; implementation queued |
-| P0 | DSP + Verification | Multi-voice modulation crunch | Old v1.8.03 reproduced; **v1.8.04 hardware results missing** |
+| P0 | Verification (DSP conditional) | JB-03 — post-Metallic DSP load check | **No confirmed v1.8.04 crunch; FM disabled.** Await 2-tom/4-pad readings before any code fix |
 | P1 | DSP + Embedded | Morph A/B/C, LFO and velocity | Backlog |
 | P1 | DSP + Verification | Per-voice tape/tube saturation | Backlog |
 | P2 | Research + Embedded | USB multitrack feasibility | Deferred until stable audio budget |
@@ -47,9 +47,9 @@
 ### JB-03 — Multi-voice modulation crunch
 - **Priority:** P0
 - **Owners:** DSP + Verification
-- **Scope:** Reproduce simultaneous modulation crunch with overlapping 3–4 hits; isolate clipping, CPU overruns and shared state.
+- **Scope:** Compare the *FM-free v1.8.04* candidate against the same older 2-tom and 4-pad load scenarios, logging DSP/PK/LATE/RAIL. Only investigate clipping, deadlines or code optimisation if the issue remains on new hardware.
 - **Deliverable:** Research findings with source links and license check, implementation proposal or focused PR, host tests, ARM build, image verification and hardware-test notes.
-- **State:** Initial code audit complete; hardware reproduction CONFIRMED (DSP 94–101%, PK 105%, LATE 999, RAIL 240 on overloaded tom tests); see `docs/JIMBONES_P0_FINDINGS.md` and `docs/agents/dub_step_send_v184.md`. Root cause not yet established.
+- **State:** Previous metallic-enabled **v1.8.03** hardware reproduction confirmed (DSP 94–101%, PK 105%, LATE 999, RAIL 240). Metallic FM render logic is now compiled out in v1.8.04 and hidden from the UI, so its previous CPU cost is not expected to recur. **Do not mark v1.8.04 faulty or claim a precise improvement before device measurements.** Next action is a like-for-like test with the backed-up experimental candidate.
 
 ### JB-04 — Morph A/B/C, LFO and velocity
 - **Priority:** P1
