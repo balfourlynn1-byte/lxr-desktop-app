@@ -44,7 +44,7 @@ int main(void) {
   unsigned a=0,b=0;
   uint64_t h1=run(n,&a),h2=run(n,&b);
   assert(h1==h2 && a==b);
-  printf("PASS %u modulated voices, deterministic %u samples, layer-buffer clips=%u, hash=%016llx\\n",
+  printf("PASS %u modulated voices, deterministic %u samples, layer-buffer clips=%u, hash=%016llx\n",
          n,n*BLOCKS*N,a,(unsigned long long)h1);
  }
  puts("NOTE: does not measure final hardware mixer, post-FX or CPU deadlines.");
