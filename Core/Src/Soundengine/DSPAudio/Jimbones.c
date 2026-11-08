@@ -18,6 +18,7 @@ typedef struct {
  float hitVelocity;
  JbTransientState transientShaper;
  JbSampleHold sampleHold;
+ float srrWet;
 } Layer;
 static Layer layers[JB_VOICES];
 /* Runtime-only controls until CLICK UI and backward-compatible kit storage land. */
@@ -59,7 +60,9 @@ static uint32_t lock(void) { uint32_t mask=__get_PRIMASK(); __disable_irq(); ret
 static void unlock(uint32_t mask) { __DMB(); __set_PRIMASK(mask); }
 void jb_setSampleRateReduction(unsigned v,uint8_t factor) {
  if(v>=JB_VOICES || factor>32u)return;
- uint32_t m=lock();jb_srrFactor[v]=factor;layers[v].sampleHold.counter=0;unlock(m);
+ /* Preserve the held sample when changing the factor. The audio renderer
+  * crossfades the wet path, avoiding an immediate held-sample jump. */
+ uint32_t m=lock();jb_srrFactor[v]=factor;unlock(m);
 }
 void jb_setTransient(unsigned v,int8_t attack,int8_t sustain) {
  if(v>=JB_VOICES || attack< -64 || attack>64 || sustain< -64 || sustain>64)return;
@@ -250,7 +253,19 @@ void jb_render(uint8_t v,int16_t *buffer,unsigned size,float gain) {
   }
   if(p[JB_BITS] || s->aggression>0) { float q=out*steps; out=(int)(q+(q<0?-.5f:.5f))/steps; }
   if(jb_attack[v] || jb_sustain[v]) out=jb_transient_process(&s->transientShaper,out,(float)jb_attack[v]/64.f,(float)jb_sustain[v]/64.f);
-  if(jb_srrFactor[v]>1u) out=jb_sample_hold_process(&s->sampleHold,out,jb_srrFactor[v]);
+  /* JB-18: 64-sample wet/dry transition for knob changes. This does not
+   * remove deliberate LOFI coloration, but avoids abrupt bypass steps.
+   * A physical multi-voice listening test is still mandatory.
+   */
+  {
+   const uint8_t factor=jb_srrFactor[v];
+   const float dry=out;
+   const float wet=jb_sample_hold_process(&s->sampleHold,dry,factor);
+   const float target=factor>1u?1.f:0.f;
+   if(s->srrWet<target) { s->srrWet+=1.f/64.f; if(s->srrWet>target)s->srrWet=target; }
+   else if(s->srrWet>target) { s->srrWet-=1.f/64.f; if(s->srrWet<target)s->srrWet=target; }
+   out=dry+(wet-dry)*s->srrWet;
+  }
   out=out*s->envelope*s->velocity;
   /* Match the previous output at the boundary, rather than adding it to the
      new attack. The correction decays in ~2.5 ms; there is no event delay. */
