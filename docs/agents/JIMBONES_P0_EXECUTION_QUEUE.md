@@ -32,3 +32,6 @@ On workflow run 42462017630, host-menu succeeded; ARM compiler installation and 
 
 ## No Clip ARM candidate: JB-31–42 atomic queue
 Twelve smaller P0 tasks are now defined in `docs/agents/NO_CLIP_ARM_TEST_BUILD_EXECUTION.md` and `docs/agents/no-clip/JB-31.md` through `JB-42.md`. Prioritize JB-31 native mixer trace, JB-32 native telemetry, JB-34 two-voice reproducer and JB-33 CPU probe. Gate fix on measured cause; don't generate a hardware-test release without exact-commit CI, review and rollback procedure. These are assignments, not autonomously running workers.
+
+## Idle workstreams reassigned for ARM build readiness
+See `docs/agents/JIMBONES_ARM_BUILD_WORKLOAD_BOARD.md` for 18 bounded assignments, production-file ownership and WIP limits. Only real commits + exact-commit CI + review count as DONE. No autonomous worker execution is implied by the queue.
