@@ -34,8 +34,8 @@ BASE: known-good LXR-02 firmware (keep untouched + backed up)
                               +-- [AFTER CPU PASS] JB-09B native
                               |   oscillator wavetable / LFO
                               |   scan feasibility + profile
-                              +-- [AFTER CPU PASS] JB-12 comb
-                              |   filter prototype and budget
+                              +-- [CI PASS / REVIEW] JB-12 Comb
+                              |   FILTER Type prototype         draft PR #15
                               +-- [DEFERRED] other sound engines
 ```
 
@@ -56,7 +56,7 @@ BASE: known-good LXR-02 firmware (keep untouched + backed up)
 | **JB-02** DSP/PK/LATE/RAIL meter | P0 | Present in experimental firmware and hardware readings on earlier build | Confirm semantics and reset behavior on new image; compare idle and loaded cases | Embedded / Verification |
 | **JB-01** baseline parity and rollback | P0 | Source and CI regressions exist; user has booted prior experimental firmware | Verify six original voices, physical outputs, kits and recoverable rollback on device | Integration |
 | **JB-09B** further wavetable integration | P1 conditional | JB-24 uses existing JIMBONES wave tables/interpolation, **not** upstream sample/loop engine or its LFO wave-ID scan | Research independent LFO-to-waveform modulation and CPU usage; design separate minimal PR **after measurements** | DSP / Research |
-| **JB-12** comb / independent bass filter | P1 conditional | Initial feasibility backlog, no integrated comb implementation in current candidate | Audit short-delay memory and stability; then bounded prototype if CPU allows | DSP / Research |
+| **JB-12** Comb filter / independent bass filter | P1, hardware-dependent | **[Draft PR #15](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/15) implemented Comb as ninth FILTER Type across six voices. [GCC/Clang host+ARM CI passed](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42495034632) with 528 B ITCM free.** Physical DSP/audio test still needed; separate bass HPF/LPF not implemented. | Verify review and hardware CPU/PK/LATE/RAIL on Comb versus native filter; do not release until stable | DSP / Verification |
 | **JB-05** tape/tube saturation | P2 conditional | Backlog | Benchmark a cheap per-voice alternative, default off; do not add before live headroom proof | DSP |
 | **JB-04** morph A/B/C | P2 conditional | Backlog | Preserve A and kick; spec edit/morph state and automation controls after stable build | DSP / Embedded |
 | **JB-10/11/13** hi-hat/snare/visual polish | P2 | Backlog / partial diagnostics | Separate small PRs after core audio and Step FX validation | Embedded / DSP |
@@ -79,8 +79,8 @@ BASE: known-good LXR-02 firmware (keep untouched + backed up)
 2. Confirm the user retains their currently bootable image and backed-up SD kits **before** experimenting. Verify checksum of that rollback image and the new image.
 3. User-supervised LXR-02 tests begin at low audio volume. Test original voices, output routes and Step 1 LED first; stop immediately on crashes, audible crunch, or increased late counters.
 4. Record idle DSP/PK/LATE/RAIL after reset, 2 overlapping toms, 4 concurrent pad hits, wave interpolation, DUB SEND, clock disconnect, physical LEDs and output routing. v1.8.03 figures are historical reference only.
-5. Treat v1.8.03 crunch measurements as historical, not a confirmed v1.8.04 defect. Metallic FM processing is removed. File a new DSP optimisation/fix work order only if fresh firmware readings reproduce overload; hold expensive comb/tape/new oscillators until headroom is established.
+5. Treat v1.8.03 crunch measurements as historical, not a confirmed v1.8.04 defect. Metallic FM is disabled. JB-12 Comb now exists as **unmerged draft PR #15**, not a new hardware-approved image. Measure CPU load and 2-tom/four-pad stress on an explicitly backed-up candidate before merging/releasing Comb; defer new tape and oscillator engines until headroom is established.
 
-**Release gate:** the user manually reports a stable boot with all six original voices, no new crackle or missed deadlines on four-hit stress, satisfactory headroom, and successful rollback. Only then reconsider comb/wavetable expansion.
+**Release gate:** the user manually reports a stable boot with all six original voices, no new crackle or missed deadlines on four-hit stress, satisfactory headroom, and successful rollback. A Comb prototype exists in draft #15 but **has not met that hardware gate**; native oscillator waveform-ID/LFO interpolation is a separate JB-09B job.
 
 **Codex next-start prompt:** `Read docs/JIMBONES_JOB_TREE_V184.md and PR #14. Use the existing JB-23 checksum-pinned artifact and device checklist. Don't assume hardware tests have been done; when actual device readings arrive, compare them to historical v1.8.03 baseline, identify DSP bottlenecks, and make separate minimal reviewable PRs. Preserve backup/rollback.`
