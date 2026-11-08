@@ -38,3 +38,13 @@ build/host/test_four_voice_sum
 ${CC:-cc} -std=c11 -O2 -g -Wall -Wextra -Werror -fsanitize=address,undefined \
  -ICore/Inc tests/test_audio_telemetry.c -o build/host/test_audio_telemetry
 build/host/test_audio_telemetry
+
+# JB-14 transient shaper isolated DSP regression
+${CC:-cc} -std=c11 -O2 -g -Wall -Wextra -Werror -fsanitize=address,undefined \
+ -ICore/Inc tests/test_transient_shaper.c -lm -o build/host/test_transient_shaper
+build/host/test_transient_shaper
+
+# JB-18 sample-rate hold regression
+${CC:-cc} -std=c11 -O2 -g -Wall -Wextra -Werror -fsanitize=address,undefined \
+ -ICore/Inc tests/test_sample_rate_reducer.c -o build/host/test_sample_rate_reducer
+build/host/test_sample_rate_reducer
