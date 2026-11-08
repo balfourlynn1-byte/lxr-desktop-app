@@ -19,6 +19,7 @@
 #include "Soundengine/DSPAudio/Jimbones.h"
 #include "Soundengine/StepFX.h"
 #include "Soundengine/AudioDiagnostics.h"
+#include "Soundengine/DSPAudio/JimbonesAudioTelemetry.h"
 void stepfx_audioBlock(void);
 #include "Soundengine/MIDI/Uart.h"
 
@@ -27,6 +28,7 @@ volatile uint32_t jb_audioMaxCycles, jb_audioLastCycles, jb_audioOverruns;
 volatile uint8_t jb_audioLoadPercent, jb_audioPeakPercent;
 #ifndef LXR_EMU
 static uint32_t renderBudgetCycles;
+static jb_audio_telemetry jb_renderTelemetry;
 #endif
 uint8_t soundengine_calcNextSampleBlock()
 {
@@ -42,7 +44,8 @@ uint8_t soundengine_calcNextSampleBlock()
 		mixer_calcNextSampleBlock(&dma_buffer[bCurrentSampleValid*(OUTPUT_DMA_SIZE*2)],&dma_buffer2[(1-bCurrentSampleValid)*(OUTPUT_DMA_SIZE*2)]);
 	#endif
 #ifndef LXR_EMU
-        jb_audioLastCycles=DWT->CYCCNT-cycleStart;
+        jb_audio_telemetry_record(&jb_renderTelemetry,cycleStart,DWT->CYCCNT);
+        jb_audioLastCycles=jb_renderTelemetry.last_cycles;
         if(jb_audioLastCycles>jb_audioMaxCycles)jb_audioMaxCycles=jb_audioLastCycles;
         /* Audio render-only budget; no claim to include other ISR and MIDI work. */
         const uint32_t budget=renderBudgetCycles;
@@ -51,7 +54,7 @@ uint8_t soundengine_calcNextSampleBlock()
             jb_audioLoadPercent=(uint8_t)(load>255u?255u:load);
             jb_audioLoadSample(load);
             if(jb_audioLoadPercent>jb_audioPeakPercent)jb_audioPeakPercent=jb_audioLoadPercent;
-            if(jb_audioLastCycles>budget)jb_audioOverruns++;
+            jb_audioOverruns=jb_renderTelemetry.over_budget;
         }
 #endif
 		bCurrentSampleValid = SAMPLE_VALID;
@@ -67,6 +70,7 @@ void soundengine_init()
 #ifndef LXR_EMU
     /* MCLK enabled: 45.2 MHz I2S clock / (256 * 4) = 44140.625 Hz. */
     renderBudgetCycles=(uint32_t)((uint64_t)SystemCoreClock*OUTPUT_DMA_SIZE*1024u/45200000u);
+    jb_audio_telemetry_init(&jb_renderTelemetry,SystemCoreClock,OUTPUT_DMA_SIZE*1024u,45200000u);
     CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
     DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
 #endif
