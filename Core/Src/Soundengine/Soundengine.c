@@ -30,6 +30,16 @@ volatile uint8_t jb_audioLoadPercent, jb_audioPeakPercent;
 static uint32_t renderBudgetCycles;
 static jb_audio_telemetry jb_renderTelemetry;
 #endif
+/* Called from AudioDiagnostics reset with IRQs masked; retain the clock budget. */
+void jb_audioTelemetryResetCounters(void)
+{
+#ifndef LXR_EMU
+    jb_audio_telemetry_init(&jb_renderTelemetry,SystemCoreClock,OUTPUT_DMA_SIZE*1024u,45200000u);
+#endif
+    jb_audioLastCycles=0;
+    jb_audioLoadPercent=0;
+}
+
 uint8_t soundengine_calcNextSampleBlock()
 {
 	if(bCurrentSampleValid!= SAMPLE_VALID)
