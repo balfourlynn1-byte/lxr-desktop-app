@@ -17,6 +17,7 @@ typedef struct {
     int16_t history[JB_COMB_TAPS];
     uint16_t write;
     uint16_t delay;
+    uint8_t active;
 } JbCombFilter;
 
 /* Init/reset are safe to call only from voice startup or reset context.
