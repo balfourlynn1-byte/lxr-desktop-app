@@ -18,6 +18,7 @@
 #include "Soundengine/MIDI/MidiParser.h"
 #include "Soundengine/MIDI/MidiNoteNumbers.h"
 #include "Soundengine/Sequencer/sequencer.h"
+#include "Soundengine/DSPAudio/JimbonesNativeWave.h"
 
 static __inline uint32_t freq2PhaseIncr(const float f) //4096
 {
@@ -372,9 +373,52 @@ int16_t calcNoise(OscInfo* osc)
 	return osc->output;
 }
 //-----------------------------------------------------------
+/* JB-27: native oscillator morph runs only for LFO-driven fractional
+ * SINE/TRI/SAW/REC positions. No added voice, FM processing or wavetable ROM.
+ * Keep its expensive branch in FLASH, not constrained audio ITCM. */
+static int16_t jb_native_periodic_at(uint8_t wave,uint8_t band,uint32_t phase) {
+    if(wave==SINE){
+        const uint32_t pos=phase>>20u;
+        const int32_t a=sine_table[pos], b=sine_table[pos+1u];
+        const uint32_t fraction=(phase>>12u)&255u;
+        return (int16_t)(a+(((b-a)*(int32_t)fraction)>>8u));
+    }
+    const int16_t *table;
+    switch(wave){
+    case TRI: table=triTable[band]; break;
+    case SAW: table=sawTable[band]; break;
+    default: table=recTable[band]; break;
+    }
+    const uint32_t pos=phase>>22u;
+    const int32_t a=table[pos], b=table[(pos+1u)&1023u];
+    const uint32_t fraction=(phase>>14u)&255u;
+    return (int16_t)(a+(((b-a)*(int32_t)fraction)>>8u));
+}
+__attribute__((noinline)) static void jb_native_periodic_morph_block(
+    OscInfo *osc,int16_t *buf,uint8_t size,float gain,uint32_t morph)
+{
+    const uint8_t from=(uint8_t)((morph>>JB_NATIVE_WAVE_BASE_SHIFT)&3u);
+    const uint8_t next=(uint8_t)((morph>>JB_NATIVE_WAVE_NEXT_SHIFT)&3u);
+    const int32_t mix=(int32_t)(morph&JB_NATIVE_WAVE_Q15_MASK);
+    const uint8_t band=osc->tableOffset>10u?10u:osc->tableOffset;
+    uint32_t phase=osc->phase;
+    for(uint8_t i=0;i<size;i++){
+        const int32_t a=jb_native_periodic_at(from,band,phase);
+        const int32_t b=jb_native_periodic_at(next,band,phase);
+        const int32_t sample=a+(((b-a)*mix)>>15u);
+        buf[i]=(int16_t)(sample*gain);
+        phase+=osc->phaseInc;
+    }
+    osc->phase=phase;
+}
 IN_ITCM_RAM void calcNextOscSampleBlock(OscInfo* osc, int16_t* buf, const uint8_t size, const float gain, const float pwm)
 {
-	switch(osc->waveform)
+    const uint32_t morph=__atomic_load_n(&osc->waveMorphState,__ATOMIC_RELAXED);
+    if(morph&JB_NATIVE_WAVE_MORPH_ON){
+        jb_native_periodic_morph_block(osc,buf,size,gain,morph);
+        return;
+    }
+    switch(osc->waveform)
 		{
 		case SINE:
 			calcSineBlock(osc,buf,size, gain);
