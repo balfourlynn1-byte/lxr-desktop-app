@@ -56,6 +56,7 @@ add_library(lxr_ui OBJECT
     Src/menu/JimbonesPerfUI.c
     Src/menu/JimbonesWaveUI.c
     Src/menu/screensaver.c
+    Src/menu/JimbonesSkull.c
 )
 
 # Kit/pattern/project storage on the SD card.
