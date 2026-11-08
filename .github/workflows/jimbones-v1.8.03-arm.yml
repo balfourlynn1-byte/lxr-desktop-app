@@ -43,8 +43,21 @@ jobs:
           grep -Eq 'VERSION[[:space:]]+1\.8\.03' CMakeLists.txt || { echo 'STOP: v1.8.03 source/version not committed to this branch'; exit 1; }
       - name: Build ARM image
         run: |
-          cmake --preset release
-          cmake --build --preset release --parallel 2
+          cmake --preset release 2>&1 | tee configure.log
+          set -o pipefail
+          cmake --build --preset release --parallel 2 2>&1 | tee build.log
+      - name: Preserve build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: JIMBONES-v1.8.03-build-diagnostics
+          path: |
+            configure.log
+            build.log
+            build/release/CMakeFiles/CMakeConfigureLog.yaml
+            build/release/CMakeCache.txt
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Record ARM memory usage
         run: |
           mkdir -p build/release/diagnostics
