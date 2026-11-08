@@ -1,0 +1,33 @@
+name: JIMBONES v1.8.03 ARM test build
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  firmware:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build python3 gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
+      - name: Check isolated version
+        run: |
+          grep -Eq 'VERSION[[:space:]]+1\\.8\\.03' CMakeLists.txt || { echo 'STOP: v1.8.03 source/version not committed to this branch'; exit 1; }
+      - name: Build ARM image
+        run: |
+          cmake --preset release
+          cmake --build --preset release --parallel 2
+      - name: Validate image name
+        run: |
+          test -s build/release/LXR_V2_V1.8.03.img
+          sha256sum build/release/LXR_V2_V1.8.03.img > build/release/SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: JIMBONES-v1.8.03-ARM-UNTESTED
+          path: |
+            build/release/LXR_V2_V1.8.03.img
+            build/release/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 30
