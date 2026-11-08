@@ -33,6 +33,7 @@ int main(void) {
   menu_switchSubPage(0,1); assert(!jb_screen && menuIndex==0);
   menu_switchSubPage(0,1); assert(jb_screen && jb_selected==JB_MODE);
   for(unsigned page=1;page<JB_PARAMS/4;page++) { menu_switchSubPage(0,1); assert(jb_screen && jb_selected==page*4); }
+  menu_switchSubPage(0,1); assert(jb_screen && jb_selected==JB_PARAMS); /* ninth wave interpolation page */
   menu_switchSubPage(0,1); assert(!jb_screen);
   menu_switchSubPage(0,1); assert(jb_screen && jb_selected==JB_MODE);
   menu_switchSubPage(1,1); assert(!jb_screen && !jb_oscArmed && menu_getSubPage()==1);
