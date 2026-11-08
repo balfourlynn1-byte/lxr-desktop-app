@@ -17,7 +17,8 @@
 - Metallic FM and wavetable oscillators **alongside** original engines; optional layering and velocity blend.
 - Wavetable waveshaping and click-transient user samples where feasible without breaking compatibility.
 - Per-voice tape/tube-like saturation with low-end preservation and velocity drive; do not substitute a global effect.
-- Optional second bass HPF/LPF and comb filter.
+- Optional second bass HPF/LPF and **Octatrack-style comb filter**, with resonant feedback, tunable delay/pitch and safe feedback limits.
+- **Dub-style FX sends in Step FX:** per-step send amounts into delay/reverb-style returns, tempo-synchronised throws, optional feedback and kick exclusion. Prefer send/return routing over forcing the effect across the whole mix; benchmark RAM and CPU.
 - Tempo-synced step performance FX: 2/4/8-bar repeat patterns, step 1 all off, step 16 morph LFO, selectable kick exclusion.
 - Straightforward double-press menu navigation, useful performance page and CPU monitor; visual waveform is lower priority than real-time audio safety.
 
