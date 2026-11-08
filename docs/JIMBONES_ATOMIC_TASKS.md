@@ -19,7 +19,7 @@
 ## Atomic task checklist (ordered; dependencies explicit)
 
 ### A — Baseline, fade, screensaver
-- [ ] **A01** Locate earliest pushed commit and exact source symbols for the original working 3 ms No Clip fade. Evidence: paths, SHA, call chain.
+- [ ] **A01** PARTIAL 2026-11-08: exact original source symbols, blob hashes and 132-sample/≈3ms call chain pinned in `docs/CODEX_HANDOVER_2026-11-10.md` from `jimbones-noclip-baseline`. **BLOCKER for DONE:** earliest introducing commit not established by available commit-message search; inspect Git file history/blame for `Core/Src/Soundengine/DSPAudio/RetriggerSmoother.c` and compare its parent revisions. No audio test run.
 - [ ] **A02** Compare A01 against v1.8.06 code; document any change to fade length, retrigger, note-off or overlapping tails.
 - [ ] **A03** Add focused host regression for No Clip fade, with exact expected sample/ramp counts at current sample rate; no hardware build.
 - [ ] **A04** Identify v1.8.06 skull code, LCD update and wake paths; pin source SHA and host test so port preserves behaviour.
