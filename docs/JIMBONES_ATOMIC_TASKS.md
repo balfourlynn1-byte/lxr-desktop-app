@@ -21,7 +21,7 @@
 
 ### B — Upstream source analysis
 - [ ] **B01** Pin LXR02Open `prime` HEAD commit, licence, oscillator and interpolation audit blob SHAs.
-- [ ] **B02** Trace upstream `modNode_updateValue` fractional waveform-ID write, global interpolation toggle and reset paths.
+- [x] **B02** Trace upstream `modNode_updateValue` fractional waveform-ID write, global interpolation toggle and reset paths. DONE 2026-11-08; source evidence in `docs/JB_WAVETABLE_UPSTREAM_PORT_PLAN.md` (modulationNode.c blob e3a811b, lines 61–109, 173–194, 253–305).
 - [ ] **B03** Trace upstream `Oscillator.c` two-wave block rendering, sample/FM/noise/crash dispatch and fallback.
 - [ ] **B04** Compare upstream `OscInfo` with Erica `OscInfo`; map native waveform IDs, LFO target enums and voice count.
 - [ ] **B05** Map upstream velocity routing to proposed destinations; select initial safe 2–3 controls and backward-compatible default OFF.
@@ -63,4 +63,4 @@
 `JIMBONES [ID] DONE — [one concrete result]. Evidence: [commit SHA, tests or exact source]. Next: [ID]. ARM remains held.`
 
 ## First next task
-**A01** — source-trace the original 3 ms No Clip fade. Do not start C or E before A and B prerequisites.
+**A01** — source-trace the original 3 ms No Clip fade. Preliminary repository commit-message and default-branch code searches did not locate it; inspect older branch/file history and audio trigger/reset symbols. B02 source analysis is complete. Do not start C or E before A and B prerequisites.
