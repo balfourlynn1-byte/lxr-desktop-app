@@ -169,7 +169,10 @@ void dub_delay_prepare(struct DelayStruct *delay, uint8_t fx_is_delay,
             __atomic_store_n(&wet_only,1u,__ATOMIC_RELAXED);
         }else{
             if(last_samples) {
-                restore_manual(d,manual_time,manual_range,manual_feedback);
+                /* Different FX types reuse fxBus.parameter[]; never restore
+                 * delay values from distortion/compressor parameters. */
+                if(fx_is_delay)
+                    restore_manual(d,manual_time,manual_range,manual_feedback);
                 last_samples=0u;last_feedback=-1.f;
                 cooldown_frames=DUB_COOLDOWN_FRAMES;
                 __atomic_store_n(&dirty,0u,__ATOMIC_RELAXED);
