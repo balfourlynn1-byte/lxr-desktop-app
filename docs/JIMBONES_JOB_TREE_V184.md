@@ -3,6 +3,20 @@
 **Updated:** 2026-11-08. **Purpose:** make jobs small and ready for Codex, with clear dependencies and test gates. 
 **Status of this programme:** v1.8.04 has user-reported stable boot, ~62% DSP and no new audible crunch; new 1.8.05–1.8.06 changes remain **untested on hardware**. Exact PK/LATE/RAIL and four-pad stress on v1.8.04 are still unrecorded. CI does not prove realtime headroom. Branch roles in this board are **virtual assignments**, not autonomous active agents. CI passing is not a substitute for physical tests.
 
+## Step FX requirement clarification — 2026-11-08
+
+**User correction:** Existing Step FX effects **DO work on hardware**. Their musical utility is limited, particularly fixed pitch up/down and lack of selective voice routing. Do not mark the Step FX engine as broken or rewrite it. The user wants to target **snare alone, clap alone, hi-hat alone, or arbitrary combinations** of those, while preserving all six voices and leaving non-targeted voices dry. Other voices can be optionally selectable, with kick protected by default.
+
+**JB-29 — per-Step-FX voice mask and useful pitch controls (P1, after current integration candidate):**
+- Add an independent **six-bit voice target mask per Step FX effect slot**; allow combinations, including empty mask = no processing. Initial musical presets can include snare, clap, hats; no hardcoded single-voice limit.
+- Confirm real voice indexes from the actual LXR-02 firmware before mapping UI labels (snare/clap/hi-hat may share routing or trigger logic). Never assume the UI voice names equal hardware voice IDs.
+- Apply target gating at the *existing effect trigger/send point*; **do not silence or replace the dry voice**. Preserve the already working dub FX, current Step FX, six-voice engine, original kit compatibility, and kick-exclusion default.
+- Add a discoverable LCD editor for the mask and persist it safely with backward-compatible defaults. UI controls/serialization and LED behaviour require explicit tests. If per-slot persistence would change legacy kit data, use versioned optional extension or runtime defaults first.
+- Reassess pitch up/down **musical controls** (amount/range, rate and tempo sync) separately from voice targeting. Avoid full audio engine rewrite or additional DSP processors; host regression and physical tests on snare-only, clap-only, hats-only, combinations, non-targeted dry parity, kick protection and 4-pad DSP/PK/LATE/RAIL.
+- **Acceptance:** user confirms a chosen Step FX audibly affects only the selected voice(s), with unaffected voices unchanged, and controls behave consistently on hardware. Code/CI alone is not completion.
+
+**Corrected status:** Step FX core = **HARDWARE WORKING, MUSICAL CONTROL REDESIGN REQUIRED**. Step 1 LED and toggle specifics remain **previously reported issues whose newer fix is not hardware confirmed**. Dub delay = **HARDWARE WORKING**. Do not conflate usefulness with audio-engine failure.
+
 ## Hardware-truth audit — user correction (2026-11-08)
 
 **Only user-confirmed functional feature so far: existing dub delay / dub effect.** Removing Metallic FM also reduced the reported DSP load to ~62% and apparently removed audible crunch; this is a stability improvement, **not** another delivered feature. The user explicitly reports that the **last seven iterations have delivered only that one working feature**. CI green, code merged into a branch, or an image generated are **not feature acceptance**.
@@ -11,7 +25,8 @@
 |---|---|---|
 | Dub delay / dub effect | User reports it works well | **HARDWARE WORKING** (specific modes not exhaustively tested) |
 | Five 1/4, 1/8, 1/8-triplet, 1/16, 1/32 timing buttons | Code in v1.8.05; no user test | **NOT ACCEPTED** |
-| Step 1 LED and each Step FX press-on/press-off | User previously reported LED/toggle bug; code fix not hardware confirmed | **BUG OPEN** |
+| Step FX core and pitch up/down | User confirms effects work, but pitch controls and indiscriminate voice routing are musically limiting | **WORKING CORE; REDESIGN TARGETING (JB-29)** |
+| Step 1 LED and each Step FX press-on/press-off | User previously reported LED/toggle bug; newer code fix not hardware confirmed | **UI FIX UNVERIFIED** |
 | Wavetable and waveform shaping / LFO scanning | User says wavetable not working as demo intended; upstream full engine not ported | **INCOMPLETE / NOT WORKING AS REQUESTED** |
 | Comb in FILTER | Separate CI-passing prototype, no combined physical test | **NOT ACCEPTED** |
 | LCD garbling after screensaver | User provided device photo; fix not device tested | **BUG OPEN** |
