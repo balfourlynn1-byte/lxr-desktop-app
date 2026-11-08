@@ -7,3 +7,4 @@ ${CC:-cc} -std=c11 -O2 -g -Wall -Wextra -Werror -fsanitize=undefined \
  -o build/host/test_jb26_skull
 build/host/test_jb26_skull
 python3 tests/test_jb26_screensaver_source.py
+sh tests/run_jb26_screensaver_state.sh
