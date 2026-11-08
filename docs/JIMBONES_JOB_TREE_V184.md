@@ -1,7 +1,7 @@
-# JIMBONES v1.8.04 — build job tree and Codex handover
+# JIMBONES v1.8.04–1.8.06 — build job tree and Codex handover
 
 **Updated:** 2026-11-08. **Purpose:** make jobs small and ready for Codex, with clear dependencies and test gates. 
-**Status of this programme:** experimental source; **no approved hardware build or confirmed DSP headroom**. Branch roles in this board are **virtual assignments**, not autonomous active agents. CI passing is not a substitute for physical tests.
+**Status of this programme:** v1.8.04 has user-reported stable boot, ~62% DSP and no new audible crunch; new 1.8.05–1.8.06 changes remain **untested on hardware**. Exact PK/LATE/RAIL and four-pad stress on v1.8.04 are still unrecorded. CI does not prove realtime headroom. Branch roles in this board are **virtual assignments**, not autonomous active agents. CI passing is not a substitute for physical tests.
 
 ## Active dependency tree
 
@@ -31,6 +31,18 @@ BASE: known-good LXR-02 firmware (keep untouched + backed up)
                               |       +-- JB-02 meter verification
                               |       +-- JB-01 baseline/rollback
                               |
+                              +-- [CI PASS / REVIEW] JB-25 5 dub
+                              |   interval pads v1.8.05         draft PR #16
+                              |       |
+                              |       +-- [CI PASS / REVIEW] JB-26
+                              |           LCD byte-latch + bouncing skull
+                              |           v1.8.06               draft PR #17
+                              |           |
+                              |           +-- [NEXT / CONDITIONAL] JB-27
+                              |               upstream-style waveform-ID
+                              |               scanning + shaping DSP
+                              |               (licence + CPU review first)
+                              |
                               +-- [AFTER CPU PASS] JB-09B native
                               |   oscillator wavetable / LFO
                               |   scan feasibility + profile
@@ -39,7 +51,7 @@ BASE: known-good LXR-02 firmware (keep untouched + backed up)
                               +-- [DEFERRED] other sound engines
 ```
 
-**Review order:** #8 → #9 → #10 → #11 → #12 → #13 → #14. These PRs are stacked **on one another**, not six independently mergeable changes into `main`. Never merge or flash just because CI is green.
+**Review order for the current test-image chain:** #8 → #9 → #10 → #11 → #12 → #13 → #14 → #16 → #17. These PRs are **stacked**, not independently mergeable into `main`. **Comb PR #15 is a separate branch and is NOT included in the v1.8.06 skull candidate.** Never merge or flash just because CI is green.
 
 ## Work queue and status
 
@@ -52,11 +64,14 @@ BASE: known-good LXR-02 firmware (keep untouched + backed up)
 | **JB-22** integration + FM-off | P0 | GCC/Clang, ARM + image validation PASS; **560 B free ITCM** in [run #42485178857](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42485178857); [PR #12](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/12) | Review the combined signal path, unchanged kit format and device risk | Integration / Verification |
 | **JB-24** wave-first OSC UI | P1 | GCC/Clang + ARM + memory/image CI PASS in [run #42486888340](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42486888340); [PR #13](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/13) | Review 7 pages + interpolation on actual 16×2 display, preset legacy modes | Embedded / DSP |
 | **JB-23** device test pack | P0 | **[Draft PR #14](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/14), [GCC/Clang + ARM/manifest checks GREEN](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42487592194)**; [UNVERIFIED artifact](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42487592194/artifacts/13620400602) published, 560 B ITCM free, SHA256 `0be1f7553f0fd86adbd8c49891b5de0c2f44a46348642e369b6223a76c741aae` | Independently review stacked PRs, verify working rollback image, then actual supervised hardware tests. No routine use approval. | Verification / Integration |
-| **JB-03** post-FM-removal DSP verification | P0 | **Historical issue on metallic-enabled v1.8.03 only** (DSP up to 101%, LATE 999). Metallic FM render code is compiled out in v1.8.04; there is **no evidence yet** of this crunch on the new build. | Record like-for-like v1.8.04 idle/2-tom/4-pad DSP, PK, LATE and RAIL. **Only open an optimisation/fix job if it recurs.** | Verification (DSP conditional) |
+| **JB-03** post-FM-removal DSP verification | P0 | **Hardware report on v1.8.04:** ~62% DSP and the previous high readings/crunch appear gone; dub send sounds good. RAIL rises only with sequencer playing, not at idle, with no audible noise reported. **PK/LATE and controlled 2-tom/4-pad stress unreported.** | Log PK, LATE and loaded DSP/RAIL; treat v1.8.03 101% as historical. Do not write a speculative overload fix. | Verification (DSP conditional) |
 | **JB-02** DSP/PK/LATE/RAIL meter | P0 | Present in experimental firmware and hardware readings on earlier build | Confirm semantics and reset behavior on new image; compare idle and loaded cases | Embedded / Verification |
 | **JB-01** baseline parity and rollback | P0 | Source and CI regressions exist; user has booted prior experimental firmware | Verify six original voices, physical outputs, kits and recoverable rollback on device | Integration |
-| **JB-09B** further wavetable integration | P1 conditional | JB-24 uses existing JIMBONES wave tables/interpolation, **not** upstream sample/loop engine or its LFO wave-ID scan | Research independent LFO-to-waveform modulation and CPU usage; design separate minimal PR **after measurements** | DSP / Research |
+| **JB-09B** further wavetable integration | P1 conditional | Existing JB-24 UI and native tables work, but upstream LXR02Open's waveform-ID/LFO interpolation and user sample/loop system are **not fully ported**. | **JB-27** feasibility and independent implementation plan, CPU bench against ~62% baseline; noncommercial upstream code not copied into public GPL repo without separate permission. | DSP / Research |
 | **JB-12** Comb filter / independent bass filter | P1, hardware-dependent | **[Draft PR #15](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/15) implemented Comb as ninth FILTER Type across six voices. [GCC/Clang host+ARM CI passed](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42495034632) with 528 B ITCM free.** Physical DSP/audio test still needed; separate bass HPF/LPF not implemented. | Verify review and hardware CPU/PK/LATE/RAIL on Comb versus native filter; do not release until stable | DSP / Verification |
+| **JB-25** five dub timing buttons | P1 | [Draft PR #16](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/16), [host+ARM+image CI GREEN](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42498555769), v1.8.05. Step FX 1–5 quarter, eighth, triplet eighth, sixteenth, thirty-second; 6–16 originals. | Physical 5-button timing, LEDs, DSP/PK/LATE/RAIL and delay-buffer modes; v1.8.04 remains rollback. | DSP / Embedded |
+| **JB-26** LCD corruption + animated skull | P0 | [Draft PR #17](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/17), v1.8.06: guarded LCD ownership, latched nibble writes, 10×12 skull bouncing vertically, host UI simulation + ARM gate. **Hardware test not yet performed**. | Verify screenshot corruption is gone after sleep/wake, actual skull glyphs, UI controls and CPU. | Embedded / Verification |
+| **JB-27** full upstream-style wavetable and waveshaping | P1 conditional | Requested with upstream [LXR02Open](https://github.com/brendanclarke/LXR02Open) + YouTube reference. Existing JIMBONES wave layer is only partial. Upstream **noncommercial restrictions conflict with GPL-only public distribution** if copied verbatim. | Obtain licence exception or independently implement original-oscillator waveform-ID interpolation/LFO scan, wavefold/shape, sample-domain evaluation, and test four-hit CPU cost; do not combine with skull bugfix. | DSP / Research |
 | **JB-05** tape/tube saturation | P2 conditional | Backlog | Benchmark a cheap per-voice alternative, default off; do not add before live headroom proof | DSP |
 | **JB-04** morph A/B/C | P2 conditional | Backlog | Preserve A and kick; spec edit/morph state and automation controls after stable build | DSP / Embedded |
 | **JB-10/11/13** hi-hat/snare/visual polish | P2 | Backlog / partial diagnostics | Separate small PRs after core audio and Step FX validation | Embedded / DSP |
