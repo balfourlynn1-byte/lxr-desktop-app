@@ -18,6 +18,8 @@ static Pending pending[6];
 static uint8_t selected,divisor=2,probability=100,mask=40;
 /* Dub control masks only; existing native FX audio routing is unchanged. */
 static uint8_t dubEnabled,dubSendMask=0x3eu,dubThrowMask;
+/* Per-voice 64-sample send ramps; only touched by the audio render thread. */
+static uint8_t dubRamp[6];
 static uint32_t phase,externalPhase,clockAge,clockRemainder,rng=0x53465831u;
 static uint64_t fraction;
 static uint8_t clockSeen,wasExternal;
@@ -25,7 +27,7 @@ static uint32_t lock(void) { uint32_t m=__get_PRIMASK();__disable_irq();return m
 static void unlock(uint32_t m) { __DMB();__set_PRIMASK(m); }
 static uint32_t random32(void) { rng^=rng<<13;rng^=rng>>17;rng^=rng<<5;return rng; }
 static void cancel(void) { memset(pending,0,sizeof(pending)); }
-void stepfx_init(void) { uint32_t m=lock();dubEnabled=0;dubSendMask=0x3eu;dubThrowMask=0;cancel();selected=0;divisor=2;probability=100;mask=40;phase=externalPhase=clockAge=clockRemainder=0;fraction=0;clockSeen=wasExternal=0;rng=0x53465831u;unlock(m); }
+void stepfx_init(void) { uint32_t m=lock();dubEnabled=0;dubSendMask=0x3eu;dubThrowMask=0;memset(dubRamp,0,sizeof(dubRamp));cancel();selected=0;divisor=2;probability=100;mask=40;phase=externalPhase=clockAge=clockRemainder=0;fraction=0;clockSeen=wasExternal=0;rng=0x53465831u;unlock(m); }
 void stepfx_select(uint8_t slot) { if(slot>15)return;uint32_t m=lock();cancel();selected=slot;divisor=slots[slot].div;probability=slots[slot].prob;unlock(m); }
 void stepfx_rate(int delta) { uint32_t m=lock();if(delta>0 && divisor<16)divisor*=2;if(delta<0 && divisor>2)divisor/=2;cancel();unlock(m); }
 void stepfx_probability(int delta) { uint32_t m=lock();int p=probability+delta;probability=p<0?0:(p>100?100:p);unlock(m); }
@@ -137,9 +139,16 @@ uint8_t stepfx_dubEffectiveMask(void){
  * when master is disabled. Deliberately fixed -12 dB send to leave headroom.
  * Existing FX delay remains responsible for feedback and tail processing. */
 void stepfx_dubTap(uint8_t voice,const int16_t *samples,int16_t *fxStereo,unsigned frames) {
- if(voice>=6u || !samples || !fxStereo || !(stepfx_dubEffectiveMask()&(1u<<voice)))return;
+ if(voice>=6u || !samples || !fxStereo)return;
+ /* Ramp toward target, including after send-off. The delay itself is never
+  * cleared; this only controls new samples entering the existing FX bus. */
+ const uint8_t target=(stepfx_dubEffectiveMask()&(1u<<voice))?64u:0u;
+ uint8_t level=dubRamp[voice];
+ if(level==0u && target==0u)return;
  for(unsigned i=0;i<frames;i++) {
-  const int32_t add=(int32_t)samples[i]/4;
+  if(level<target)++level;
+  else if(level>target)--level;
+  const int32_t add=((int32_t)samples[i]*level)/(4*64);
   for(unsigned ch=0;ch<2;ch++) {
    const unsigned k=2u*i+ch;
    int32_t mixed=(int32_t)fxStereo[k]+add;
@@ -148,4 +157,5 @@ void stepfx_dubTap(uint8_t voice,const int16_t *samples,int16_t *fxStereo,unsign
    fxStereo[k]=(int16_t)mixed;
   }
  }
+ dubRamp[voice]=level;
 }
