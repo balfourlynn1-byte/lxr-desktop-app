@@ -52,7 +52,7 @@ BASE: known-good LXR-02 firmware (keep untouched + backed up)
 | **JB-22** integration + FM-off | P0 | GCC/Clang, ARM + image validation PASS; **560 B free ITCM** in [run #42485178857](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42485178857); [PR #12](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/12) | Review the combined signal path, unchanged kit format and device risk | Integration / Verification |
 | **JB-24** wave-first OSC UI | P1 | GCC/Clang + ARM + memory/image CI PASS in [run #42486888340](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42486888340); [PR #13](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/13) | Review 7 pages + interpolation on actual 16×2 display, preset legacy modes | Embedded / DSP |
 | **JB-23** device test pack | P0 | **[Draft PR #14](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/14), [GCC/Clang + ARM/manifest checks GREEN](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42487592194)**; [UNVERIFIED artifact](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42487592194/artifacts/13620400602) published, 560 B ITCM free, SHA256 `0be1f7553f0fd86adbd8c49891b5de0c2f44a46348642e369b6223a76c741aae` | Independently review stacked PRs, verify working rollback image, then actual supervised hardware tests. No routine use approval. | Verification / Integration |
-| **JB-03** overlapping-tom crunch | P0 | Reproduced on v1.8.03 device (DSP up to 101%, LATE 999); root cause not confirmed; Metallic DSP removed in later source | Test same kit and velocities on reviewed v1.8.04 device build, 2 toms and 4 pads | DSP / Verification |
+| **JB-03** post-FM-removal DSP verification | P0 | **Historical issue on metallic-enabled v1.8.03 only** (DSP up to 101%, LATE 999). Metallic FM render code is compiled out in v1.8.04; there is **no evidence yet** of this crunch on the new build. | Record like-for-like v1.8.04 idle/2-tom/4-pad DSP, PK, LATE and RAIL. **Only open an optimisation/fix job if it recurs.** | Verification (DSP conditional) |
 | **JB-02** DSP/PK/LATE/RAIL meter | P0 | Present in experimental firmware and hardware readings on earlier build | Confirm semantics and reset behavior on new image; compare idle and loaded cases | Embedded / Verification |
 | **JB-01** baseline parity and rollback | P0 | Source and CI regressions exist; user has booted prior experimental firmware | Verify six original voices, physical outputs, kits and recoverable rollback on device | Integration |
 | **JB-09B** further wavetable integration | P1 conditional | JB-24 uses existing JIMBONES wave tables/interpolation, **not** upstream sample/loop engine or its LFO wave-ID scan | Research independent LFO-to-waveform modulation and CPU usage; design separate minimal PR **after measurements** | DSP / Research |
@@ -69,7 +69,7 @@ BASE: known-good LXR-02 firmware (keep untouched + backed up)
 - It does **not** paste or import LXR02Open's non-commercial source into this GPL-only public repository. The user's intended use is personal, but redistribution of code in public GitHub still requires a compatible licence or explicit permission. Existing native DSP wave tables remain.
 - The actual LCD, knob sensitivity and audio result have **not** been tested on the physical synth. The CI checks verify source, host simulations, successful ARM link, a checksum and a >=512 B ITCM slack threshold; they do not measure audio ISR CPU utilisation.
 
-## Next work: hardware sign-off (JB-03 + JB-02 + JB-01)
+## Next work: verify FM-free hardware headroom (JB-03 + JB-02 + JB-01)
 
 **Goal:** verify the experimental package on the actual unit, using a separately verified known-working rollback image, and gather real DSP/PK/LATE/RAIL readings. JB-23 source and packaging are completed; the test is NOT.
 
@@ -79,7 +79,7 @@ BASE: known-good LXR-02 firmware (keep untouched + backed up)
 2. Confirm the user retains their currently bootable image and backed-up SD kits **before** experimenting. Verify checksum of that rollback image and the new image.
 3. User-supervised LXR-02 tests begin at low audio volume. Test original voices, output routes and Step 1 LED first; stop immediately on crashes, audible crunch, or increased late counters.
 4. Record idle DSP/PK/LATE/RAIL after reset, 2 overlapping toms, 4 concurrent pad hits, wave interpolation, DUB SEND, clock disconnect, physical LEDs and output routing. v1.8.03 figures are historical reference only.
-5. File any observed device failures as separate GitHub work orders and do not add comb/tape/new oscillators until DSP headroom is measured.
+5. Treat v1.8.03 crunch measurements as historical, not a confirmed v1.8.04 defect. Metallic FM processing is removed. File a new DSP optimisation/fix work order only if fresh firmware readings reproduce overload; hold expensive comb/tape/new oscillators until headroom is established.
 
 **Release gate:** the user manually reports a stable boot with all six original voices, no new crackle or missed deadlines on four-hit stress, satisfactory headroom, and successful rollback. Only then reconsider comb/wavetable expansion.
 
