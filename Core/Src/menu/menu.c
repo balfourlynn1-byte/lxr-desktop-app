@@ -15,6 +15,7 @@
 #include "Soundengine/DubDelaySync.h"
 #include "Soundengine/AudioDiagnostics.h"
 #include "Soundengine/DSPAudio/Jimbones.h"
+#include "menu/JimbonesWaveUI.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -1520,62 +1521,67 @@ static void menu_displayModTargetShort(uint8_t curParmVal, char *valueAsText, ch
 // (as opposed to repainting the load save screen)
 /* OSC extension is separate from packed legacy menuIndex and does not alter the sequencer. */
 extern volatile uint8_t jb_audioLoadPercent;
-static uint8_t jb_screen=0, jb_selected=JB_METAL, jb_oscArmed=0;
-static const char *const jb_short[JB_PARAMS]={
- "Mod","FML","WTL","Dec", "Met","Noi","Agg","Tex",
- "vMt","vNo","vAg","vTx", "Pit","Rat","Dep","Fbk",
- "Det","Nvl","Col","Trn", "Drv","PSh","Bit","Vel",
- "Pos","Mov","Rnd","PEn", "Mix","Shp","FxA","vMx"};
-static const char *const jb_long[JB_PARAMS]={
- "Layer mode","Metal level","Wave level","Amp decay",
- "METAL","NOISE","AGGRESSION","TEXTURE",
- "Velocity > Metal","Velocity > Noise","Velocity > Agg","Velocity > Tex",
- "Carrier pitch","FM ratio","FM depth","FM feedback",
- "Detune","Noise level","Noise colour","Transient length",
- "Drive","Phase Shape/Sat","Bit reduction","Velocity sens",
- "Wave position","Wave movement","Randomisation","Pitch envelope",
- "Layer blend","WaveShape amount","Step FX amount","Velocity > Blend"};
+/* Visible OSC indices are separate from the preserved 32-field kit data.
+ * Waveform / level / position / movement first; FM controls hidden. */
+static uint8_t jb_screen=0, jb_selected=0, jb_oscArmed=0;
 static uint8_t jb_uiActive(void) { return jb_screen && menu_activePage<7; }
 static uint8_t jb_uiVoice(void) { uint8_t v=menu_getActiveVoice(); return v>5?5:v; }
-static void jb_uiAdjust(unsigned p,int diff) {
- jb_adjust(jb_uiVoice(),p,diff);
+static uint8_t jb_uiSigned(uint8_t p) {
+ return p==JB_VNOISE || p==JB_VTEXTURE || p==JB_VAGGRESSION || p==JB_VBLEND;
+}
+static void jb_uiAdjust(unsigned index,int diff) {
+ const uint8_t p=jb_waveui_param((uint8_t)index);
+ if(p>=JB_PARAMS || !diff)return;
+ if(p==JB_MODE) {
+  /* Legacy presets keep raw modes; write ONLY OFF=0 / WAVETABLE=2. */
+  jb_setControl(jb_uiVoice(),JB_MODE,diff>0?2u:0u);
+ } else jb_adjust(jb_uiVoice(),p,diff);
  preset_touchTimer(PRESET_KIT_TIMER);
  menu_repaintAll();
 }
 static void jb_uiPaint(void) {
- if(jb_selected==JB_PARAMS) {
-  memset(editDisplayBuffer,' ',sizeof(editDisplayBuffer));
-  memcpy(editDisplayBuffer[0],"WAVE INTERPOLATE",16);
-  memcpy(editDisplayBuffer[1],jb_getWaveInterpolation()?"ON  smooth blend":"OFF stepped wave",16);
-  editDisplayBuffer[0][16]=0; editDisplayBuffer[1][16]=0;
+ memset(editDisplayBuffer,' ',sizeof(editDisplayBuffer));
+ if(jb_selected==JB_WAVEUI_INTERP) {
+  const char *title="OSC INTERPOLATE";
+  const char *state=jb_getWaveInterpolation()?"ON: SMOOTH BLEND":"OFF: STEP WAVE";
+  memcpy(editDisplayBuffer[0],title,strlen(title));
+  memcpy(editDisplayBuffer[1],state,strlen(state));
+  editDisplayBuffer[0][16]=0;editDisplayBuffer[1][16]=0;
   return;
  }
- unsigned voice=jb_uiVoice();
- memset(editDisplayBuffer,' ',sizeof(editDisplayBuffer));
+ const unsigned voice=jb_uiVoice();
+ const uint8_t par=jb_waveui_param(jb_selected);
+ if(par>=JB_PARAMS){editDisplayBuffer[0][16]=0;editDisplayBuffer[1][16]=0;return;}
  if(editModeActive) {
-  const char *label=jb_long[jb_selected];
-  unsigned n=strlen(label); if(n>16) n=16;
+  const char *label=jb_waveui_long(jb_selected);
+  unsigned n=strlen(label);if(n>16u)n=16u;
   memcpy(editDisplayBuffer[0],label,n);
-  char b[17]; int value=jb_parameters[voice][jb_selected];
-  if((jb_selected>=JB_VMETAL && jb_selected<=JB_VTEXTURE) || jb_selected==JB_VBLEND) value-=64;
-  if(jb_selected==JB_MODE) {
-   static const char *const modes[]={"Original","FM off","Orig + Wave","Wave (FM off)"};
-   snprintf(b,sizeof(b),"%s",modes[value]);
-  } else snprintf(b,sizeof(b),"V%u  %d",voice+1,value);
+  char b[17]={0};
+  int value=jb_parameters[voice][par];
+  if(par==JB_MODE)
+   snprintf(b,sizeof(b),"V%u WAVE %s",voice+1u,(value&2)?"ON":"OFF");
+  else if(par==JB_POSITION)
+   snprintf(b,sizeof(b),"V%u %s",voice+1u,
+     jb_waveui_shape_name((uint8_t)value,jb_getWaveInterpolation()));
+  else
+   snprintf(b,sizeof(b),"V%u %d",voice+1u,jb_uiSigned(par)?value-64:value);
   memcpy(editDisplayBuffer[1],b,strlen(b));
  } else {
-  unsigned base=(jb_selected/4)*4;
-  for(unsigned col=0;col<4;col++) {
-   unsigned par=base+col; char b[5];
-   memcpy(&editDisplayBuffer[0][col*4],jb_short[par],3);
-   int value=jb_parameters[voice][par];
-   if((par>=JB_VMETAL && par<=JB_VTEXTURE) || par==JB_VBLEND) value-=64;
-   snprintf(b,sizeof(b),"%3d",value);
-   memcpy(&editDisplayBuffer[1][col*4],b,3);
-   if(par==jb_selected) editDisplayBuffer[0][col*4+3]='<';
+  const uint8_t bank=(uint8_t)(jb_selected/4u);
+  for(unsigned col=0;col<4u;col++) {
+   const uint8_t index=jb_waveui_col(bank,(uint8_t)col);
+   const uint8_t p=jb_waveui_param(index);
+   if(p>=JB_PARAMS)continue;
+   memcpy(&editDisplayBuffer[0][col*4u],jb_waveui_short(index),3u);
+   char b[5]={0};
+   int value=jb_parameters[voice][p];
+   if(p==JB_MODE)snprintf(b,sizeof(b),"%3s",(value&2)?"ON":"OFF");
+   else snprintf(b,sizeof(b),"%3d",jb_uiSigned(p)?value-64:value);
+   memcpy(&editDisplayBuffer[1][col*4u],b,3u);
+   if(index==jb_selected)editDisplayBuffer[0][col*4u+3u]='<';
   }
  }
- editDisplayBuffer[0][16]=0; editDisplayBuffer[1][16]=0;
+ editDisplayBuffer[0][16]=0;editDisplayBuffer[1][16]=0;
 }
 
 /* The third Performance screen is an explicit state, not a legacy menuIndex
@@ -2930,15 +2936,14 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
   menu_repaintAll(); return;
  }
  if(jb_uiActive() && copyClear_Mode==MODE_NONE) {
-  if(jb_selected==JB_PARAMS) {
+  if(jb_selected==JB_WAVEUI_INTERP) {
    if(inc || btnClicked) jb_setWaveInterpolation(inc?inc>0:!jb_getWaveInterpolation());
    editModeActive=0; menu_repaintAll(); return;
   }
   if(inc) {
    if(editModeActive) jb_uiAdjust(jb_selected,inc);
    else {
-    int next=(int)jb_selected+inc;
-    jb_selected=next<0?JB_PARAMS:(next>JB_PARAMS?0:next);
+    jb_selected=jb_waveui_next(jb_selected,inc);
    }
   }
   menu_repaintAll(); return;
@@ -3346,11 +3351,11 @@ void menu_switchSubPage(uint8_t subPageNr, uint8_t toggle)
 {
  if(menu_activePage<7 && subPageNr==0 && toggle) {
   if(jb_oscArmed && menu_getSubPage()==0) {
-   if(!jb_screen) { jb_screen=1; jb_selected=JB_MODE; }
+   if(!jb_screen) { jb_screen=1; jb_selected=0; }
    else {
     unsigned bank=(unsigned)(jb_selected/4)+1u;
-    if(bank > (JB_PARAMS+3u)/4u) { jb_screen=0; jb_selected=JB_MODE; }
-    else if(bank == (JB_PARAMS+3u)/4u) jb_selected=JB_PARAMS;
+    if(bank > JB_WAVEUI_BANKS) { jb_screen=0; jb_selected=0; }
+    else if(bank == JB_WAVEUI_BANKS) jb_selected=JB_WAVEUI_INTERP;
     else jb_selected=(uint8_t)(bank*4u);
    }
    editModeActive=0; return;
@@ -4165,13 +4170,14 @@ uint8_t menu_parseKnobValue(uint8_t potNr, int16_t diff)
   screensaver_touch();menu_repaintAll();return 1;
  }
  if(jb_uiActive() && copyClear_Mode==MODE_NONE && potNr<4) {
-  if(jb_selected==JB_PARAMS) {
+  if(jb_selected==JB_WAVEUI_INTERP) {
    if(potNr==0 && diff) jb_setWaveInterpolation(diff>0);
    screensaver_touch(); editModeActive=0; menu_repaintAll(); return 1;
   }
   screensaver_touch(); editModeActive=0;
-  jb_selected=(jb_selected/4)*4+potNr;
-  jb_uiAdjust(jb_selected,diff); return 1;
+  const uint8_t index=jb_waveui_col((uint8_t)(jb_selected/4u),potNr);
+  if(index<JB_WAVEUI_VISIBLE) {jb_selected=index;jb_uiAdjust(index,diff);}
+  return 1;
  }
 	screensaver_touch();
 	preset_touchTimer(PRESET_KIT_TIMER);
