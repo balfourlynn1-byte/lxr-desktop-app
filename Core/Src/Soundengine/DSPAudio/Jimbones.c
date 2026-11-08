@@ -103,7 +103,7 @@ void jb_init(void) { jb_defaults(&jb_parameters[0][0]); jb_silence(); }
 void jb_trigger(uint8_t v,uint8_t velocity,uint8_t note,uint8_t open) {
  if(v>=JB_VOICES) return;
  Layer next={0}, *s=&next; const uint8_t *p=jb_parameters[v];
- if(!p[JB_MODE] || !velocity) {
+ if(!(p[JB_MODE]&2u) || !velocity) {
   uint32_t m=lock(); layers[v]=next; unlock(m); return;
  }
  uint32_t seed=layers[v].rng?layers[v].rng:0x917b15u+v*31337u;
@@ -111,7 +111,9 @@ void jb_trigger(uint8_t v,uint8_t velocity,uint8_t note,uint8_t open) {
  s->carrier=s->modulator=s->wave=.25f;
  float vel=unit(velocity>127?127:velocity);
  s->hitVelocity=vel;
+#if JB_METALLIC_ENABLED
  s->metal=clamp(unit(p[JB_METAL])+(p[JB_VMETAL]-64)/63.f*vel,0,1);
+#endif
  s->noise=clamp(unit(p[JB_NOISE])+(p[JB_VNOISE]-64)/63.f*vel,0,1);
  s->aggression=clamp(unit(p[JB_AGGRESSION])+(p[JB_VAGGRESSION]-64)/63.f*vel,0,1);
  s->texture=clamp(unit(p[JB_TEXTURE])+(p[JB_VTEXTURE]-64)/63.f*vel,0,1);
@@ -119,9 +121,11 @@ void jb_trigger(uint8_t v,uint8_t velocity,uint8_t note,uint8_t open) {
  int pitch=(int)p[JB_PITCH]+(int)note-48; pitch=pitch<0?0:(pitch>127?127:pitch);
  s->frequency=clamp(MidiNoteFrequencies[pitch]*(1.f+s->random*.025f),10,12000)/REAL_FS;
  s->table=(pitch+11)/12; if(s->table>10) s->table=10;
+#if JB_METALLIC_ENABLED
  s->ratio=.25f+unit(p[JB_RATIO])*13.75f+s->metal*4.41421356f;
  s->depth=unit(p[JB_DEPTH])*(.25f+8.5f*s->metal);
- s->fb=unit(p[JB_FEEDBACK])*.78f; // deeper feedback for clangorous FM
+ s->fb=unit(p[JB_FEEDBACK])*.78f;
+#endif
  s->detune=1.f+(p[JB_DETUNE]-64)*(.03f/64.f);
  float seconds=.015f+unit(p[JB_DECAY])*unit(p[JB_DECAY])*4.f;
  if(v==5 && !open) seconds=fminf(seconds,.12f); // closed hit replaces open tail
@@ -139,8 +143,8 @@ static float blend(unsigned v) {
  return unit(p[JB_BLEND])*(1.f-(depth>=0?depth*(1.f-velocity):-depth*velocity));
 }
 static float activeLevel(const uint8_t *p) {
- return fmaxf((p[JB_MODE]&1)?unit(p[JB_METAL_LEVEL]):0,
-              (p[JB_MODE]&2)?unit(p[JB_WAVE_LEVEL]):0);
+ /* FM-only presets retain their data but must not attenuate native audio. */
+ return (p[JB_MODE]&2u)?unit(p[JB_WAVE_LEVEL]):0.f;
 }
 /* Fixed fader law before summing. Depends on control positions only. */
 uint8_t jb_liveBalance;
@@ -166,11 +170,13 @@ void jb_stageVoice(uint8_t v,int16_t *samples,unsigned size,float fader) {
 void jb_render(uint8_t v,int16_t *buffer,unsigned size,float gain) {
  if(v>=JB_VOICES) return;
  Layer *s=&layers[v]; const uint8_t *p=jb_parameters[v];
- if(!p[JB_MODE]) { s->envelope=0; s->tail=0; s->last=0; return; } // bit-exact buffer bypass
- float fmGain=(p[JB_MODE]&1)?unit(p[JB_METAL_LEVEL]):0;
- float wtGain=(p[JB_MODE]&2)?unit(p[JB_WAVE_LEVEL]):0;
+ if(!(p[JB_MODE]&2u)) { s->envelope=0; s->tail=0; s->last=0; return; } // FM-only: bit-exact native bypass
+#if JB_METALLIC_ENABLED
+ float fmGain=(p[JB_MODE]&1u)?unit(p[JB_METAL_LEVEL]):0.f;
+#endif
+ float wtGain=(p[JB_MODE]&2u)?unit(p[JB_WAVE_LEVEL]):0.f;
  float mix=blend(v);
- if((fmGain==0 && wtGain==0) || mix==0) { s->last=s->tail=s->envelope=0; return; }
+ if(wtGain==0 || mix==0) { s->last=s->tail=s->envelope=0; return; }
  float shape=fminf(1.f,p[JB_SHAPE]/64.f);
  float extraShape=fmaxf(0.f,(p[JB_SHAPE]-64)/63.f);
  float drive=1+unit(p[JB_DRIVE])*12+s->aggression*15;
@@ -186,12 +192,15 @@ void jb_render(uint8_t v,int16_t *buffer,unsigned size,float gain) {
  for(unsigned i=0;i<size;i++) {
   if(s->envelope<.00003f && fabsf(s->tail)<.00003f) { s->last=0; break; }
   float inc=clamp(s->frequency*(1+pitchEnv*s->transient*5),.00001f,.4f);
+#if JB_METALLIC_ENABLED
   s->carrier=wrap(s->carrier+inc);
   s->modulator=wrap(s->modulator+fminf(inc*s->ratio,.45f));
+#endif
   s->motion=wrap(s->motion+motionInc);
   float movement=needsMotion?sine(s->motion):0;
   if(wtGain>0) s->wave=wrap(s->wave+inc*s->detune*(1+s->texture*.025f*movement));
   float out=0;
+#if JB_METALLIC_ENABLED
   if(fmGain>0) {
    float mod=sine(s->modulator+s->feedback*s->fb);
    s->feedback=mod;
@@ -205,6 +214,7 @@ void jb_render(uint8_t v,int16_t *buffer,unsigned size,float gain) {
    }
    out+=fmGain*metal;
   }
+#endif
   if(wtGain>0) {
    float pos=position+(move+2.5f*s->texture)*movement+s->random*.3f;
    /* LXR02Open-style adjacent waveform interpolation (already native to
@@ -263,7 +273,7 @@ void jb_render(uint8_t v,int16_t *buffer,unsigned size,float gain) {
 void jb_preFilterNoise(uint8_t v,int16_t *buffer,unsigned size) {
  if(v>=JB_VOICES || !buffer) return;
  const uint8_t *p=jb_parameters[v];
- if(!p[JB_MODE]) return;
+ if(!(p[JB_MODE]&2u)) return;
  Layer *s=&layers[v];
  if(s->envelope<.00003f) return;
  float level=fmaxf(unit(p[JB_NOISE_LEVEL]),s->noise)*fminf(1.f,2.f*activeLevel(p))*blend(v);
