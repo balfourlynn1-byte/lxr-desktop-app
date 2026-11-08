@@ -81,3 +81,10 @@ Each update must include UTC time, pushed commit SHA, stage, files inspected/cha
 - Do NOT re-enable ARM, produce a firmware image or label a candidate hardware-ready until user approves the chosen feature-frozen build and all host checks pass.
 - Version 1.8.07 is a source-integration intermediate, NOT the next hardware test target; v1.8.08 is a proposed future target, pending scope and user acceptance. Existing older job logs may still exist.
 - Next: gather specific v1.8.06 hardware shortcomings, prioritize meaningful improvements, finish and validate host-side integration before requesting ARM build approval.
+
+### 2026-11-08 — user-directed wavetable source investigation (research only)
+- User confirms personal home-only use; prioritizes upstream Brendan Clarke waveform behavior, original 3 ms No Clip fade, and expanded velocity modulation over previous experimental oscillator.
+- Read upstream `Oscillator.c`, `Oscillator.h`, `OSC_INTERP_AUDIT.md` and `LICENSE` via GitHub; compared against current native oscillator and JB-27 experimental branch.
+- Pushed pinned audit and phased compatibility/test plan at `docs/JB_WAVETABLE_UPSTREAM_PORT_PLAN.md`, commit `504a936125b75e81640d795ddc1435ce0f3d50e8`.
+- No upstream code copied, no new DSP implementation, no ARM build. Existing user ARM hold remains in force.
+- Next: locate original No Clip 3ms fade exact source and tests; inspect upstream modulation target write path, then map implementation on isolated development branch.
