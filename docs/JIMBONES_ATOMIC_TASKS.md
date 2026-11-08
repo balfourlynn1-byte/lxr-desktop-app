@@ -123,3 +123,61 @@
 - [ ] F06.7 Prepare Codex integration order, build commands **for later approved execution only**, acceptance sheet and rollback.
 
 **Feature completion scoring:** Track design, implementation, focused audio evidence, integrated regression and handover separately. Never equate checked design tasks with functional or hardware-accepted implementation. No Metallic FM, ARM compilation, .img packaging, ARM workflow re-enablement or merge to main before explicit approval.
+
+
+## G — Engineering success gates (user-approved 2026-11-08; all new work TODO)
+
+**Execution policy:** These gates support, not displace, the A–F dependency order and one-verifiable-task-per-run rule. A new checklist is not an implemented safeguard until its own acceptance evidence is committed. No release, ARM build, image packaging or main merge is authorized.
+
+### G01 — Source integration manifest and dependency graph (CRITICAL)
+- [ ] G01.1 Pin exact branch head, v1.8.06 baseline source/image provenance (mark unknown image SHA), PR #18 comb commit, JB-27 oscillator donor, Step FX donor and skull source refs.
+- [ ] G01.2 Record per-feature donor SHA, destination files, dependencies, conflicts, licence status, integration order and rollback SHA in a versioned manifest.
+- [ ] G01.3 Validate every referenced ref/path against repository; fail closed for missing refs, incompatible licences or unreviewed code.
+- [ ] G01.4 Integrate only isolated, host-tested changes; never merge unrelated donor histories.
+
+### G02 — DSP, memory and worst-case performance budget (CRITICAL)
+- [ ] G02.1 Capture baseline render cost and RAM/buffer use; record platform sample rate, block size and available budget.
+- [ ] G02.2 Estimate/measure incremental wavetable, comb and dub-send work independently and combined; include 4+ overlapping long-tail hits.
+- [ ] G02.3 Use <=75% sustained DSP as a **provisional hardware target**, not a proven limit; require zero LATE, no audible crunch and zero unexpected clipping in acceptance.
+- [ ] G02.4 Investigate RAIL growth under sequencer playback with source-defined counter semantics; do not equate count with audible clipping.
+- [ ] G02.5 Record worst-case memory/stack and ARM ITCM >=512 B free only after explicitly approved ARM build; mark hardware-only checks pending.
+
+### G03 — Golden audio corpus and objective/subjective sound gates (CRITICAL)
+- [ ] G03.1 Capture immutable legacy OFF-path WAVs and SHA256 hashes for six voices, No Clip overlap, simultaneous hits and approved v1.8.06 sound.
+- [ ] G03.2 Build deterministic reference patch/settings manifests for comb, dub throws, wavetable stepped/smooth and velocity 0/64/127.
+- [ ] G03.3 Compare OFF-path PCM exactly where promised; measure peaks, discontinuities, full-scale counts, silence, output level and render determinism.
+- [ ] G03.4 Perform matched-level A/B listening for sonic usefulness; document reject/rework decisions, not just compilation.
+
+### G04 — Automated host CI gates (CRITICAL)
+- [ ] G04.1 Add host-only GCC and Clang jobs for focused Comb, Step FX, wavetable, No Clip, skull and preset tests on exact integration SHA.
+- [ ] G04.2 Add regression fixture hashes, deterministic seeds, compiler warnings, sanitizers where supported and clear failure logs.
+- [ ] G04.3 Require focused plus full suite green after each integration; record exact run URLs and SHAs; keep ARM job disabled.
+- [ ] G04.4 Prevent stale version assertions and silent test skips; report test coverage gaps.
+
+### G05 — Defect register and regression prevention (CRITICAL)
+- [ ] G05.1 Create versioned defect register with severity, exact reproduction, expected/actual result, affected SHA, owner, fix SHA and regression evidence.
+- [ ] G05.2 Seed known observations: overlapping modulated tom crunch, Step 1 LED, sequencer-only RAIL growth, preset save/recovery failures and any current CI failures; distinguish fixed from unverified.
+- [ ] G05.3 Block handover-ready status for known unresolved critical/high defects; log hardware-only unknowns separately.
+- [ ] G05.4 Add a focused regression for every fixed defect and rerun full host suite.
+
+### G06 — Codex handover readiness audit (CRITICAL)
+- [ ] G06.1 Produce a machine-readable and human-readable source/feature matrix with exact SHAs, licences, tests and statuses.
+- [ ] G06.2 Verify integration order, host commands, acceptance criteria, rollback, open defects and explicit ARM hold are all documented.
+- [ ] G06.3 Distinguish host-ready, Codex-build-ready (pending user approval), hardware-unverified and released; never claim bug-free.
+- [ ] G06.4 At Nov 10 18:30 UK provide truthful completed/blocked/deferred list and handover SHA.
+
+### G07 — Preset migration and recovery (HIGH)
+- [ ] G07.1 Define backward-compatible defaults for all new controls; verify old kits reproduce original sound.
+- [ ] G07.2 Host-test save/reload, invalid ranges, truncated files, full SD, interrupted write and rollback/recovery.
+- [ ] G07.3 Keep hardware power-loss/card-disconnect verification pending approved image.
+
+### G08 — Hardware test protocol and diagnostic capture (HIGH)
+- [ ] G08.1 Publish reproducible Alesis/KT-10/FD-8 pad and sequencer test matrix: velocity, overlap, tom switches, comb, sends, wave, skull.
+- [ ] G08.2 Capture DSP/PK/LATE/RAIL before/after each test with firmware SHA, preset, tempo, duration and audio recording.
+- [ ] G08.3 Define pass/fail and rollback triggers; require user hardware acceptance after approved build.
+
+### G09 — Future feature feasibility queue (DEFER until A–G core complete)
+- [ ] G09.1 Rank optional filters, drive, morph and additional routing by audible benefit, CPU/memory cost, UI/persistence complexity and licensing.
+- [ ] G09.2 Produce modular drop-in briefs with host-only tests and integration points; no unapproved hardware claims.
+
+**Mandatory Nov 10 handover audit:** G01–G06 must be either evidence-backed DONE or explicitly BLOCKED/DEFERRED with reasons; no checkbox inflation. G07–G08 can remain hardware-pending; G09 must not displace core work.
