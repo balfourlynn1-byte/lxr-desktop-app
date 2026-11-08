@@ -40,3 +40,15 @@ Any unexplained full-scale rail, discontinuity, missed audio deadline, broken dr
 2. JB-32 extend diagnostics to the real mixer path without altering sound.
 3. JB-34 create a two-voice regression that reproduces the issue before attempting a correction.
 4. JB-33 add deadline telemetry; only then decide whether the cause is gain or CPU.
+
+## Parallel Step FX implementation (must not delay No Clip)
+
+**Verified source state (2026-11-08):** `Core/Src/Soundengine/StepFX.c` schedules bounded MIDI retriggers; `Core/Src/menu/JimbonesPerfUI.c` selects 16 slots; `Core/Src/menu/menu.c` exposes the page and encoder edits. No dedicated dub-delay audio-send/throw DSP path was identified in these modules. A step-button press-to-toggle path was not verified. Do not mark these as implemented.
+
+- **JB-43 Step-button event trace:** identify actual hardware step-key dispatch and confirm precedence with sequencer; produce event-flow evidence.
+- **JB-44 Toggle UI state:** one press enables selected slot, second disables it; slot 1 is all off, never confuse index 0 with physical key 1; verify LED state, page transitions and kit switching.
+- **JB-45 Dub-delay DSP design:** bounded tempo-synced delay buffer, feedback, send level, return level and CPU/RAM budget; distinguish MIDI retriggers from audio delay.
+- **JB-46 Send/throw routing:** per-voice send gates, kick exclusion by default, step-key throw state and feedback tails that survive send-off; guard against feedback runaway.
+- **JB-47 Step FX tests:** host key-toggle/LED, bypass parity, clock sync, delay tail, feedback ceiling, 2–4 voice No Clip stress and ARM memory checks.
+
+**Ordering:** JB-43 → JB-44; JB-45 → JB-46 → JB-47. Do not merge audio delay into No Clip test build before its own CPU, memory, regression and review gates pass. All are work orders, not autonomous workers.
