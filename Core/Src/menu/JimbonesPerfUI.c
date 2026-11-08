@@ -19,8 +19,10 @@ uint8_t jb_perfui_stepfx_active(void) { return active_page == JB_PERF_PAGE_STEPF
 uint8_t jb_perfui_cpu_active(void) { return active_page == JB_PERF_PAGE_CPU; }
 uint8_t jb_perfui_select(uint8_t index) {
     if (index >= 16u) return 0;
-    selected_fx = index;
-    stepfx_select(index);
+    /* Step 1 (index 0) always means OFF. Re-pressing an active
+     * step also toggles OFF; other steps select their named effect. */
+    selected_fx = (index == 0u || selected_fx == index) ? 0u : index;
+    stepfx_select(selected_fx);
     return 1;
 }
 uint8_t jb_perfui_selected(void) { return selected_fx; }
