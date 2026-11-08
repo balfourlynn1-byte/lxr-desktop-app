@@ -22,3 +22,9 @@
 5. JB-13 review shared menu conflicts; JB-20 collect **actual** independent code review approvals and host/ARM CI evidence, then prepare hardware listening checklist. Only after source + CI gates may an ARM candidate be built, and only physical hardware tests may establish NO CLIP PASS.
 
 **Current result:** source review conducted, no independent agent reviews, no green latest CI, **NO CLIP UNVERIFIED**. Existing working firmware remains untouched.
+
+## Fix pass 1 — 2026-11-08
+- **JB-18 live LOFI transition:** `Core/Src/Soundengine/DSPAudio/Jimbones.c` no longer forcibly zeroes the hold counter when SRR changes; each voice now blends between dry and held samples with a bounded 64-sample wet/dry ramp. This addresses one potential abrupt bypass discontinuity, but does **not** establish click-free factor changes or clean final output.
+- **Host regression:** `tests/test_jimbones.c` now exercises active voice SRR 0 → 16 → 0 → 32 → 0 during rendering. This is a smoke test, not a quantified pop or No Clip assertion.
+- **Kit-load UI mismatch:** existing revision counter and UI reset changes remain in place; must be verified by exact-commit host and device tests.
+- **Outstanding blockers unchanged:** no independent peer approval, no verified latest host/ARM CI, no physical audio No Clip PASS, no persistence for temporary controls, no proven fix for the original overlapping modulated voice crunch. **DO NOT BUILD OR FLASH NEW ARM IMAGE YET.**
