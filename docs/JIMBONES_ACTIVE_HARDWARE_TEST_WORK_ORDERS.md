@@ -21,7 +21,14 @@ Updated 2026-11-08. Working v1.8.02 remains frozen. **Assignments below are engi
 | JB-10 Hi-hat | Optional FD-8 CC4/note choke state with short release ramp | MIDI replay, pedal hardware, default compatibility | Parallel isolated |
 | JB-11 Snare | Seeded trigger-only variation and backbeat lock | Deterministic seed, 0/100%, save/load | After morph storage |
 | JB-12 Filters | Opt-in stable bass HPF/LPF; bounded comb if memory permits | Frequency sweep, resonance and CPU | After G1 |
-| JB-13 UI | Read-only render load/peak/deadline page, no ISR formatting | Menu navigation, debounce, real device | After JB-02 |
+| JB-13 UI | Read-only render load/peak/deadline page, CLICK transient controls, Step FX LEDs, no ISR formatting | Menu navigation, debounce, real device | After JB-02 |
+| JB-14 Transient CLICK | Finish attack/sustain DSP integration, actual CLICK submenu and compatible storage | Bit-exact bypass, host+ARM CI, real LXR menu and audio | After CLICK UI map |
+| JB-15 FM Drum | Optional body/noise engine integrated with existing metallic FM | CPU and native bypass | After G1 |
+| JB-16 Velocity Matrix | Optional per-voice mappings, protected A and kick exclude | MIDI velocity fixture and storage | After JB-04/JB-14 |
+| JB-17 Comb Routing | Comb polarity and pre/post routing | Feedback stability, memory | After JB-12 |
+| JB-18 Bit/SRR | Sample-rate reduction alongside existing bit quantisation | Aliasing, CPU, bypass | After G1 |
+| JB-19 Osc Cluster | Optional CPU-bounded detuned oscillator | Four-voice render budget | After G1 |
+| JB-20 Integration QA | Merge only reviewed feature PRs; exact SHA host+ARM CI, map, manifest and rollback | Independent combined device test and old-kit A/B | Final gate |
 
 ## Work protocol
 1. Each implementer works in its `agents/*-research` branch or a new feature branch. Research alone is not a finished feature.
@@ -40,3 +47,6 @@ Combined CPU telemetry and four-voice diagnostics commit `1790aec920905eaece2241
 3. Add opt-in CC4 hi-hat state machine host fixture (JB-10).
 4. Build A/B/C morph storage prototype with safe kit versioning (JB-04).
 5. Profile FM/wavetable to set realistic effect CPU budgets.
+
+## Live tracking
+See [combined implementation tracker](JIMBONES_COMBINED_BUILD_IMPLEMENTATION_TRACKER.md) for feature-by-feature estimated readiness and explicit outstanding work. No autonomous agent processes are implied by these assignments.
