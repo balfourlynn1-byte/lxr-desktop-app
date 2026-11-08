@@ -26,6 +26,7 @@ static int8_t jb_attack[JB_VOICES],jb_sustain[JB_VOICES];
 static uint8_t jb_srrFactor[JB_VOICES];
 
 volatile uint32_t jb_layerSaturationHits;
+volatile uint32_t jb_layerOutputRailHits;
 static float clamp(float x, float a, float b) { return x<a?a:(x>b?b:x); }
 static float unit(uint8_t x) { return x*(1.f/127.f); }
 /* All callers pass bounded phases. Integer conversion avoids libm floorf per sample. */
@@ -122,7 +123,7 @@ void jb_loadKit(const uint8_t *kit) {
  memset(layers,0,sizeof(layers));
  memset(jb_attack,0,sizeof(jb_attack));memset(jb_sustain,0,sizeof(jb_sustain));memset(jb_srrFactor,0,sizeof(jb_srrFactor)); jb_kitEpoch++; unlock(m);
 }
-void jb_init(void) { jb_kitEpoch++; jb_defaults(&jb_parameters[0][0]); memset(jb_attack,0,sizeof(jb_attack));memset(jb_sustain,0,sizeof(jb_sustain));memset(jb_srrFactor,0,sizeof(jb_srrFactor));jb_silence(); }
+void jb_init(void) { jb_layerOutputRailHits=0; jb_kitEpoch++; jb_defaults(&jb_parameters[0][0]); memset(jb_attack,0,sizeof(jb_attack));memset(jb_sustain,0,sizeof(jb_sustain));memset(jb_srrFactor,0,sizeof(jb_srrFactor));jb_silence(); }
 void jb_trigger(uint8_t v,uint8_t velocity,uint8_t note,uint8_t open) {
  if(v>=JB_VOICES) return;
  Layer next={0}, *s=&next; const uint8_t *p=jb_parameters[v];
@@ -291,6 +292,7 @@ void jb_render(uint8_t v,int16_t *buffer,unsigned size,float gain) {
   float dry=buffer[i];
   float room=1.f-fmaxf(0.f,(added<0.f?-dry:dry)/32768.f);
   float mixed=dry+added*room;
+  if(mixed>=32767.f || mixed<=-32768.f) ++jb_layerOutputRailHits;
   buffer[i]=(int16_t)clamp(mixed,-32768.f,32767.f);
  }
 }
