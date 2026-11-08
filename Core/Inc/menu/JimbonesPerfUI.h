@@ -18,8 +18,10 @@ void jb_perfui_leave(void);
 uint8_t jb_perfui_page(void);
 uint8_t jb_perfui_stepfx_active(void);
 uint8_t jb_perfui_cpu_active(void);
-uint8_t jb_perfui_select(uint8_t index); /* physical step index 0..15 */
-uint8_t jb_perfui_selected(void);
+uint8_t jb_perfui_select(uint8_t index); /* physical step index 0..15: toggle arm/off */
+uint8_t jb_perfui_selected(void); /* focused button for editing */
+uint8_t jb_perfui_active(void);   /* armed button 0..15, or 255 = all OFF */
+uint8_t jb_perfui_focus(uint8_t index); /* knob browse without arming */
 const char *jb_perfui_effect_name(uint8_t index);
 
 #endif

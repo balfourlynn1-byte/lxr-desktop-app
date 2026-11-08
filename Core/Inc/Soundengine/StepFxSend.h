@@ -23,6 +23,19 @@ void stepfx_send_set_mask(uint8_t voice_mask);
 void stepfx_send_set_level(uint8_t voice, uint8_t level); /* 0..127 */
 void stepfx_send_gate(uint8_t voice, uint32_t hold_frames); /* 0 = release */
 
+/* JB-21: musical gate length control (quarter note is 1/4). UI-only
+ * controls are independent from global FX processor delay time. */
+uint8_t stepfx_send_division(void); /* 4, 8, 16, or 32 */
+void stepfx_send_adjust_division(int delta);
+uint8_t stepfx_send_mask(void);
+uint8_t stepfx_send_level(uint8_t voice);
+
+/* Called once from the ordinary voice note-on path, both MIDI/pad and
+ * sequencer. Hat articulations 5 and 6 share the sixth synthesis voice.
+ * Does not retrigger voices or write to the FX delay buffer. */
+void stepfx_send_on_note(uint8_t voice, uint8_t velocity, uint16_t bpm);
+
+
 /* Audio context: call begin_block once per voice and next_gain once per sample.
  * The returned Q15 gain applies to an ADDITIVE COPY, never to the dry voice.
  * Gates do not touch a delay buffer or stop existing effect feedback tails.
