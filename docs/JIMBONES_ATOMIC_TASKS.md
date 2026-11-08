@@ -22,7 +22,7 @@
 ### B — Upstream source analysis
 - [ ] **B01** Pin LXR02Open `prime` HEAD commit, licence, oscillator and interpolation audit blob SHAs.
 - [x] **B02** Trace upstream `modNode_updateValue` fractional waveform-ID write, global interpolation toggle and reset paths. DONE 2026-11-08; source evidence in `docs/JB_WAVETABLE_UPSTREAM_PORT_PLAN.md` (modulationNode.c blob e3a811b, lines 61–109, 173–194, 253–305).
-- [ ] **B03** Trace upstream `Oscillator.c` two-wave block rendering, sample/FM/noise/crash dispatch and fallback.
+- [x] **B03** Trace upstream `Oscillator.c` two-wave block rendering, sample/FM/noise/crash dispatch and fallback. DONE 2026-11-08; pinned oscillator blob 5c1bf056; evidence in `docs/JB_WAVETABLE_UPSTREAM_PORT_PLAN.md` (lines 98–155, 186–211, 229–253, 552–590).
 - [ ] **B04** Compare upstream `OscInfo` with Erica `OscInfo`; map native waveform IDs, LFO target enums and voice count.
 - [ ] **B05** Map upstream velocity routing to proposed destinations; select initial safe 2–3 controls and backward-compatible default OFF.
 - [ ] **B06** Compare sample memory, kit/global format, MIDI/clock and screen APIs; identify blockers to a full upstream firmware base.
