@@ -21,6 +21,8 @@ static uint8_t lcd_command_state = 0;
 static uint8_t lcd_data_state = 0;
 static uint8_t lcd_clear_state = 0;
 static uint8_t lcd_chargen_state = 0;
+/* Preserve both 4-bit halves from the same byte across asynchronous LCD calls. */
+static uint8_t lcd_data_latched, lcd_command_latched;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -465,6 +467,7 @@ uint8_t lcd_data_nonBlock( uint8_t data )
 	switch(lcd_data_state)
 	{
 		case 0:
+			lcd_data_latched = data;
 			// RS auf 1 setzen
 				//LCD_RS_GPIO_Port->BSRR = LCD_RS_Pin;
 			LCD_RS_GPIO_Port->ODR |= LCD_RS_Pin;
@@ -514,7 +517,7 @@ uint8_t lcd_data_nonBlock( uint8_t data )
 			//LCD_D4_GPIO_Port->BSRR = (uint32_t)(LCD_D4_Pin | LCD_D5_Pin | LCD_D6_Pin | LCD_D7_Pin)<<16U;
 			//LCD_D4_GPIO_Port->BSRR = (data&0xf)<<7;
 
-			data = data&0xf;
+			data = lcd_data_latched & 0x0fu;
 			#if USE_BSRR //BSRR version not working in release build due to mysterious reasons
 				LCD_D4_GPIO_Port->BSRR = (uint32_t)(LCD_D4_Pin | LCD_D5_Pin | LCD_D6_Pin | LCD_D7_Pin)<<16U ;
 				LCD_D4_GPIO_Port->BSRR = (((uint32_t)data)<<7);
@@ -574,6 +577,7 @@ uint8_t lcd_command_nonblock( uint8_t data )
 	switch(lcd_command_state)
 	{
 		case 0:
+			lcd_command_latched = data;
 			// RS auf 0 setzen
 			//LCD_RS_GPIO_Port->BSRR = (uint32_t)LCD_RS_Pin<<16U;
 			LCD_RS_GPIO_Port->ODR &= ~(LCD_RS_Pin);
@@ -622,7 +626,7 @@ uint8_t lcd_command_nonblock( uint8_t data )
 			//lcd out data lower 4 bit
 			//LCD_D4_GPIO_Port->BSRR = (uint32_t)(LCD_D4_Pin | LCD_D5_Pin | LCD_D6_Pin | LCD_D7_Pin)<<16U;
 			//LCD_D4_GPIO_Port->BSRR = (data&0xf)<<7;
-			data = data&0xf;
+			data = lcd_command_latched & 0x0fu;
 			#if USE_BSRR //BSRR version not working in release build due to mysterious reasons
 				LCD_D4_GPIO_Port->BSRR = (uint32_t)(LCD_D4_Pin | LCD_D5_Pin | LCD_D6_Pin | LCD_D7_Pin)<<16U ;
 				LCD_D4_GPIO_Port->BSRR = (((uint32_t)data)<<7);
