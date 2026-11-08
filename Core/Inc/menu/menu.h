@@ -68,6 +68,7 @@ uint8_t menu_cpuPageActive(void);
 uint8_t menu_stepFxPageActive(void);
 void menu_stepFxSelect(uint8_t stepIndex);
 uint8_t menu_stepFxSelected(void);
+uint8_t menu_stepFxActive(void); /* 0..15, 255 = none */
 extern uint32_t sucessTimer;
 
 void menu_setShownPattern(uint8_t patternNr);
