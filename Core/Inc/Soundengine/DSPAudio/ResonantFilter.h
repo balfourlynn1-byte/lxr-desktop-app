@@ -28,6 +28,7 @@
 #include "Soundengine/datatypes.h"
 #include "math.h"
 #include "Soundengine/DSPAudio/distortion.h"
+#include "Soundengine/DSPAudio/CombFilter.h"
 //----------------------------------------------------
 #define ENABLE_NONLINEAR_INTEGRATORS 	0
 #define FILTER_GAIN 					0x7fff
@@ -45,7 +46,8 @@ enum filterTypeEnum
 	FILTER_NOTCH,
 	FILTER_PEAK,
 	FILTER_NAIVE_2_POLE,
-	FILTER_OFF
+	FILTER_OFF,
+	FILTER_COMB /* appended: original filter IDs unchanged */
 };
 //----------------------------------------------------
 typedef struct ResoFilterStruct
@@ -63,6 +65,8 @@ typedef struct ResoFilterStruct
 #endif
 
 	float drive;
+
+	JbCombFilter comb; /* one 256-sample ring per voice */
 
 #if USE_SHAPER_NONLINEARITY
 	Distortion shaper;
