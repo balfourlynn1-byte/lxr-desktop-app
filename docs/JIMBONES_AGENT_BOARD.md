@@ -5,8 +5,8 @@
 | Priority | Assigned agent roles | Task | Status |
 |---|---|---|---|
 | P0 | Verification + Integration | Baseline parity and release gate | Backlog |
-| P0 | Embedded + DSP | Real-time CPU monitor | Backlog |
-| P0 | DSP + Verification | Multi-voice modulation crunch | Backlog |
+| P0 | Embedded + DSP | Real-time CPU monitor | Research complete; implementation queued |
+| P0 | DSP + Verification | Multi-voice modulation crunch | Initial code audit complete; reproduction queued |
 | P1 | DSP + Embedded | Morph A/B/C, LFO and velocity | Backlog |
 | P1 | DSP + Verification | Per-voice tape/tube saturation | Backlog |
 | P1 | Research + Embedded | USB multitrack feasibility | Backlog |
@@ -32,14 +32,14 @@
 - **Owners:** Embedded + DSP
 - **Scope:** DWT cycle counter, audio budget, peak/average load and overrun count; no audio-thread allocation.
 - **Deliverable:** Research findings with source links and license check, implementation proposal or focused PR, host tests, ARM build, image verification and hardware-test notes.
-- **State:** Backlog; no agent process launched.
+- **State:** Initial research complete; see `docs/JIMBONES_P0_FINDINGS.md`. Implementation pending.
 
 ### JB-03 — Multi-voice modulation crunch
 - **Priority:** P0
 - **Owners:** DSP + Verification
 - **Scope:** Reproduce simultaneous modulation crunch with overlapping 3–4 hits; isolate clipping, CPU overruns and shared state.
 - **Deliverable:** Research findings with source links and license check, implementation proposal or focused PR, host tests, ARM build, image verification and hardware-test notes.
-- **State:** Backlog; no agent process launched.
+- **State:** Initial code audit complete; see `docs/JIMBONES_P0_FINDINGS.md`. Reproduction pending.
 
 ### JB-04 — Morph A/B/C, LFO and velocity
 - **Priority:** P1
