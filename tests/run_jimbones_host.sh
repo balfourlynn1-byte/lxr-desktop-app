@@ -25,3 +25,5 @@ ${CC:-cc} -std=gnu11 -O2 -Wall -Wextra \
 build/host/test_stepfx_ui
 
 python3 tests/test_dub_mixer_routing.py
+
+python3 tests/test_mixer_route.py
