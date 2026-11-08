@@ -4,7 +4,7 @@ Canonical planning tree: [JIMBONES_JOB_TREE_V184.md on agents/wavetable-research
 
 | Job | Stage | Last pushed checkpoint | Next action |
 |---|---|---|---|
-| JB-28A Comb integration | NOT STARTED BY CODEX | Initial template; no Codex progress | Inspect donor PR #15 and map changes; push research checkpoint |
+| JB-28A Comb integration | CODE PATCH PUSHED — CI UNVERIFIED | Draft PR #18; checkpoint `46a9296` | Inspect JB-28A Actions run, fix failed gates; report ITCM and validated artifact only if green |
 | JB-28B integrated physical regression | QUEUED | — | Wait for JB-28A candidate |
 | JB-29A per-slot Step FX voice targeting | QUEUED | — | Wait for isolated integration and hardware test |
 | JB-29B four-knob parameter redesign | QUEUED | — | Wait for JB-29A validation |
