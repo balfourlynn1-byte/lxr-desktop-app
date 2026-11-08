@@ -34,7 +34,7 @@ def make_manifest(
     image: Path, binary: Path, log: Path, output: Path,
     sha: str, workflow_run: str, branch: str, version: str,
 ) -> dict:
-    if version not in ("1.8.04","1.8.05"):
+    if version not in ("1.8.04","1.8.05","1.8.06"):
         raise ValueError("Unexpected version for JB-23 candidate: " + version)
     if image.name != f"LXR_V2_V{version}.img":
         raise ValueError("Unexpected image name: " + image.name)
