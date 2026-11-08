@@ -59,3 +59,10 @@ These are assignments and estimates, not running background agents. No peer revi
 - **JB-23:** fixed the four-voice PCM regression's C diagnostic newline escape. Source updated; no host run has been executed.
 - **JB-13/JB-24:** `tests/test_menu.py` now creates `build/host` before writing its extracted C fixture. This removes a deterministic fresh-checkout failure mode; compilation and runtime still unverified.
 - **Release gate:** no physical LXR-02 audio proof, no verified latest host/ARM CI, no independent approvals. Keep next ARM candidate blocked pending those gates.
+
+## Verified CI improvement — run 42462298513
+- Added `tests/host_include/stm32f7xx_hal.h` isolated host-only interrupt/HAL shim and `tests/run_jimbones_host.sh` to compile **actual production Jimbones.c, wavetable.c, JimbonesPreset.c** with `tests/test_jimbones.c`.
+- Added `host-dsp` job to `.github/workflows/jimbones-candidate-gate.yml`.
+- **Actual GitHub CI evidence:** host-dsp SUCCESS, host-menu SUCCESS on workflow run 42462298513; ARM compilation still IN PROGRESS when observed. This does not demonstrate hardware No Clip or DAC/mixer behavior.
+- Planning estimates: JB-23 **12% → 25%** (audio regression now actually runs in CI); JB-24 **5% → 25%** (CI now verifies DSP and menu; ARM status pending); JB-30 **5% → 20%** (real 3-job gate added). These are estimates, not measured percent completion.
+- Next: confirm exact-commit ARM result, collect link/artifact, investigate actual mixer/FX path and capture 2–4 voice CPU/rail measurements before hardware-test approval.
