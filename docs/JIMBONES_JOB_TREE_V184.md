@@ -3,6 +3,44 @@
 **Updated:** 2026-11-08. **Purpose:** make jobs small and ready for Codex, with clear dependencies and test gates. 
 **Status of this programme:** v1.8.04 has user-reported stable boot, ~62% DSP and no new audible crunch; new 1.8.05–1.8.06 changes remain **untested on hardware**. Exact PK/LATE/RAIL and four-pad stress on v1.8.04 are still unrecorded. CI does not prove realtime headroom. Branch roles in this board are **virtual assignments**, not autonomous active agents. CI passing is not a substitute for physical tests.
 
+## JB-29 UI specification — approved design (2026-11-08)
+
+**User-approved goal:** preserve the working Step FX audio algorithms and dub send. Make each Step FX slot independently target selected voices using a fast three-group selector, with four consistently assigned physical knobs. **Kick excluded and protected by default.** This is a design specification, NOT implemented or device tested.
+
+### Four knobs on Step FX page
+
+| Physical control | Fixed role | Effect-specific interpretation |
+|---|---|---|
+| Knob 1 — VOICE | Choose affected voice group(s) | Eight positions below; selection stored **per Step FX slot** |
+| Knob 2 — RATE | Musical timing / retrigger rate | Tempo-synced division where applicable; dub uses existing safe timing planner |
+| Knob 3 — DEPTH | Wet/dry amount, send level or intensity | Preserve original dry sound; no unintended volume spikes |
+| Knob 4 — CHAR | Character of the selected effect | Pitch range on pitch FX; feedback on dub; variation on retrigger |
+
+**Knob 1 group positions (three independent groups; kick excluded):**
+
+| Selection | Actual target |
+|---|---|
+| OFF | None (effect bypassed) |
+| SNR | Snare + clap |
+| TOM | Tom 1 + Tom 2 |
+| HAT | Hi-hat |
+| S+T | Snare + clap + both toms |
+| S+H | Snare + clap + hi-hat |
+| T+H | Both toms + hi-hat |
+| ALL | All five non-kick voices |
+
+The three groups are a **convenience UI** over an underlying per-slot **six-bit hardware voice mask**; do not assume voice numbering, voice names or MIDI channel mapping without reading actual source. An advanced **SHIFT + Knob 1** edit page must allow snare-only, clap-only, tom1-only, tom2-only, hats-only, or any combination, including empty; don't force grouped selections when advanced mask is active. Show compact 16×2 OLED status; keep normal Step FX LED/button behaviour.
+
+**Per-slot memory:** Each of the 16 Step FX buttons recalls its own group/mask and RATE/DEPTH/CHAR settings. Switching slots must restore values without parameter jumps. Inspect whether the physical controls are endless encoders or absolute pots; **do not invent a pickup-mode requirement for encoders**. If pots, use pickup to prevent jumps; if encoders, apply relative deltas to recalled values. Save/restore only via a backwards-compatible, versioned mechanism; first establish whether existing kit storage can accommodate new data.
+
+**First Codex implementation subjob — JB-29A (after JB-28A integrated Comb):** inspect current Step FX input/trigger/send routing and hardware voice indices; implement **only** mask storage, group selector and gating at existing send/trigger point, leaving dry audio untouched and all effect algorithms identical. Default mask should preserve current behaviour where safe, but kick must remain excluded; explicitly test migration of legacy kits. Add host tests for eight group presets, all individual advanced masks, each of 16 slots retaining independent state, dry parity, kick exclusion and Step FX/dub regression. **Do not attempt pitch algorithm redesign in JB-29A.**
+
+**Second subjob — JB-29B:** implement consistent RATE/DEPTH/CHAR controls across effects, with a small documented parameter table for each existing slot; only after validating original FX parameter semantics. Keep dub's five Step FX note divisions and existing safe feedback bounds. Pitch up/down should offer useful bounded pitch-range, rate and wet amount, without allocating new voices or buffers. Validate control smoothing and no sudden jumps.
+
+**Physical acceptance:** on hardware, select snare-only, clap-only, hats-only, toms-only and combinations; verify other voices—including kick—are acoustically unchanged; switch between two effects and back and verify independent knob settings; confirm no clipping, audible glitches, LED or OLED regression; record DSP/PK/LATE/RAIL with four overlapping hits. Mark **NOT ACCEPTED** until the user confirms.
+
+**Priority:** JB-29A after JB-28A's combined Comb candidate; JB-29B after JB-29A's host/device verification. Do not expand the current 18:30 Codex first job beyond Comb integration.
+
 ## Step FX requirement clarification — 2026-11-08
 
 **User correction:** Existing Step FX effects **DO work on hardware**. Their musical utility is limited, particularly fixed pitch up/down and lack of selective voice routing. Do not mark the Step FX engine as broken or rewrite it. The user wants to target **snare alone, clap alone, hi-hat alone, or arbitrary combinations** of those, while preserving all six voices and leaving non-targeted voices dry. Other voices can be optionally selectable, with kick protected by default.
