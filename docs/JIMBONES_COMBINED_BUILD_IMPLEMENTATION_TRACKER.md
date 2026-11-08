@@ -48,7 +48,7 @@ Updated 2026-11-08. **All percentages are engineering estimates of end-to-end re
 | FM Drum body/noise | 10% | Implementation branch/work order; no validated new engine |
 | Velocity modulation matrix | 15% | Bounded velocity-route prototype and host fixture on JB-16 branch; not yet in live DSP |
 | Comb+/− and routing | 5% | Assignment; unimplemented |
-| Per-voice bit/SRR | 48% | Existing JB_BITS quantisation plus JB-18 sample-hold prototype/test; SRR not integrated |
+| Per-voice bit/SRR | 55% | JB_BITS plus opt-in SRR wired into experimental engine in draft PR #5; UI/kit persistence and hardware tests pending |
 | Detuned oscillator cluster | 5% | Assignment; unimplemented |
 | CLICK custom transient samples | 5% | Requirement only; sample format/storage unresolved |
 | UI double-press / performance page | 20% | UI work order; full menu hardware validation absent |
@@ -62,3 +62,8 @@ Updated 2026-11-08. **All percentages are engineering estimates of end-to-end re
 - JB-16: `JimbonesVelocityMatrix.h` and `test_velocity_matrix.c` plus host runner, latest commit `70cafd6db9e38e8d2dacf260077c14dd798fac1a`. Isolated primitive only, no live DSP routing.
 - JB-18: `JimbonesSampleRateReducer.h` and `test_sample_rate_reducer.c` plus host runner, latest commit `ff5a63cf03a93c3e6ad7731a258af19406f013ea`. Isolated primitive only, no live DSP routing.
 - Percentages changed conservatively. CI for latest commits and device verification must be checked separately.
+
+## Implementation update — 2026-11-08 (continued)
+- JB-14 latest four-voice stress fixture commit `406712da`: GitHub Actions run `42459662194` **host-regression success, firmware success**. CLICK submenu and persistent controls still absent.
+- JB-18 SRR opt-in audio path and regression in draft PR #5: https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/5. Controls are runtime-only, bypass default, no kit serialization. Latest host/ARM CI not yet verified; reviewer must inspect reset/trigger edge cases and switching clicks.
+- Next integration gates: locate native CLICK submenu code, implement menu control mapping with backwards-compatible persistence; compare four-voice DSP load and output rail statistics for JB-14 and JB-18 together before merging either.
