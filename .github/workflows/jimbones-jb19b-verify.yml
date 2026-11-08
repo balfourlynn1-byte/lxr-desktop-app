@@ -1,0 +1,47 @@
+# JB-19B experimental only: verify source, never publish firmware for flashing.
+name: JB-19B Parallel FX Send Verification
+on:
+  push:
+    branches:
+      - agents/jb-19b-parallel-fx-send-v184
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  host:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compiler
+        run: cc --version | head -1
+      - name: JB-19A gate regression
+        run: sh tests/run_stepfx_send.sh
+      - name: JB-19B parallel send and bypass regression
+        run: sh tests/run_stepfx_send_mix.sh
+      - name: Full host regression
+        env:
+          CC: clang
+        run: sh tests/run_host.sh
+  arm-build:
+    needs: host
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install cross compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build python3 gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
+      - name: Check exact source revision
+        run: |
+          echo "EXPERIMENTAL, NOT HARDWARE VERIFIED" 
+          git rev-parse HEAD
+          git status --short
+      - name: Cross-compile firmware, no image distribution
+        run: |
+          cmake --preset release
+          cmake --build --preset release --parallel 2
+      - name: Check binary and memory sizes only
+        run: |
+          find build/release -type f -name '*.elf' -exec arm-none-eabi-size {} \;
