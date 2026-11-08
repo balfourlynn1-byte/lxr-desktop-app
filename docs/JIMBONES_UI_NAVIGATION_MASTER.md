@@ -36,3 +36,6 @@ On a voice page, pressing native CLICK (subpage 4) selects its original paramete
 - Verify runtime-only UI cache resets on kit load and cannot show stale settings after `jb_loadKit`; otherwise explicitly block release.
 - Add versioned kit storage, safe bypass, other parameters, full menu router for all assigned pages, no hidden overwrites of native controls.
 - Validate real 16x2 display, four knobs, page buttons, MIDI and all six voices on physical device. **Not hardware tested.**
+
+## Implementation update — native menu router
+Commit `01ed3a4a8cfb6124b5095dc38374e56e3a060123` adds code-level native submenu cycling for MOD (JB-04/10/11/16), FM (JB-15), CLICK (JB-14), FILTER (JB-12/17) and MIX (JB-05/18), preserving the existing OSC experimental page and existing Performance screens. Only CLICK attack/sustain and MIX SRR are DSP-wired; every other page explicitly displays `PENDING` and does not modify audio. MIX requires cycling through TAPE first to reach LOFI. This is deliberately a non-releasable draft until host+ARM CI, physical UI tests, and NO CLIP P0 qualification pass. No claim of complete feature menus, kit persistence or verified hardware.
