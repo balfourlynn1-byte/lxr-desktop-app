@@ -11,6 +11,7 @@
 #include "lcd.h"
 #include "menu/JimbonesPerfUI.h"
 #include "Soundengine/StepFX.h"
+#include "Soundengine/StepFxSend.h"
 #include "Soundengine/AudioDiagnostics.h"
 #include "Soundengine/DSPAudio/Jimbones.h"
 #include <string.h>
@@ -1578,7 +1579,7 @@ static void jb_uiPaint(void) {
 
 /* The third Performance screen is an explicit state, not a legacy menuIndex
  * subpage, so the first two parameter banks remain completely untouched. */
-static uint8_t jb_fxVoice;
+static uint8_t jb_fxVoice=3u; /* snare on the dub-send page */
 static uint8_t jb_cpuDetails;
 static void jb_stepfxPaint(void)
 {
@@ -1586,8 +1587,19 @@ static void jb_stepfxPaint(void)
     const char *name = jb_perfui_effect_name(index);
     char top[17], bottom[17];
     memset(editDisplayBuffer, ' ', sizeof(editDisplayBuffer));
-    snprintf(top,sizeof(top),"FX%02u %.6s %2u%%", index+1u,name,jb_audioLoadPercent);
-    snprintf(bottom,sizeof(bottom),"1/%u V%u%c %3u%% %s",stepfx_divisor(),jb_fxVoice+1,(stepfx_mask()&(1u<<jb_fxVoice))?'+':'-',stepfx_chance(),stepfx_slot()?"ON":"--");
+    const uint8_t active=(uint8_t)(jb_perfui_active()==index);
+    snprintf(top,sizeof(top),"FX%02u%c%.6s %2u%%", index+1u,active?'*':' ',name,jb_audioLoadPercent);
+    if(index==0u) {
+        snprintf(bottom,sizeof(bottom),"1/%u V%u%c %3u %s",
+                 stepfx_send_division(),jb_fxVoice+1u,
+                 (stepfx_send_mask() & (1u<<jb_fxVoice))?'+':'-',
+                 stepfx_send_level(jb_fxVoice),active?"ON":"--");
+    } else {
+        snprintf(bottom,sizeof(bottom),"1/%u V%u%c %3u%% %s",
+                 stepfx_divisor(),jb_fxVoice+1u,
+                 (stepfx_mask() & (1u<<jb_fxVoice))?'+':'-',
+                 stepfx_chance(),active?"ON":"--");
+    }
     memcpy(editDisplayBuffer[0],top,strlen(top));
     memcpy(editDisplayBuffer[1],bottom,strlen(bottom));
     editDisplayBuffer[0][16]=0;
@@ -1608,6 +1620,10 @@ void menu_stepFxSelect(uint8_t stepIndex)
 uint8_t menu_stepFxSelected(void)
 {
     return jb_perfui_selected();
+}
+uint8_t menu_stepFxActive(void)
+{
+    return jb_perfui_active(); /* 255 when all effect buttons are OFF */
 }
 
 uint8_t menu_cpuPageActive(void) {
@@ -2898,7 +2914,11 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
  if(menu_stepFxPageActive()) {
   editModeActive=0;
   if(inc) jb_fxVoice=(uint8_t)((jb_fxVoice+(inc>0?1:5))%6);
-  if(btnClicked)stepfx_include(jb_fxVoice,!(stepfx_mask()&(1u<<jb_fxVoice)));
+  if(btnClicked) {
+   if(jb_perfui_selected()==0u)
+    stepfx_send_set_mask(stepfx_send_mask()^(1u<<jb_fxVoice));
+   else stepfx_include(jb_fxVoice,!(stepfx_mask()&(1u<<jb_fxVoice)));
+  }
   menu_repaintAll(); return;
  }
  if(jb_uiActive() && copyClear_Mode==MODE_NONE) {
@@ -4109,10 +4129,26 @@ uint8_t menu_parseKnobValue(uint8_t potNr, int16_t diff)
     screensaver_touch();return 1;
  }
  if(menu_stepFxPageActive()) {
-  if(potNr==0 && diff){int i=jb_perfui_selected()+(diff>0?1:-1);jb_perfui_select(i<0?0:(i>15?15:i));}
-  else if(potNr==1)stepfx_rate(diff);
-  else if(potNr==2)stepfx_probability(diff);
-  else if(potNr==3 && diff)stepfx_include(jb_fxVoice,diff>0);
+  if(potNr==0 && diff) {
+   int i=(int)jb_perfui_selected()+(diff>0?1:-1);
+   jb_perfui_focus((uint8_t)(i<0?0:(i>15?15:i)));
+  } else if(jb_perfui_selected()==0u) {
+   if(potNr==1)stepfx_send_adjust_division(diff);
+   else if(potNr==2 && diff) {
+    int level=(int)stepfx_send_level(jb_fxVoice)+diff;
+    stepfx_send_set_level(jb_fxVoice,(uint8_t)(level<0?0:(level>127?127:level)));
+   }
+   else if(potNr==3 && diff) {
+    uint8_t mask=stepfx_send_mask();
+    if(diff>0)mask|=(uint8_t)(1u<<jb_fxVoice);
+    else mask&=(uint8_t)~(1u<<jb_fxVoice);
+    stepfx_send_set_mask(mask);
+   }
+  } else {
+   if(potNr==1)stepfx_rate(diff);
+   else if(potNr==2)stepfx_probability(diff);
+   else if(potNr==3 && diff)stepfx_include(jb_fxVoice,diff>0);
+  }
   screensaver_touch();menu_repaintAll();return 1;
  }
  if(jb_uiActive() && copyClear_Mode==MODE_NONE && potNr<4) {
