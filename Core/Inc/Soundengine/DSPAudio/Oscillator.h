@@ -46,6 +46,9 @@ typedef struct OscStruct
 	uint32_t	phase;		// the current phase of the osc 8bit indexing 24 interpolation
 	float	 	freq;		// frequency in [Hz]
 	uint8_t		waveform;	// the selected waveform of the osc
+    /* JB-27: an atomic control-rate wave scan request; zero means exact
+     * native synthesis bypass. No change to kit format or sample ROM. */
+    uint32_t waveMorphState;
 
 	uint8_t		tableOffset;	//overtone table
 
