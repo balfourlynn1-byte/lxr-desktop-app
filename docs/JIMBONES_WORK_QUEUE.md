@@ -51,3 +51,6 @@ Upstream `brendanclarke/LXR02Open` `prime` HEAD pinned to `c896bfd0efe86a4037418
 
 ### 2026-11-08 A01 No Clip source checkpoint (partial)
 Found original `jimbones-noclip-baseline` implementation: `RetriggerSmoother.h` sets 132 samples (~2.99 ms at 44140 Hz), `RetriggerSmoother.c` corrects first sample then decays correction over 132 samples; `DrumVoice.c` hooks three main drums before envelope retrigger and after volume render. Exact source blob hashes and lines recorded in `docs/CODEX_HANDOVER_2026-11-10.md`. Earliest introducing commit remains unverified; use `git log --follow -- Core/Src/Soundengine/DSPAudio/RetriggerSmoother.c` on historical branch. A01 remains PARTIAL, not DONE. No test or build.
+
+### 2026-11-08 A02 No Clip comparison (source-only DONE)
+The 132-sample smoother C/header blobs and enabled config are identical across `jimbones-noclip-baseline`, JB-26 skull lineage and JB-28 integration. Three-drum trigger/processing call sites are unchanged. JB-26 adds `jb_trigger` and `jb_preFilterNoise`, which can change surrounding audio despite identical smoother code. Exact SHA/line evidence and caveats in Codex handover A02. A03 host regressions still required; physical v1.8.06 image identity not verified.
