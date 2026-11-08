@@ -50,3 +50,6 @@ Combined CPU telemetry and four-voice diagnostics commit `1790aec920905eaece2241
 
 ## Live tracking
 See [combined implementation tracker](JIMBONES_COMBINED_BUILD_IMPLEMENTATION_TRACKER.md) for feature-by-feature estimated readiness and explicit outstanding work. No autonomous agent processes are implied by these assignments.
+
+## All-agent UI submission request (2026-11-08)
+Every JB-01 through JB-20 workstream (JB-06 research-only/deferred) is assigned a feature-specific native submenu recommendation brief in [JIMBONES_UI_SUBMENU_RECOMMENDATION_REQUEST.md](agents/JIMBONES_UI_SUBMENU_RECOMMENDATION_REQUEST.md). Each must submit source-verified navigation, controls, defaults, kit storage, bypass, cost and tests in `docs/agents/ui-submissions/JB-XX-UI.md`. JB-13 consolidates a collision-free master navigation tree and JB-20 independently reviews. These are tracked assignments, **not autonomous agents actively submitting reports**.
