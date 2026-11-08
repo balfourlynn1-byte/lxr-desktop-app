@@ -23,8 +23,47 @@
 #include "Soundengine/MIDI/MidiMessages.h"
 #include "Soundengine/MIDI/MidiParser.h"
 #include "frontPanelParser_ui.h"
+#include "Soundengine/DSPAudio/Jimbones.h"
+#include "Soundengine/DSPAudio/JimbonesNativeWave.h"
 
 INDTCMZ ModulationNode velocityModulators[6];
+/* The existing native LFO destination parameter IDs already address the
+ * waveform selectors for all six original voices (plus modulation/cymbal/
+ * hat oscillators). No new kit data IDs, MIDI CCs or oscillators are added. */
+static OscInfo *jb_native_wave_target(uint16_t param) {
+    switch(param) {
+    case PAR_OSC_WAVE_DRUM1:return &voiceArray[0].osc;
+    case PAR_OSC_WAVE_DRUM2:return &voiceArray[1].osc;
+    case PAR_OSC_WAVE_DRUM3:return &voiceArray[2].osc;
+    case PAR_OSC_WAVE_SNARE:return &snareVoice.osc;
+    case PAR_WAVE1_CYM:return &cymbalVoice.osc;
+    case PAR_WAVE1_HH:return &hatVoice.osc;
+    case PAR_MOD_WAVE_DRUM1:return &voiceArray[0].modOsc;
+    case PAR_MOD_WAVE_DRUM2:return &voiceArray[1].modOsc;
+    case PAR_MOD_WAVE_DRUM3:return &voiceArray[2].modOsc;
+    case PAR_WAVE2_CYM:return &cymbalVoice.modOsc;
+    case PAR_WAVE3_CYM:return &cymbalVoice.modOsc2;
+    case PAR_WAVE2_HH:return &hatVoice.modOsc;
+    case PAR_WAVE3_HH:return &hatVoice.modOsc2;
+    default:return 0;
+    }
+}
+static void jb_native_wave_reset_all(void) {
+    /* Restoring native oscillator waveform parameters precedes LFO updates.
+     * Clear stale scan state each audio block; writes are whole-word atomic. */
+    for(uint8_t i=0u;i<3u;i++){
+        __atomic_store_n(&voiceArray[i].osc.waveMorphState,0u,__ATOMIC_RELAXED);
+        __atomic_store_n(&voiceArray[i].modOsc.waveMorphState,0u,__ATOMIC_RELAXED);
+    }
+    __atomic_store_n(&snareVoice.osc.waveMorphState,0u,__ATOMIC_RELAXED);
+    __atomic_store_n(&cymbalVoice.osc.waveMorphState,0u,__ATOMIC_RELAXED);
+    __atomic_store_n(&cymbalVoice.modOsc.waveMorphState,0u,__ATOMIC_RELAXED);
+    __atomic_store_n(&cymbalVoice.modOsc2.waveMorphState,0u,__ATOMIC_RELAXED);
+    __atomic_store_n(&hatVoice.osc.waveMorphState,0u,__ATOMIC_RELAXED);
+    __atomic_store_n(&hatVoice.modOsc.waveMorphState,0u,__ATOMIC_RELAXED);
+    __atomic_store_n(&hatVoice.modOsc2.waveMorphState,0u,__ATOMIC_RELAXED);
+}
+
 
  //-----------------------------------------------------------------------
 void modNode_init(ModulationNode* vm)
@@ -89,6 +128,7 @@ void modNode_originalValueChanged(uint16_t idx)
 //-----------------------------------------------------------------------
 IN_ITCM_RAM void modNode_resetTargets()
 {
+	jb_native_wave_reset_all();
 	uint8_t i;
 	for(i=0;i<6;i++)
 	{
@@ -206,6 +246,15 @@ void modNode_updateValue(ModulationNode* vm, float val)
 		msg.data1 &= 0x7f;
 		midiParser_ccHandler(msg,0, 1, newValue);
 
+	}
+
+	/* LFO wave selection now preserves the fractional position between
+	 * periodic wave IDs in addition to the original rounded MIDI CC state.
+	 * The ordinary rendered wave is bit-identical when this is disabled. */
+	OscInfo *wave=jb_native_wave_target(vm->destination);
+	if(wave) {
+		const uint32_t morph=jb_native_wave_pack(newValue,jb_getWaveInterpolation());
+		__atomic_store_n(&wave->waveMorphState,morph,__ATOMIC_RELAXED);
 	}
 
 #else
