@@ -27,4 +27,7 @@ uint8_t stepfx_dubEnabled(void);
 uint8_t stepfx_dubSendMask(void);
 uint8_t stepfx_dubThrowMask(void);
 uint8_t stepfx_dubEffectiveMask(void);
+/* Bounded PCM send tap: add mono voice to interleaved stereo FX bus.
+ * Caller must gate on FX_DELAY and avoid double routing. */
+void stepfx_dubTap(uint8_t voice,const int16_t *samples,int16_t *fxStereo,unsigned frames);
 #endif
