@@ -88,3 +88,8 @@ Each update must include UTC time, pushed commit SHA, stage, files inspected/cha
 - Pushed pinned audit and phased compatibility/test plan at `docs/JB_WAVETABLE_UPSTREAM_PORT_PLAN.md`, commit `504a936125b75e81640d795ddc1435ce0f3d50e8`.
 - No upstream code copied, no new DSP implementation, no ARM build. Existing user ARM hold remains in force.
 - Next: locate original No Clip 3ms fade exact source and tests; inspect upstream modulation target write path, then map implementation on isolated development branch.
+
+### 2026-11-08 UTC — atomic B01 upstream commit and licence pinned
+- Upstream `brendanclarke/LXR02Open` `prime` resolved to commit `c896bfd0efe86a4037418bf9f46f1fcc39255958`; fetched six exact-commit blobs including LICENSE, oscillator, modulation and interpolation audit. Blob hashes recorded in `docs/JB_WAVETABLE_UPSTREAM_PORT_PLAN.md` (pushed evidence commit `a5c51dc2a60b25108ca8689593e81932c5629711`).
+- Licence expressly forbids commercial use and requires modified-source redistribution; no upstream code imported. No host or ARM tests run.
+- Next: A01 locate original 3 ms No Clip source and compare to v1.8.06; continue B04 architecture mapping if A01 history inaccessible.
