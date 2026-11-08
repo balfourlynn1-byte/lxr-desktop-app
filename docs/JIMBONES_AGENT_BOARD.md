@@ -12,7 +12,7 @@
 | P1 | DSP + Embedded | Morph A/B/C, LFO and velocity | Backlog |
 | P1 | DSP + Verification | Per-voice tape/tube saturation | Backlog |
 | P2 | Research + Embedded | USB multitrack feasibility | Deferred until stable audio budget |
-| P0 | DSP + Embedded | Step FX on/off toggle and step 1 LED fix (JB-07/JB-21) | Source mapped; needs implementation |
+| P0 | DSP + Embedded | Step FX on/off toggle and step 1 LED fix (JB-07/JB-21) | **PR #10 implemented; physical LEDs not yet verified** |
 | HOLD | DSP + Research | Metallic FM layered engine | Shelved by user: insufficient audible benefit for DSP load |
 | P1 | DSP + Research | Wavetable oscillators and waveshaping | Core tables/interpolation found; optimize, audit and regression-gate |
 | P2 | Embedded + Verification | Hi-hat articulation and velocity curves | Backlog |
@@ -22,7 +22,7 @@
  
 | P0 | DSP + Embedded | JB-19A — six-lane send gate | **Draft PR #8 implemented; host tests passed locally; ARM/hardware not verified** |
 | P0 | DSP + Embedded | JB-19B — parallel FX mixer tap | **Draft PR #9; GitHub host + ARM CI passed, hardware pending** |
-| P1 | DSP + Embedded | JB-20 — tempo-synced dub delay using current FX buffer | **Research complete, buffer limits known; implementation needed** |
+| P1 | DSP + Embedded | JB-20 — tempo-synced dub delay using current FX buffer | **Draft PR #11 implemented; host+ARM CI green; hardware pending** |
 | P0 | Embedded + Verification | JB-21 — all 16 buttons toggle and LEDs, per-voice send UI | **Draft PR #10 coded; host+ARM CI green, actual LED/device verification pending** |
 | P0 | Verification + Integration | JB-22 — baseline/CPU/host/ARM/hardware release gates | **Hardware failure evidence recorded; test implementation needed** |
 
@@ -122,12 +122,12 @@
 ### JB-19 — Parallel gated send from existing rendered voices
 - **Priority:** P0. **Owners:** DSP + Embedded.
 - **Scope:** Preserve physical dry routing; tap rendered voice to FX buffer on bounded per-voice Step FX gate; no voice retrigger; no additional delay engine.
-- **State:** JB-19A draft [PR #8](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/8); JB-19B stacked draft [PR #9](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/9) now wires an optional additive tap from six rendered voices to the existing global FX bus. GitHub Actions JB-19B **host and ARM build checks passed** on 2026-11-08 ([run #42480313654](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42480313654), commit `cc8cd0ff20fafb52e05269b487246889ca0fa806`). **Neither PR merged or device-tested.** A user-facing Step FX send control is still required (JB-21), so a usable dub throw does not yet exist. [Source audit](agents/dub_step_send_v184.md).
+- **State:** JB-19A draft [PR #8](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/8); JB-19B stacked draft [PR #9](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/9) now wires an optional additive tap from six rendered voices to the existing global FX bus. GitHub Actions JB-19B **host and ARM build checks passed** on 2026-11-08 ([run #42480313654](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42480313654), commit `cc8cd0ff20fafb52e05269b487246889ca0fa806`). **Neither PR merged or device-tested.** UI and tempo-delayed throw implementation now exists in stacked PRs #10 and #11, still **unmerged and device-unverified**. [Source audit](agents/dub_step_send_v184.md).
 
 ### JB-20 — Dub tempo-synced delay and feedback tails
 - **Priority:** P1. **Owners:** DSP + Embedded.
 - **Scope:** Use current global Delay engine; BPM subdivisions only if within existing mono/ping-pong buffer capacity; ensure trails continue after send gate closes.
-- **State:** Research complete, code changes unimplemented; [buffer math and source locations](agents/dub_step_send_v184.md).
+- **State:** Implemented as stacked draft [PR #11](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/11), with source-backed mono/pingpong mapping, visible LONG/SHORT/CLK/NOFX statuses, BPM-derived delay repeats, wet-only echo tail and conservative feedback cap. **Host and ARM compilation passed** in [run #42483624857](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42483624857), commit `943302d4e03d41b5a24caca04fe8242633243fd4`. ITCM overflow caught in first build, then fixed by moving once-per-block timing setup out of ITCM. Not hardware-verified and not approved for flashing; see [implementation handover](https://github.com/balfourlynn1-byte/lxr-desktop-app/blob/agents/jb-20-dub-delay-sync-v184/docs/agents/dub_delay_sync_jb20.md).
 
 ### JB-21 — Step FX buttons, LED parity and send controls
 - **Priority:** P0. **Owners:** Embedded + Verification.
@@ -141,7 +141,7 @@
 
 ## Findings and constraints
 
-- **Next implementation job:** JB-20 tempo-synced dub delay on existing FX bus with buffer bounds and feedback tail tests. Review JB-19A PR #8 before stacked JB-19B PR #9. Dry voice remains untouched. GitHub ARM checks and real-device CPU headroom/hardware acceptance are required; no firmware has been flashed for the new send.
+- **Next engineering gate:** JB-22 integration regression of the stacked PRs, CPU/PK/LATE/RAIL and real output verification on the actual LXR-02, retaining a known-good rollback. Then wavetable cost optimisation and comb-filter feasibility, after headroom is confirmed. Review JB-19A PR #8 before stacked JB-19B PR #9. Dry voice remains untouched. GitHub ARM checks and real-device CPU headroom/hardware acceptance are required; no firmware has been flashed for the new send.
 
 - Earlier v1.8.03 ARM CI passed, AND v1.8.03 subsequently **booted on tester's actual LXR-02**. It is **NOT safe/validated**: DSP crunch/overrun reproduced; idle readings after restart DSP 62%, PK 66%, LATE 0, RAIL 0; under load DSP 101%, PK 105%, LATE 999 (UI cap), RAIL 240. These meter fields have distinct semantics. No v1.8.04 firmware build exists yet.
 - CPU instrumentation and multi-voice crunch are first engineering priorities; any new send must reuse existing FX processing and default OFF. User explicitly shelved Metallic FM and moved wavetable, dub send, step toggle/LED fix and comb-filter feasibility higher. The upstream LXR02Open license is **non-commercial**, not automatically compatible with GPL-3.0-only: study ideas, do not copy source.
