@@ -74,3 +74,10 @@ Each update must include UTC time, pushed commit SHA, stage, files inspected/cha
 - First failing gate: `tests/test_jb22_integration.py:17` hard-coded `VERSION 1.8.06`; target intentionally now `VERSION 1.8.07`. ARM job skipped; no memory/image evidence.
 - Updated that exact assertion to 1.8.07, pushed `442d8be8dfcc22195be2c49b1bededd401c628aa`. No DSP implementation changed in this fix.
 - Next: inspect new PR run for `442d8be8` or later, follow next concrete failure; no image approved.
+
+### 2026-11-08 — USER-ORDERED ARM BUILD HOLD
+- User testing v1.8.06 reports firmware not nearly ready; prefers a substantially more developed v1.8.08 candidate rather than incremental ARM builds.
+- ARM and test-artifact job in `.github/workflows/jimbones-jb28-comb-integration.yml` disabled with unconditional `if: ${{ false }}` at commit `5b0dd2e3f23885dedb4a69c13ebb6a16c0dad4d7`. Host-only tests remain enabled.
+- Do NOT re-enable ARM, produce a firmware image or label a candidate hardware-ready until user approves the chosen feature-frozen build and all host checks pass.
+- Version 1.8.07 is a source-integration intermediate, NOT the next hardware test target; v1.8.08 is a proposed future target, pending scope and user acceptance. Existing older job logs may still exist.
+- Next: gather specific v1.8.06 hardware shortcomings, prioritize meaningful improvements, finish and validate host-side integration before requesting ARM build approval.
