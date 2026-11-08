@@ -17,7 +17,7 @@
 | P1 | DSP + Research | Wavetable oscillators and waveshaping | JB-24 [PR #13](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/13) wave-first OSC UI CI green; hardware unverified |
 | P2 | Embedded + Verification | Hi-hat articulation and velocity curves | Backlog |
 | P2 | DSP + Embedded | Per-hit snare randomisation | Backlog |
-| P1 | DSP + Embedded | Bass and comb filters | Comb: research/source audit required before implementation |
+| P1 | DSP + Embedded | JB-12 — Bass and comb filters | **Comb implemented in [draft PR #15](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/15), [host/ARM CI passed](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42495034632); hardware unverified.** Independent bass filter remains backlog |
 | P1 | Embedded + Verification | UI navigation and performance diagnostics | Source/UI regression green; real LED/display test pending |
  
 | P0 | DSP + Embedded | JB-19A — six-lane send gate | **Draft PR #8 implemented; host tests passed locally; ARM/hardware not verified** |
@@ -110,9 +110,9 @@
 ### JB-12 — Bass and comb filters
 - **Priority:** P1
 - **Owners:** DSP + Embedded
-- **Scope:** Independent bass HPF/LPF and comb resonance stability/CPU profiling.
+- **Scope:** Separate bass HPF/LPF is still backlog. A **per-voice recursive Comb** is now a real ninth native FILTER Type, reusing existing Freq/Reso without modifying kit IDs. Benchmarks and physical CPU measurements remain necessary.
 - **Deliverable:** Research findings with source links and license check, implementation proposal or focused PR, host tests, ARM build, image verification and hardware-test notes.
-- **State:** Backlog; no agent process launched.
+- **State:** **Comb source implemented** in stacked draft [PR #15](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/15); six-voice 384k-sample host stress, GCC/Clang regressions, ARM cross-build, image integrity and >=512 B ITCM memory guard all passed [run #42495034632](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42495034632). Only **528 B free ITCM** and no physical audio/CPU tests; not approved for flashing. The original factory FM submenus are separate from Metallic FM; preserve them. [Controls and risk handover](https://github.com/balfourlynn1-byte/lxr-desktop-app/blob/agents/jb-12-comb-filter-v184/docs/agents/jb12_comb_filter.md).
 
 ### JB-13 — UI navigation and performance diagnostics
 - **Priority:** P1
