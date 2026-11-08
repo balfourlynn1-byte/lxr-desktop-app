@@ -2,6 +2,26 @@
 
 **Status (2026-11-08):** JIMBONES **v1.8.04 hardware-tested in part (~62% DSP, no audible crunch); v1.8.05/1.8.06 EXPERIMENTAL source/CI only**. Do not imply that the latest version has booted on the LXR-02. Agents are virtual responsibilities, **not running autonomous processes**; this tracked board replaces GitHub Issues (API 410). No job is implemented merely by being listed. Codex should take the discrete, researched jobs below, one PR per change.
 
+## Hardware-truth audit — user correction (2026-11-08)
+
+**Only user-confirmed functional feature so far: existing dub delay / dub effect.** Removing Metallic FM also reduced the reported DSP load to ~62% and apparently removed audible crunch; this is a stability improvement, **not** another delivered feature. The user explicitly reports that the **last seven iterations have delivered only that one working feature**. CI green, code merged into a branch, or an image generated are **not feature acceptance**.
+
+| User request / issue | Device evidence | Acceptance status |
+|---|---|---|
+| Dub delay / dub effect | User reports it works well | **HARDWARE WORKING** (specific modes not exhaustively tested) |
+| Five 1/4, 1/8, 1/8-triplet, 1/16, 1/32 timing buttons | Code in v1.8.05; no user test | **NOT ACCEPTED** |
+| Step 1 LED and each Step FX press-on/press-off | User previously reported LED/toggle bug; code fix not hardware confirmed | **BUG OPEN** |
+| Wavetable and waveform shaping / LFO scanning | User says wavetable not working as demo intended; upstream full engine not ported | **INCOMPLETE / NOT WORKING AS REQUESTED** |
+| Comb in FILTER | Separate CI-passing prototype, no combined physical test | **NOT ACCEPTED** |
+| LCD garbling after screensaver | User provided device photo; fix not device tested | **BUG OPEN** |
+| Bouncing skull screensaver | Source implementation only | **NOT ACCEPTED** |
+| Morph A/B/C, velocity/LFO, protected kick | User requested; not complete | **NOT IMPLEMENTED** |
+| Tape/tube, hi-hat articulation, snare random, independent bass filter, advanced Step FX, USB audio | Requested, incomplete or feasibility only | **NOT IMPLEMENTED** |
+
+**New process:** Every user-requested feature needs (1) explicit expected controls/sound behaviour, (2) host test, (3) integration build, (4) **real hardware demonstration by the user**, (5) measured DSP/PK/LATE/RAIL under relevant stress, and (6) acceptance/bug closure. Report source implementation and hardware acceptance as separate fields. Preserve a known-good rollback. Codex must not declare “fully functioning” or “implemented successfully” solely from CI.
+
+**Revised next Codex instruction:** First review the hardware-truth table and the existing user bug reports; identify missing implementation against each request. Keep the existing working dub path untouched. Integrate Comb only as a **testable candidate**, not a finished feature; do not expand to a large bundle before the user can isolate each change. The actual target is **all requested features working on device**, not merely all feature source files compiling.
+
 **Start here:** [Full dependency job tree](JIMBONES_JOB_TREE_V184.md) · [Codex handover](CODEX_V184_HANDOVER.md) · [Dub-send audit](agents/dub_step_send_v184.md). Official manual: https://www.ericasynths.lv/media/LXR_manual.pdf
 
 **18:30 Codex priority (2026-11-08):** [JB-28A minimal handoff](https://github.com/balfourlynn1-byte/lxr-desktop-app/blob/agents/jb-28-full-integration-v186/docs/CODEX_1830_HANDOFF.md). The Codex branch exists but **Comb is not yet integrated into the skull build**. Only transplant existing Comb PR #15, run host/ARM/memory/image gates, and open a draft v1.8.07 test-only PR. No broad new feature implementation in the first pass. **Next:** JB-28B physical verification; JB-27 native oscillator/waveshaping after headroom. Full future-feature backlog remains separate.
