@@ -10,3 +10,9 @@ Inspect source changes and tests; check original six-voice sound, old kit loadin
 
 ## Delivery
 Actual source commits and host regression, exact CI run, ARM image SHA, hardware test checklist, and explicit merge recommendation. Research-only documents do not count as implementation.
+
+## Implementation progress — 2026-11-08
+- DSP prototype: `Core/Inc/Soundengine/DSPAudio/JimbonesTransientShaper.h`, bounded two-envelope attack/sustain shaper.
+- Host test: `tests/test_transient_shaper.c`, wired into `tests/run_host.sh`.
+- **Not yet wired into audio rendering or CLICK submenu**; no claims of audible hardware change or verified CI.
+- Next: inspect native CLICK menu parameter routing and preset serialization; design backward-compatible transient control storage before any live integration.
