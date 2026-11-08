@@ -70,6 +70,6 @@ int main(void) {
  puts("PASS native agent submenu router: first OSC original, eight macro banks plus interpolation bank, exit, six voices plus open-hat page, MOD/FM/CLICK/FILTER/MIX extension cycles and global behavior");
 }
 '''
-out=root/'build/host/menu_fixture.c'; out.write_text(fixture+fn+test)
+out=root/'build/host/menu_fixture.c'; out.parent.mkdir(parents=True,exist_ok=True); out.write_text(fixture+fn+test)
 subprocess.run([os.environ.get('CC','cc'),'-std=c11','-Wall','-Wextra','-Werror','-I'+str(root/'Core/Inc'),str(out),'-o',str(out.with_suffix(''))],check=True)
 subprocess.run([str(out.with_suffix(''))],check=True)
