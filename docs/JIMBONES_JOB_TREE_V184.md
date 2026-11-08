@@ -3,55 +3,52 @@
 **Updated:** 2026-11-08. **Purpose:** make jobs small and ready for Codex, with clear dependencies and test gates. 
 **Status of this programme:** v1.8.04 has user-reported stable boot, ~62% DSP and no new audible crunch; new 1.8.05–1.8.06 changes remain **untested on hardware**. Exact PK/LATE/RAIL and four-pad stress on v1.8.04 are still unrecorded. CI does not prove realtime headroom. Branch roles in this board are **virtual assignments**, not autonomous active agents. CI passing is not a substitute for physical tests.
 
-## Active dependency tree
+## Active dependency tree — 18:30 Codex handover
+
+**Handoff ready:** [one-page Codex 18:30 instructions](https://github.com/balfourlynn1-byte/lxr-desktop-app/blob/agents/jb-28-full-integration-v186/docs/CODEX_1830_HANDOFF.md) · **Codex starting branch:** `agents/jb-28-full-integration-v186` (forked from JB-26, **Comb not yet transplanted**).
 
 ```text
-BASE: known-good LXR-02 firmware (keep untouched + backed up)
-  |
-  +-- [CI PASS / REVIEW] JB-19A Step FX gated send state      draft PR #8
-      |
-      +-- [CI PASS / REVIEW] JB-19B parallel dry + FX mixer  draft PR #9
-          |
-          +-- [CI PASS / REVIEW] JB-21 16-button ON/OFF UI,
-              |                Step 1 DUB SEND and LEDs      draft PR #10
-              |
-              +-- [CI PASS / REVIEW] JB-20 tempo dub delay  draft PR #11
-                  |
-                  +-- [CI PASS / REVIEW] JB-22 integrated
-                      |    v1.8.04; Metallic FM disabled;
-                      |    image format and ITCM gate        draft PR #12
-                      |
-                      +-- [CI PASS / REVIEW] JB-24 wave-first
-                          |    OSC menu, FM controls hidden   draft PR #13
-                          |
-                          +-- [CI PASS / REVIEW] JB-23 experimental
-                              |   test pack, rollback + checksum   draft PR #14
-                              |       |
-                              |       +-- JB-03 actual DSP stress
-                              |       +-- JB-02 meter verification
-                              |       +-- JB-01 baseline/rollback
-                              |
-                              +-- [CI PASS / REVIEW] JB-25 5 dub
-                              |   interval pads v1.8.05         draft PR #16
-                              |       |
-                              |       +-- [CI PASS / REVIEW] JB-26
-                              |           LCD byte-latch + bouncing skull
-                              |           v1.8.06               draft PR #17
-                              |           |
-                              |           +-- [NEXT / CONDITIONAL] JB-27
-                              |               upstream-style waveform-ID
-                              |               scanning + shaping DSP
-                              |               (licence + CPU review first)
-                              |
-                              +-- [AFTER CPU PASS] JB-09B native
-                              |   oscillator wavetable / LFO
-                              |   scan feasibility + profile
-                              +-- [CI PASS / REVIEW] JB-12 Comb
-                              |   FILTER Type prototype         draft PR #15
-                              +-- [DEFERRED] other sound engines
+BASE: known-working v1.8.04 + SD/kit rollback (do not overwrite)
+ |
+ +-- IMPLEMENTED, STACKED, CI PASS — review before integration:
+ |   #8  JB-19A Step FX send gate
+ |   #9  JB-19B dry + FX mixer
+ |   #10 JB-21 16-button toggle + Step 1 LED
+ |   #11 JB-20 tempo dub delay
+ |   #12 JB-22 integration / Metallic FM disabled
+ |   #13 JB-24 wavetable layer / wave-first OSC UI
+ |   #14 JB-23 test pack
+ |   #16 JB-25 five dub interval pads (v1.8.05)
+ |   #17 JB-26 LCD fix + bouncing skull (v1.8.06)
+ |          |
+ |          +-- [CODEX 18:30 P0] JB-28A COMB INTEGRATION
+ |          |    branch agents/jb-28-full-integration-v186
+ |          |    take ONLY Comb changes from #15 (older branch)
+ |          |    ninth FILTER Type; no loss of JB-25/JB-26
+ |          |    full host + ARM + ITCM gate; v1.8.07 test image
+ |          |          |
+ |          |          +-- [P0] JB-28B combined regressions
+ |          |          |    + physical 4-pad / Comb / LCD test
+ |          |          |    + DSP/PK/LATE/RAIL and rollback
+ |          |          |
+ |          |          +-- [P1 conditional] JB-27 native
+ |          |               oscillator waveform-ID/LFO scan
+ |          |               + original waveshaping (licence/CPU)
+ |          |
+ |          +-- [PARALLEL SOURCE, NOT YET IN v1.8.06]
+ |               #15 JB-12 Comb prototype, CI PASS on old branch
+ |
+ +-- AFTER HARDWARE HEADROOM: morph A/B/C; tape/tube;
+ |   hi-hat; snare random; independent bass HPF/LPF;
+ |   advanced 2/4/8-bar performance FX
+ |
+ +-- FEASIBILITY ONLY: USB 4-channel audio
+ +-- HOLD: Metallic FM (CPU overload, little sonic benefit)
 ```
 
-**Review order for the current test-image chain:** #8 → #9 → #10 → #11 → #12 → #13 → #14 → #16 → #17. These PRs are **stacked**, not independently mergeable into `main`. **Comb PR #15 is a separate branch and is NOT included in the v1.8.06 skull candidate.** Never merge or flash just because CI is green.
+**Do not merge #15's entire old branch over #17.** Transplant only its Comb files and small patches into the new JB-28 branch, then rerun every gate. The two independent green builds do **not** establish a green combined build.
+
+**Review order:** #8 → #9 → #10 → #11 → #12 → #13 → #14 → #16 → #17 → new JB-28A draft PR. All are stacked except #15, which is the source of the Comb patch. No GitHub Release or flash without hardware approval.
 
 ## Work queue and status
 
@@ -72,6 +69,9 @@ BASE: known-good LXR-02 firmware (keep untouched + backed up)
 | **JB-25** five dub timing buttons | P1 | [Draft PR #16](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/16), [host+ARM+image CI GREEN](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42498555769), v1.8.05. Step FX 1–5 quarter, eighth, triplet eighth, sixteenth, thirty-second; 6–16 originals. | Physical 5-button timing, LEDs, DSP/PK/LATE/RAIL and delay-buffer modes; v1.8.04 remains rollback. | DSP / Embedded |
 | **JB-26** LCD corruption + animated skull | P0 | [Draft PR #17](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/17), v1.8.06; [GCC/Clang host, LCD state-machine simulation, ARM and SHA gates **PASS**](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42502110203). 560 B ITCM free. [**UNVERIFIED** test image](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42502110203/artifacts/13625738707), SHA256 `b959030387b89622470dfda288f1cf5096b4e0d41c39cf819f150bdce4091a49`. **Not yet device tested**. | Verify screenshot corruption gone after sleep/wake, actual skull glyphs, UI controls, 4-pad CPU; preserve v1.8.04 rollback. | Embedded / Verification |
 | **JB-27** full upstream-style wavetable and waveshaping | P1 conditional | Requested with upstream [LXR02Open](https://github.com/brendanclarke/LXR02Open) + YouTube reference. Existing JIMBONES wave layer is only partial. Upstream **noncommercial restrictions conflict with GPL-only public distribution** if copied verbatim. | Obtain licence exception or independently implement original-oscillator waveform-ID interpolation/LFO scan, wavefold/shape, sample-domain evaluation, and test four-hit CPU cost; do not combine with skull bugfix. | DSP / Research |
+| **JB-28A** one combined Comb+skull build | **P0 / Codex 18:30** | **HANDOFF READY, NOT YET IMPLEMENTED.** [Minimal Codex instructions](https://github.com/balfourlynn1-byte/lxr-desktop-app/blob/agents/jb-28-full-integration-v186/docs/CODEX_1830_HANDOFF.md), branch `agents/jb-28-full-integration-v186` from JB-26. Existing Comb PR #15 is CI green but separate. | Apply only Comb patch to current branch; host GCC/Clang, ARM, >=512 B ITCM, versioned SHA-pinned **v1.8.07 TEST ONLY**; draft PR. | Codex / Integration |
+| **JB-28B** combined hardware validation | P0 / after JB-28A | **NOT STARTED.** Six native voices, kit compatibility, Comb, 5 dub timings, 16 Step FX toggles, wave UI, skull wake must coexist. | One-page physical test sheet, user records 4-hit DSP/PK/LATE/RAIL, no crunch, LCD corruption absent, verified rollback. | Verification / User |
+| **JB-27** native oscillator wave-ID/LFO + waveshaping | P1 / after measured CPU | **NOT IMPLEMENTED.** JB-24 wave-first UI and native JIMBONES wave layer are partial, not full upstream feature parity. Upstream LXR02Open noncommercial licence limits source copying. | Original implementation or licence permission; isolate and benchmark four-hit cost. | DSP / Research |
 | **JB-05** tape/tube saturation | P2 conditional | Backlog | Benchmark a cheap per-voice alternative, default off; do not add before live headroom proof | DSP |
 | **JB-04** morph A/B/C | P2 conditional | Backlog | Preserve A and kick; spec edit/morph state and automation controls after stable build | DSP / Embedded |
 | **JB-10/11/13** hi-hat/snare/visual polish | P2 | Backlog / partial diagnostics | Separate small PRs after core audio and Step FX validation | Embedded / DSP |
@@ -98,4 +98,11 @@ BASE: known-good LXR-02 firmware (keep untouched + backed up)
 
 **Release gate:** the user manually reports a stable boot with all six original voices, no new crackle or missed deadlines on four-hit stress, satisfactory headroom, and successful rollback. A Comb prototype exists in draft #15 but **has not met that hardware gate**; native oscillator waveform-ID/LFO interpolation is a separate JB-09B job.
 
-**Codex next-start prompt:** `Read docs/JIMBONES_JOB_TREE_V184.md and PR #14. Use the existing JB-23 checksum-pinned artifact and device checklist. Don't assume hardware tests have been done; when actual device readings arrive, compare them to historical v1.8.03 baseline, identify DSP bottlenecks, and make separate minimal reviewable PRs. Preserve backup/rollback.`
+**18:30 Codex launch:** Read [`docs/CODEX_1830_HANDOFF.md`](https://github.com/balfourlynn1-byte/lxr-desktop-app/blob/agents/jb-28-full-integration-v186/docs/CODEX_1830_HANDOFF.md). Start JB-28A only on `agents/jb-28-full-integration-v186`; transplant the existing Comb PR #15 changes into latest JB-26, run full gates and draft PR. Then stop. Earlier JB-19A instructions are completed and should **not** be restarted.
+
+## What “fully functioning” means
+
+**First integration milestone:** one candidate containing *all features currently coded* (parallel Step FX/dub, 5 timing buttons, wave-first layer, animated skull/LCD fix, and the Comb ninth FILTER Type) that builds and passes physical tests. This is **not** proof that all future requested ideas are implemented.
+
+**Full feature-completion milestone (later):** separate tasks JB-27 native oscillator scan/waveshaping, JB-04 morph A/B/C, JB-05 tape/tube, JB-10 hi-hat, JB-11 snare random, JB-12B independent bass HPF/LPF, JB-07 advanced performance FX, and JB-06 USB feasibility. Each needs independent CPU/memory/physical gating; do not silently expand the 18:30 handoff to all of them.
+
