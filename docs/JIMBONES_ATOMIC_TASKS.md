@@ -196,3 +196,18 @@
 - [ ] **H07 — Handover and hardware hold (P0; E01/G06).** Publish source mapping, legal decision, sonic A/B, DSP budget, outstanding risks and exact candidate SHA by Nov 10 18:30 UK; no ARM build, firmware image or hardware-ready claims without explicit approval.
 
 **Start now:** H01 source mapping and H02/H03 investigation can proceed in parallel with A03 host-test validation, but no new implementation should bypass A/B gates. Completion is evidence-based; incomplete tasks remain TODO/BLOCKED at deadline.
+
+
+## I — User-loaded custom transient samples (requested 2026-11-08)
+
+**Goal:** Allow a user to import short custom one-shot attack/transient WAVs (for example, stick, click, snap, clap or acoustic drum attack) and layer them over any of the six **unchanged original LXR-02 voices**. Preserve the original voice when transient layer is OFF. **Priority: HIGH after A–H stability gates; prototype host-only before ARM approval.** Do not repurpose or erase upstream LXR02Open sample flash sectors without linker/storage review.
+
+- [ ] **I01 — Import and format contract.** Define supported mono PCM WAV bit depth/sample rate, max duration/size, filename/index limits and deterministic resampling/conversion on Mac; reject malformed, oversized and unsupported files safely. Decide SD streaming vs preloaded memory using measured latency/budget; avoid SD access from audio ISR.
+- [ ] **I02 — Sample library and safe storage.** Design SD-card folder/manifest, per-kit sample references, validation, missing-file fallback, duplicate names and versioning; use staged/atomic writes and interrupted-save recovery. Preserve existing presets and user data.
+- [ ] **I03 — Transient playback engine.** Implement bounded one-shot PCM voice with configurable start offset, gain, attack/decay, pitch/tune, polarity and retrigger/choke behaviour; deterministic sample-accurate trigger aligned with original voice. Zero allocation and blocking I/O in audio callback.
+- [ ] **I04 — Per-voice layering and modulation.** Independent ON/OFF, sample selection, mix and velocity-to-transient amount on kick, snare, toms, clap and hi-hat. Optional transient-only filtering and random sample selection with controlled probability; default OFF, no original-engine changes.
+- [ ] **I05 — UI, MIDI and persistence.** Map a compact additional edit page (no loss of existing OSC/Step FX controls); save/load per-kit sample ID, gain, tuning, envelope, velocity depth and enable state. Gracefully handle missing samples and old kits.
+- [ ] **I06 — Focused host regression tests.** Verify exact OFF-path PCM, onset alignment, clipping/headroom, click-free retriggers, high-velocity extremes, malformed/empty WAVs, missing SD samples, 3–4 overlapping long decays, sample switching, memory bounds and no-alloc audio path. Compare rendered WAVs and CPU/RAM against G02/G03 gates.
+- [ ] **I07 — Integration and handover.** Integrate only after wavetable/comb/Step FX/No Clip host regressions pass; GCC/Clang/sanitizer CI evidence, documented flash/RAM and licensing audit, explicit rollback and hardware test matrix. Remains TODO/DEFERRED at Nov 10 handover if unverified; **no ARM build or flashable image without user approval**.
+
+**Acceptance:** A user can add a custom transient to a drum, play expressively with velocity, save/reload a kit and disable the layer to recover original audio bit-for-bit, without audible crunch or unsafe DSP/SD behaviour.
