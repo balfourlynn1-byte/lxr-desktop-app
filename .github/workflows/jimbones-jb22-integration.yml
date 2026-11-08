@@ -1,0 +1,53 @@
+name: JB-22 Integration Gate - NO FLASH
+on:
+  push:
+    branches:
+      - agents/jb-22-integration-gate-v184
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  host:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Source revision
+        run: |
+          echo "JIMBONES v1.8.04 EXPERIMENTAL — no flash approval"
+          git rev-parse HEAD
+      - name: FM removal and full host regression (GCC)
+        run: sh tests/run_host.sh
+      - name: FM removal and full host regression (Clang)
+        env:
+          CC: clang
+        run: sh tests/run_host.sh
+      - name: Independent StepFX regression
+        run: bash tests/run_combined_stepfx.sh
+  arm-build:
+    needs: host
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install cross-build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build python3 gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
+      - name: Configure
+        run: cmake --preset release
+      - name: Compile with linker memory evidence
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p build/release
+          cmake --build --preset release --parallel 2 2>&1 | tee build/release/arm-build.log
+      - name: ITCM margin and size policy (>=512B)
+        run: |
+          python3 tests/check_jb22_memory.py build/release/arm-build.log
+          arm-none-eabi-size build/release/LXR_V2_STM32F765.elf
+      - name: Verify image internally (do not upload)
+        run: |
+          python3 tests/validate_image.py build/release/LXR_V2_V1.8.04.img --binary build/release/LXR_V2_STM32F765.bin
+          sha256sum build/release/LXR_V2_V1.8.04.img
+          echo "Verification only: do NOT publish/flash. Hardware DSP/headroom remains untested."
