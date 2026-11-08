@@ -170,7 +170,6 @@ set(LXR_ITCM_SOURCES
     Src/Soundengine/cs4344_cs5343.c
     Src/Soundengine/FxBus.c
     Src/Soundengine/DSPAudio/1PoleLp.c
-    Src/Soundengine/DSPAudio/CombFilter.c
     Src/Soundengine/DSPAudio/CymbalVoice.c
     Src/Soundengine/DSPAudio/Decay.c
     Src/Soundengine/DSPAudio/distortion.c
