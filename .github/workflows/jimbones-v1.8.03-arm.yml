@@ -45,6 +45,11 @@ jobs:
       - name: Check isolated version
         run: |
           grep -Eq 'VERSION[[:space:]]+1\.8\.03' CMakeLists.txt || { echo 'STOP: v1.8.03 source/version not committed to this branch'; exit 1; }
+      - name: Check cross compiler and memory configuration
+        run: |
+          arm-none-eabi-gcc --version | head -1
+          arm-none-eabi-g++ --version | head -1
+          test -f cmake/arm-none-eabi.cmake
       - name: Build ARM image
         run: |
           set -o pipefail
