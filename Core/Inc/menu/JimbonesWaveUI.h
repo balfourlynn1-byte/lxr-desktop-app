@@ -7,11 +7,12 @@
 #include <stdint.h>
 #include "Soundengine/DSPAudio/Jimbones.h"
 
-/* 26 visible parameters, arranged in seven 4-knob pages; after those
- * comes one full-screen waveform-interpolation control. */
-#define JB_WAVEUI_VISIBLE 26u
-#define JB_WAVEUI_BANKS 7u
-#define JB_WAVEUI_INTERP 26u
+/* Only controls that affect the live wave layer remain visible: three
+ * four-knob banks plus native oscillator interpolation. Old preset fields
+ * retain their IDs but no longer create phantom pages. */
+#define JB_WAVEUI_VISIBLE 12u
+#define JB_WAVEUI_BANKS 3u
+#define JB_WAVEUI_INTERP 12u
 
 uint8_t jb_waveui_param(uint8_t visible_index); /* JB_PARAMS when invalid */
 uint8_t jb_waveui_col(uint8_t bank, uint8_t col); /* visible index, or INTERP */
