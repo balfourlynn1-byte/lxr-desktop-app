@@ -26,7 +26,7 @@
 - [ ] **A05** Pin v1.8.06 candidate image/source identity if available in repo artifacts; otherwise mark hardware image SHA awaiting user-provided file, without guessing.
 
 ### B — Upstream source analysis
-- [ ] **B01** Pin LXR02Open `prime` HEAD commit, licence, oscillator and interpolation audit blob SHAs.
+- [x] **B01** Pin LXR02Open `prime` HEAD commit, licence, oscillator and interpolation audit blob SHAs. DONE 2026-11-08; upstream commit `c896bfd0efe86a4037418bf9f46f1fcc39255958`; verified six blob SHAs and licence in `docs/JB_WAVETABLE_UPSTREAM_PORT_PLAN.md` (research evidence commit `a5c51dc2a60b25108ca8689593e81932c5629711`).
 - [x] **B02** Trace upstream `modNode_updateValue` fractional waveform-ID write, global interpolation toggle and reset paths. DONE 2026-11-08; source evidence in `docs/JB_WAVETABLE_UPSTREAM_PORT_PLAN.md` (modulationNode.c blob e3a811b, lines 61–109, 173–194, 253–305).
 - [x] **B03** Trace upstream `Oscillator.c` two-wave block rendering, sample/FM/noise/crash dispatch and fallback. DONE 2026-11-08; pinned oscillator blob 5c1bf056; evidence in `docs/JB_WAVETABLE_UPSTREAM_PORT_PLAN.md` (lines 98–155, 186–211, 229–253, 552–590).
 - [ ] **B04** Compare upstream `OscInfo` with Erica `OscInfo`; map native waveform IDs, LFO target enums and voice count.
