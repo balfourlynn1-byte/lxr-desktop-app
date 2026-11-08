@@ -7,7 +7,26 @@ on:
 permissions:
   contents: read
 jobs:
+  host-regression:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Host regression suite
+        env:
+          CC: clang
+        run: |
+          bash tests/run_host.sh
+          bash tests/run_waveshaping.sh
+      - name: Upload test audio for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: JIMBONES-v1.8.03-host-results
+          path: build/host/*.s16
+          if-no-files-found: ignore
+          retention-days: 14
   firmware:
+    needs: host-regression
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
