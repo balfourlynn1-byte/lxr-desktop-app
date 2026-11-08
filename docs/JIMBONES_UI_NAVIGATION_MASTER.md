@@ -39,3 +39,6 @@ On a voice page, pressing native CLICK (subpage 4) selects its original paramete
 
 ## Implementation update — native menu router
 Commit `01ed3a4a8cfb6124b5095dc38374e56e3a060123` adds code-level native submenu cycling for MOD (JB-04/10/11/16), FM (JB-15), CLICK (JB-14), FILTER (JB-12/17) and MIX (JB-05/18), preserving the existing OSC experimental page and existing Performance screens. Only CLICK attack/sustain and MIX SRR are DSP-wired; every other page explicitly displays `PENDING` and does not modify audio. MIX requires cycling through TAPE first to reach LOFI. This is deliberately a non-releasable draft until host+ARM CI, physical UI tests, and NO CLIP P0 qualification pass. No claim of complete feature menus, kit persistence or verified hardware.
+
+## Next milestone progress — kit-reload consistency
+JB-13 branch now has DSP `jb_kitRevision()` incrementing at initialization and kit reload; UI clears temporary transient/SRR knob cache when the revision changes. Host DSP regression checks revision changes and legacy OFF kit load. These commits are **not yet CI-verified**; P0 No Clip remains UNVERIFIED and the draft PR is not a flash-ready release. Next gates: run exact-commit host/ARM CI, independently review menu transitions and verify physical button workflow; do not merge before those gates.
