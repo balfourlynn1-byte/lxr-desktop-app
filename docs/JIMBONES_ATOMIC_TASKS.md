@@ -181,3 +181,18 @@
 - [ ] G09.2 Produce modular drop-in briefs with host-only tests and integration points; no unapproved hardware claims.
 
 **Mandatory Nov 10 handover audit:** G01–G06 must be either evidence-backed DONE or explicitly BLOCKED/DEFERRED with reasons; no checkbox inflation. G07–G08 can remain hardware-pending; G09 must not displace core work.
+
+
+## H — LXR02Open source and sound reference investigation (2026-11-08)
+
+**Reference:** https://github.com/brendanclarke/LXR02Open (pin source commit `c896bfd0efe86a4037418bf9f46f1fcc39255958` before comparison); developer demonstration https://www.youtube.com/watch?v=pubgafd-DEk ; Reddit author screenshot confirms waveform interpolation, sample loading changes and MIDI morph. Upstream README documents two dynamically allocated oscillator interpolation slots, main oscillators only (not FM), CPU monitor, asynchronous SD and 0.37-format compatibility within upstream. These are **upstream behaviours**, not JIMBONES functionality. Do not assume compatibility with Erica kits or copy licence-incompatible source.
+
+- [ ] **H01 — Oscillator source map (P0; B04/B07 prerequisite).** Pin exact upstream source blobs and licence; trace waveform selection, phase accumulation, adjacent-wave mixing, interpolation slot allocation/eviction, noise/sample/FM exclusions and parameter scaling. Output path/line map and native-vs-upstream differences; verify with focused source assertions.
+- [ ] **H02 — Sample loading/memory (P0).** Trace upstream flash sample table, 120-entry/1.5MB limits, one-shot/loop behaviour, SD async queue and audio-thread safety; compare with JIMBONES storage, RAM/flash budget and existing save failure cases. No wholesale SD replacement. Output memory budget and fault-injection test plan.
+- [ ] **H03 — MIDI morph and velocity routing (P0; B05/F04).** Trace upstream MIDI CC/NRPN to morph, LFO modulation writes, value shaping, per-voice state and preset serialization. Produce exact destination mapping, bounds and zero-depth bypass test fixtures; do not silently alter legacy controls.
+- [ ] **H04 — Reference audio fixtures (P0; F03/G03).** Define and host-render stepped and smooth wave sweeps, rapid retriggers, velocity 0/64/127, low/mid/high pitch, all original voice classes and four overlapping long-decay hits. Compare deterministic PCM, clicks, peaks, full-scale samples and level-matched listening. Record settings, compiler, SHA and hashes; video is a qualitative goal only until its audio is actually reviewed.
+- [ ] **H05 — Native wavetable prototype (P0; C01–C11).** Implement a separate licence-compliant host-only prototype reproducing selected upstream *behaviour*, with two-slot cost measured against scalable alternatives; disabled output must remain bit-identical. Benchmark CPU and memory; reject inaudible or excessive-cost changes.
+- [ ] **H06 — Integration gates (P0; D06/D07/G04).** Wire deterministic H01–H05 focused tests into host runner and GCC/Clang CI, sanitizers where possible; verify no regression in No Clip, Step FX, comb, skull, legacy kits or SD saves. Mark PASS only with actual CI run and source SHA.
+- [ ] **H07 — Handover and hardware hold (P0; E01/G06).** Publish source mapping, legal decision, sonic A/B, DSP budget, outstanding risks and exact candidate SHA by Nov 10 18:30 UK; no ARM build, firmware image or hardware-ready claims without explicit approval.
+
+**Start now:** H01 source mapping and H02/H03 investigation can proceed in parallel with A03 host-test validation, but no new implementation should bypass A/B gates. Completion is evidence-based; incomplete tasks remain TODO/BLOCKED at deadline.
