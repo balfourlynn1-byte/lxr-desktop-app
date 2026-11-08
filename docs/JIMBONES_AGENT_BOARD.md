@@ -4,6 +4,9 @@
 
 **Start here:** [Full dependency job tree](JIMBONES_JOB_TREE_V184.md) · [Codex handover](CODEX_V184_HANDOVER.md) · [Dub-send audit](agents/dub_step_send_v184.md). Official manual: https://www.ericasynths.lv/media/LXR_manual.pdf
 
+**18:30 Codex priority (2026-11-08):** [JB-28A minimal handoff](https://github.com/balfourlynn1-byte/lxr-desktop-app/blob/agents/jb-28-full-integration-v186/docs/CODEX_1830_HANDOFF.md). The Codex branch exists but **Comb is not yet integrated into the skull build**. Only transplant existing Comb PR #15, run host/ARM/memory/image gates, and open a draft v1.8.07 test-only PR. No broad new feature implementation in the first pass. **Next:** JB-28B physical verification; JB-27 native oscillator/waveshaping after headroom. Full future-feature backlog remains separate.
+
+
 | Priority | Assigned agent roles | Task | Status |
 |---|---|---|---|
 | P0 | Verification + Integration | Baseline parity and release gate | Backlog |
@@ -29,6 +32,8 @@
 | P0 | Verification + Integration | JB-23 — SHA-pinned experimental test pack | **[PR #14](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/14), CI passed**, v1.8.04 user has booted with ~62% DSP; a full four-pad stress/PK/LATE record remains. |
 | P1 | Embedded + DSP | JB-25 — five selectable dub echo timings | **[PR #16](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/16)**, host+ARM passed, v1.8.05; physical controls untested. |
 | P0 | Embedded + Verification | JB-26 — garbled LCD/saver wake, bouncing skull | **[PR #17](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/17)**, [host+ARM passed](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42502110203), v1.8.06, 560 B ITCM free; [test-only image artifact](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42502110203/artifacts/13625738707). Hardware untested. |
+| P0 | Codex + Integration | JB-28A — Comb + skull + 5 dub timings in ONE v1.8.07 build | **Handoff READY**, integration branch created from JB-26; implementation NOT YET DONE. Follow `docs/CODEX_1830_HANDOFF.md`; retain all prior fixes, run combined CI. |
+| P0 | Verification + User | JB-28B — full physical integration test | **Pending JB-28A**; verify six voices, ninth Comb, Step FX, 5 dub pads, skull wake, 4-hit DSP/PK/LATE/RAIL and rollback. |
 | P1 | DSP + Research | JB-27 — fuller upstream waveform-ID/LFO wavetable, waveshaping | Research/scope **only**. Upstream LXR02Open non-commercial terms incompatible with copying into GPL-only public source without permission; independent implementation / permission and DSP profiling required. |
 
 ## Individual work orders
