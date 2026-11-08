@@ -14,7 +14,7 @@ r=read("CMakeLists.txt")
 assert "#define JB_METALLIC_ENABLED 0" in h
 assert "#if JB_METALLIC_ENABLED" in j
 assert "if(!(p[JB_MODE]&2u))" in j
-assert 'VERSION 1.8.06' in r
+assert 'VERSION 1.8.07' in r
 assert "IN_ITCM_RAM void FxBus_process" in fx
 assert "IN_ITCM_RAM void FxBus_updateParameter" not in fx
 assert "IN_ITCM_RAM void FxBus_setParameter" not in fx
