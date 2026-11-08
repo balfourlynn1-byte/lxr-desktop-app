@@ -112,12 +112,14 @@ void jb_defaults(uint8_t *kit) {
  for(unsigned v=0;v<JB_VOICES;v++) memcpy(kit+v*JB_PARAMS,defaults,JB_PARAMS);
 }
 void jb_silence(void) { uint32_t m=lock(); memset(layers,0,sizeof(layers)); unlock(m); }
+static volatile uint32_t jb_kitEpoch;
+uint32_t jb_kitRevision(void) { return jb_kitEpoch; }
 void jb_loadKit(const uint8_t *kit) {
  uint32_t m=lock(); memcpy(jb_parameters,kit,JB_KIT_BYTES);
  memset(layers,0,sizeof(layers));
- memset(jb_attack,0,sizeof(jb_attack));memset(jb_sustain,0,sizeof(jb_sustain));memset(jb_srrFactor,0,sizeof(jb_srrFactor)); unlock(m);
+ memset(jb_attack,0,sizeof(jb_attack));memset(jb_sustain,0,sizeof(jb_sustain));memset(jb_srrFactor,0,sizeof(jb_srrFactor)); jb_kitEpoch++; unlock(m);
 }
-void jb_init(void) { jb_defaults(&jb_parameters[0][0]); memset(jb_attack,0,sizeof(jb_attack));memset(jb_sustain,0,sizeof(jb_sustain));memset(jb_srrFactor,0,sizeof(jb_srrFactor));jb_silence(); }
+void jb_init(void) { jb_kitEpoch++; jb_defaults(&jb_parameters[0][0]); memset(jb_attack,0,sizeof(jb_attack));memset(jb_sustain,0,sizeof(jb_sustain));memset(jb_srrFactor,0,sizeof(jb_srrFactor));jb_silence(); }
 void jb_trigger(uint8_t v,uint8_t velocity,uint8_t note,uint8_t open) {
  if(v>=JB_VOICES) return;
  Layer next={0}, *s=&next; const uint8_t *p=jb_parameters[v];
