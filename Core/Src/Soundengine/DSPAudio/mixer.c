@@ -27,6 +27,8 @@
 #include "Soundengine/TriggerOut.h"
 #include "menu/menu.h"
 #include "Soundengine/FxBus.h"
+#include "Soundengine/DubDelaySync.h"
+#include "Soundengine/Sequencer/sequencer.h"
 #include "Soundengine/StepFxSendMix.h"
 
 	uint8_t r2_Available;
@@ -584,12 +586,25 @@ static void mixer_stepfx_send(unsigned v, const int16_t *samples,
 #endif
     stepfx_send_mix_voice((uint8_t)v,
             (uint8_t)(mixer_audioRouting[v] == MIXER_ROUTING_FX_BUS),
-            (uint8_t)(fxBus.fxType != FX_OFF),
+            dub_delay_can_send(),
             samples, OUTPUT_DMA_SIZE, l, r, fxInput);
 }
 IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 {
 
+    /* One control-rate calculation per block, BEFORE the six voices render.
+     * External MIDI/analogue clocks must have received a recent pulse;
+     * otherwise suppress new sends rather than using a stale BPM. */
+    extern float sync_timeLast; /* defined by clockSync.c */
+    const uint8_t external=seq_getExtSync();
+    const uint32_t pulse=(uint32_t)sync_timeLast;
+    const uint8_t clock_fresh=(uint8_t)(pulse!=0u &&
+        (uint32_t)(systick_ticks-pulse)<=500u);
+    dub_delay_prepare(&fxBus.delay,
+                      (uint8_t)(fxBus.fxType==FX_DELAY),
+                      seq_getBpm(),external,clock_fresh,
+                      fxBus.parameter[0],fxBus.parameter[1],
+                      fxBus.parameter[3],OUTPUT_DMA_SIZE);
 	jb_prepareBalance();
 	r2_Available = (switch_r2_GPIO_Port->IDR & switch_r2_Pin)>0;
 	l1_Available = (switch_l1_GPIO_Port->IDR & switch_l1_Pin)>0;
