@@ -20,7 +20,7 @@
 
 ### A — Baseline, fade, screensaver
 - [ ] **A01** PARTIAL 2026-11-08: exact original source symbols, blob hashes and 132-sample/≈3ms call chain pinned in `docs/CODEX_HANDOVER_2026-11-10.md` from `jimbones-noclip-baseline`. **BLOCKER for DONE:** earliest introducing commit not established by available commit-message search; inspect Git file history/blame for `Core/Src/Soundengine/DSPAudio/RetriggerSmoother.c` and compare its parent revisions. No audio test run.
-- [ ] **A02** Compare A01 against v1.8.06 code; document any change to fade length, retrigger, note-off or overlapping tails.
+- [x] **A02** DONE 2026-11-08: source comparison of historical No Clip baseline against JB-26 v1.8.06-source lineage and current JB-28 shows byte-identical smoother `.c`/`.h`, enabled macro and unchanged three-drum trigger/process call sites; additional `jb_trigger` and `jb_preFilterNoise` calls in JB-26 may affect audio around smoother. No note-off handler exists in smoother; retrigger only on active envelope. Evidence: `docs/CODEX_HANDOVER_2026-11-10.md` A02 section; source comparison only, not audio verification.
 - [ ] **A03** Add focused host regression for No Clip fade, with exact expected sample/ramp counts at current sample rate; no hardware build.
 - [ ] **A04** Identify v1.8.06 skull code, LCD update and wake paths; pin source SHA and host test so port preserves behaviour.
 - [ ] **A05** Pin v1.8.06 candidate image/source identity if available in repo artifacts; otherwise mark hardware image SHA awaiting user-provided file, without guessing.
