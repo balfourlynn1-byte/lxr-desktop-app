@@ -18,7 +18,7 @@ jobs:
           grep -q 'jb_setWaveInterpolation' Core/Src/Soundengine/DSPAudio/Jimbones.c || { echo 'STOP: interpolation code not present'; exit 1; }
       - name: Check isolated version
         run: |
-          grep -Eq 'VERSION[[:space:]]+1\\.8\\.03' CMakeLists.txt || { echo 'STOP: v1.8.03 source/version not committed to this branch'; exit 1; }
+          grep -Eq 'VERSION[[:space:]]+1\.8\.03' CMakeLists.txt || { echo 'STOP: v1.8.03 source/version not committed to this branch'; exit 1; }
       - name: Build ARM image
         run: |
           cmake --preset release
@@ -26,7 +26,10 @@ jobs:
       - name: Validate image name
         run: |
           test -s build/release/LXR_V2_V1.8.03.img
+          python3 tests/validate_image.py build/release/LXR_V2_V1.8.03.img
           sha256sum build/release/LXR_V2_V1.8.03.img > build/release/SHA256SUMS.txt
+          ls -lh build/release/LXR_V2_V1.8.03.img
+          test "$(stat -c%s build/release/LXR_V2_V1.8.03.img)" -gt 10000
       - uses: actions/upload-artifact@v4
         with:
           name: JIMBONES-v1.8.03-ARM-UNTESTED
