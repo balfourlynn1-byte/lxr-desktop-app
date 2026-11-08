@@ -34,9 +34,9 @@ def make_manifest(
     image: Path, binary: Path, log: Path, output: Path,
     sha: str, workflow_run: str, branch: str, version: str,
 ) -> dict:
-    if version != "1.8.04":
+    if version not in ("1.8.04","1.8.05"):
         raise ValueError("Unexpected version for JB-23 candidate: " + version)
-    if image.name != "LXR_V2_V1.8.04.img":
+    if image.name != f"LXR_V2_V{version}.img":
         raise ValueError("Unexpected image name: " + image.name)
     if not re.fullmatch(r"[0-9a-f]{40}", sha):
         raise ValueError("Invalid Git SHA")
@@ -100,9 +100,9 @@ def make_manifest(
         manifest["image_sha256"] + "  " + image.name + "\n",
         encoding="utf-8")
     (output / "HARDWARE_UNVERIFIED.txt").write_text(
-        "JIMBONES v1.8.04 EXPERIMENTAL -- NOT HARDWARE VERIFIED\n"
+        f"JIMBONES v{version} EXPERIMENTAL -- NOT HARDWARE VERIFIED\n"
         "Do not flash without a verified working rollback image, backed-up SD card "
-        "and independent review of stacked PRs #8-#13.\n"
+        "and independent review of all stacked draft PRs.\n"
         "CI verifies the built update format and memory. It cannot prove audio timing, "
         "voice safety, or absence of clipping/crunch under pad performance.\n",
         encoding="utf-8")

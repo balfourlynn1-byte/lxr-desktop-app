@@ -17,7 +17,8 @@ enum DubDelayStatus {
 };
 
 void dub_delay_init(void);
-uint8_t dub_delay_division(void); /* 0..4 */
+uint8_t dub_delay_division(void); /* 0..5: 1/16, 1/8, 1/4, dotted 8, triplet 8, 1/32 */
+void dub_delay_set_division(uint8_t division); /* choose one preset instantly, bounds-checked */
 void dub_delay_adjust_division(int delta);
 const char *dub_delay_division_name(void);
 const char *dub_delay_status_name(void);

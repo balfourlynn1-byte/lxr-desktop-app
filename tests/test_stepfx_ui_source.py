@@ -17,5 +17,13 @@ assert "jb_perfui_focus(" in menu
 assert "stepfx_send_set_mask(" in menu
 assert "stepfx_send_adjust_division(" in menu
 assert "stepfx_send_on_note(voice, vel, seq_getBpm())" in midi
+ui = read("Core/Src/menu/JimbonesPerfUI.c")
+assert "index<5u" in ui
+assert "dub_delay_set_division(dub_divisions[index])" in ui
+assert "{2u,1u,4u,0u,5u}" in ui
+assert "stepfx_select(dub?0u:index)" in ui
+assert "stepfx_send_set_enabled(dub)" in ui
+assert "if(index<5u)" in menu
+assert "jb_perfui_selected()<5u" in menu
 assert "if(seqButtonPressed==0u && !buttonHandler_getShift())" in button
-print("PASS JB-21 source guards: button 1 maps LED_STEP1, armed-only LEDs, send controls, ordinary MIDI/pad triggers, diagnostics reset separate")
+print("PASS JB-25: Step FX buttons 1-5 dub timing select, 6-16 trigger FX, LED mapping and note routing preserved")

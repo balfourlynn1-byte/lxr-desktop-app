@@ -1595,13 +1595,15 @@ static void jb_stepfxPaint(void)
     char top[17], bottom[17];
     memset(editDisplayBuffer, ' ', sizeof(editDisplayBuffer));
     const uint8_t active=(uint8_t)(jb_perfui_active()==index);
-    if(index==0u) {
-        /* FX01 DUB SEND: echo time is a separate tempo subdivision from
+    if(index<5u) {
+        /* FX01-05 DUB SEND: echo time is a separate tempo subdivision from
          * the short sample gate. LONG / SHORT / CLK / NOFX never silently
          * masquerade as a valid synced delay time. */
-        snprintf(top,sizeof(top),"DUB%c %-4s %s",
-                 active?'*':' ',dub_delay_division_name(),
-                 dub_delay_status_name());
+        /* Show the focused button's fixed time, not the armed button's
+         * time when browsing without changing the active effect. */
+        snprintf(top,sizeof(top),"D%u%c %-4s %s",
+                 index+1u,active?'*':' ',name+4u,
+                 active?dub_delay_status_name():"--");
         snprintf(bottom,sizeof(bottom),"G1/%u V%u%c %03u",
                  stepfx_send_division(),jb_fxVoice+1u,
                  (stepfx_send_mask() & (1u<<jb_fxVoice))?'+':'-',
@@ -2929,7 +2931,7 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
   editModeActive=0;
   if(inc) jb_fxVoice=(uint8_t)((jb_fxVoice+(inc>0?1:5))%6);
   if(btnClicked) {
-   if(jb_perfui_selected()==0u)
+   if(jb_perfui_selected()<5u)
     stepfx_send_set_mask(stepfx_send_mask()^(1u<<jb_fxVoice));
    else stepfx_include(jb_fxVoice,!(stepfx_mask()&(1u<<jb_fxVoice)));
   }
@@ -4146,7 +4148,7 @@ uint8_t menu_parseKnobValue(uint8_t potNr, int16_t diff)
   if(potNr==0 && diff) {
    int i=(int)jb_perfui_selected()+(diff>0?1:-1);
    jb_perfui_focus((uint8_t)(i<0?0:(i>15?15:i)));
-  } else if(jb_perfui_selected()==0u) {
+  } else if(jb_perfui_selected()<5u) {
    if(potNr==1){
     /* SHIFT + second knob changes the echo interval; unshifted edits
      * the short snippet gate. No extra DSP allocation. */

@@ -34,6 +34,16 @@ int main(void){
     assert(dub_delay_plan(120,1,2,&n,&t)==DUB_DELAY_TOO_LONG);
     assert(dub_delay_plan(120,1,3,&n,&t)==DUB_DELAY_TOO_LONG);
     assert(dub_delay_plan(120,1,4,&n,&t)==DUB_DELAY_READY);
+    assert(dub_delay_plan(120,0,5,&n,&t)==DUB_DELAY_READY);
+    assert(n==2759u);
+    assert(dub_delay_plan(120,1,5,&n,&t)==DUB_DELAY_READY);
+    assert(dub_delay_plan(400,0,5,&n,&t)==DUB_DELAY_TOO_SHORT);
+    assert(dub_delay_plan(120,0,6,&n,&t)==DUB_DELAY_NO_CLOCK);
+    dub_delay_set_division(5u);
+    assert(dub_delay_division()==5u);
+    dub_delay_set_division(6u); /* ignore out-of-range pad commands */
+    assert(dub_delay_division()==5u);
+    dub_delay_set_division(1u);
     assert(dub_delay_plan(60,0,2,&n,&t)==DUB_DELAY_TOO_LONG);
     assert(dub_delay_plan(400,0,0,&n,&t)==DUB_DELAY_READY);
     assert(dub_delay_plan(120,0,9,&n,&t)==DUB_DELAY_NO_CLOCK);
@@ -42,7 +52,7 @@ int main(void){
     /* At 60..180 BPM, anything outside the ring is explicitly rejected. */
     const uint16_t bpms[]={60,80,100,120,140,180};
     for(unsigned i=0;i<6;i++)for(unsigned m=0;m<2;m++)
-      for(unsigned sub=0;sub<5;sub++){
+      for(unsigned sub=0;sub<6;sub++){
         uint8_t s=dub_delay_plan(bpms[i],(uint8_t)m,(uint8_t)sub,&n,&t);
         if(s==DUB_DELAY_READY){
             assert(n>=883u);
@@ -67,6 +77,22 @@ int main(void){
     assert(times==old_time_count);
     tick(&d,130,0,1,11035u); /* bounded update rate */
     assert(times>old_time_count);
+
+    /* A quick pad timing change during Delay.c's 10 ms crossfade must
+     * be deferred, not forgotten until another knob or note event. */
+    d.interpValue=.5f; 
+    dub_delay_set_division(5u);
+    unsigned before=times;
+    tick(&d,130,0,1,64u);
+    assert(times==before);
+    assert(dub_delay_status()==DUB_DELAY_READY);
+    d.interpValue=0.f;
+    tick(&d,130,0,1,64u);
+    assert(times==before+1u);
+    assert(dub_delay_division()==5u);
+    dub_delay_set_division(1u);
+    tick(&d,130,0,1,64u);
+    assert(times==before+2u);
 
     /* Manual FX-knob changes are reasserted with synced time on next block. */
     d.range=0.3f;d.delayTime=0.0f;
