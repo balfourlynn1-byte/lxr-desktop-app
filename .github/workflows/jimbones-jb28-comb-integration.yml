@@ -1,0 +1,75 @@
+name: JB-28A Comb integration — hardware UNVERIFIED
+on:
+  push:
+    branches:
+      - agents/jb-28-full-integration-v186
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  host:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - name: Source identity
+        run: git rev-parse HEAD
+      - name: Focused Comb regression
+        run: sh tests/run_jb12_comb.sh
+      - name: Full host regression GCC
+        run: sh tests/run_host.sh
+      - name: Full host regression Clang
+        env:
+          CC: clang
+        run: sh tests/run_host.sh
+      - name: Standalone Step FX
+        run: bash tests/run_combined_stepfx.sh
+  arm-and-test-artifact:
+    needs: host
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ARM compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build python3 gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
+      - name: Configure
+        run: cmake --preset release
+      - name: Build with linker evidence
+        shell: bash
+        run: |
+          set -o pipefail
+          cmake --build --preset release --parallel 2 2>&1 | tee build/release/arm-build.log
+      - name: Memory and updater integrity gates
+        run: |
+          python3 tests/check_jb22_memory.py build/release/arm-build.log
+          python3 tests/validate_image.py build/release/LXR_V2_V1.8.07.img --binary build/release/LXR_V2_STM32F765.bin
+          arm-none-eabi-size build/release/LXR_V2_STM32F765.elf
+      - name: SHA-pinned manifest and rollback instructions
+        run: |
+          python3 tests/jb23_candidate_manifest.py \
+            --image build/release/LXR_V2_V1.8.07.img \
+            --binary build/release/LXR_V2_STM32F765.bin \
+            --build-log build/release/arm-build.log \
+            --output build/release/jb28-test-pack \
+            --sha "${{ github.sha }}" \
+            --workflow-run "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            --branch "${{ github.ref_name }}" \
+            --version 1.8.07
+          cp build/release/LXR_V2_V1.8.07.img build/release/jb28-test-pack/
+          cp docs/agents/jb23_hardware_test_sheet.md build/release/jb28-test-pack/TEST_SHEET.md
+          cp docs/agents/jb23_rollback_and_install.md build/release/jb28-test-pack/READ_FIRST_ROLLBACK.md
+          cp docs/JIMBONES_HARDWARE_ACCEPTANCE.md build/release/jb28-test-pack/HARDWARE_ACCEPTANCE.md
+          cd build/release/jb28-test-pack
+          sha256sum --check SHA256SUMS.txt
+          python3 -c 'import json; d=json.load(open("MANIFEST.json")); assert d["hardware_tested"] is False and d["safe_for_live_performance"] is False'
+      - name: Upload hardware-UNVERIFIED test-only artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: JB28A-UNVERIFIED-TEST-ONLY-${{ github.sha }}
+          path: build/release/jb28-test-pack/
+          if-no-files-found: error
+          retention-days: 14
+      - name: No automatic flashing
+        run: echo "Hardware NOT TESTED. No merge, release, or device flash."
