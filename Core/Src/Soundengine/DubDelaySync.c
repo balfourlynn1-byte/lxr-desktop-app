@@ -110,6 +110,7 @@ void dub_delay_prepare(struct DelayStruct *delay, uint8_t fx_is_delay,
     float normalized=0.f;
     const uint8_t requested=stepfx_send_is_enabled();
     const uint8_t mode=(uint8_t)(d->delayType==DELAY_PINGPONG);
+    const uint8_t mode_changed=(uint8_t)(last_mode!=255u && last_mode!=mode);
     if(requested){
         if(!fx_is_delay)next=DUB_DELAY_NEEDS_FX;
         else if(external_clock && !clock_fresh)next=DUB_DELAY_NO_CLOCK;
@@ -121,7 +122,7 @@ void dub_delay_prepare(struct DelayStruct *delay, uint8_t fx_is_delay,
      * old pointers can exceed half-buffer bounds. Preserve buffer contents.
      * A mode switch during a running echo may still audibly crossfade. */
     if(fx_is_delay && (was_ready || next==DUB_DELAY_READY) &&
-       last_mode!=255u && last_mode!=mode){
+       mode_changed){
         const uint32_t mask=mode?(FX_BUFFER_SIZE>>1u):FX_BUFFER_SIZE;
         d->write&=mask;d->oldRead&=mask;d->newRead&=mask;
         d->interpValue=0.f;
@@ -141,7 +142,7 @@ void dub_delay_prepare(struct DelayStruct *delay, uint8_t fx_is_delay,
          * and retimes are throttled to at most 4 Hz. */
         uint32_t diff=samples>last_samples?samples-last_samples:last_samples-samples;
         const uint8_t changed=(uint8_t)(diff>=(DUB_FS/120u));
-        if(!was_ready || reapply || mode!=d->delayType ||
+        if(!was_ready || reapply || mode_changed ||
            (changed && cooldown_frames>=DUB_COOLDOWN_FRAMES)){
             if(d->range!=1.f)Delay_setRange(d,1.f);
             Delay_setDelayTime(d,normalized);
