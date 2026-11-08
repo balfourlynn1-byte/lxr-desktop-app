@@ -64,7 +64,7 @@ static void kit_revision_reset(void) {
  jb_loadKit(kit);
  assert(jb_kitRevision()!=before);
  assert(jb_parameters[0][JB_MODE]==0);
- puts("PASS kit revision invalidates transient/SRR temporary UI state");
+ puts("PASS DSP kit revision changes on init/load; UI reset requires separate integration test");
 }
 static void bypass(void) {
  jb_init(); int16_t b[256],ref[256];
@@ -148,6 +148,35 @@ static void audio(const char *path) {
  }
  fclose(f);
 }
+/* JB-23: deterministic additive four-voice PCM fixture with a conservative
+ * 4 x 0.25 gain. This tests mixed output rather than per-voice buffers only.
+ * The actual LXR hardware mixer and DAC remain unverified. */
+static void four_voice_mix_regression(void) {
+ int16_t voice[4][64];
+ unsigned rails=0,blocks=0,active=0;
+ jb_init();
+ for(unsigned v=0;v<4;v++) {
+  jb_parameters[v][JB_MODE]=3;
+  jb_parameters[v][JB_DECAY]=127;
+  jb_setTransient(v,32,24);
+  jb_setSampleRateReduction(v,4);
+  jb_trigger(v,100,45+v*3,0);
+ }
+ for(unsigned block=0;block<300;block++) {
+  for(unsigned v=0;v<4;v++) render(v,voice[v],64);
+  for(unsigned i=0;i<64;i++) {
+   int32_t sum=0;
+   for(unsigned v=0;v<4;v++) sum+=voice[v][i];
+   int32_t mixed=sum/4;
+   if(mixed>=32767 || mixed<=-32768)rails++;
+   if(mixed!=0)active++;
+  }
+  blocks++;
+ }
+ assert(active>0);
+ assert(rails==0);
+ printf("PASS conservative 4-voice PCM mix: %u blocks, %u rail samples (hardware mixer unverified)\\n",blocks,rails);
+}
 static void transient_four_voice_stress(void) {
  int16_t dry[4][64],wet[4][64];
  jb_init();
@@ -211,6 +240,6 @@ static void srr_integration(void) {
  assert(!memcmp(baseline,bypass,sizeof(baseline)));
  puts("PASS SRR bypass identity, opt-in audio change, init reset");
 }
-int main(int argc,char **argv) { lofi_live_toggle_smoke();
+int main(int argc,char **argv) { four_voice_mix_regression(); lofi_live_toggle_smoke();
  kit_revision_reset(); srr_integration(); transient_four_voice_stress(); transient_integration(); interpolation_audio();
  interpolation_control(); bypass(); storage(); voices(); reproducible(); stress(); if(argc>1) audio(argv[1]); return 0; }
