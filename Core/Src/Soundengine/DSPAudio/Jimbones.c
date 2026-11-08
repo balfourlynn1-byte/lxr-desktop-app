@@ -1,5 +1,6 @@
 /* JIMBONES experimental layers. SPDX-License-Identifier: GPL-3.0-only */
 #include "Soundengine/DSPAudio/Jimbones.h"
+#include "Soundengine/DSPAudio/JimbonesTransientShaper.h"
 #include "Soundengine/DSPAudio/wavetable.h"
 #include "Soundengine/config.h"
 #include "Soundengine/MIDI/MidiNoteNumbers.h"
@@ -14,8 +15,12 @@ typedef struct {
  uint8_t table, restart, editPending, fadeLeft;
  float lastAdded, editStep;
  float hitVelocity;
+ JbTransientState transientShaper;
 } Layer;
 static Layer layers[JB_VOICES];
+/* Runtime-only controls until CLICK UI and backward-compatible kit storage land. */
+static int8_t jb_attack[JB_VOICES],jb_sustain[JB_VOICES];
+
 volatile uint32_t jb_layerSaturationHits;
 static float clamp(float x, float a, float b) { return x<a?a:(x>b?b:x); }
 static float unit(uint8_t x) { return x*(1.f/127.f); }
@@ -49,6 +54,11 @@ static float jb_waveScan(float x) {
 }
 static uint32_t lock(void) { uint32_t mask=__get_PRIMASK(); __disable_irq(); return mask; }
 static void unlock(uint32_t mask) { __DMB(); __set_PRIMASK(mask); }
+void jb_setTransient(unsigned v,int8_t attack,int8_t sustain) {
+ if(v>=JB_VOICES || attack< -64 || attack>64 || sustain< -64 || sustain>64)return;
+ uint32_t m=lock();jb_attack[v]=attack;jb_sustain[v]=sustain;unlock(m);
+}
+
 static float noise(Layer *s) {
  uint32_t x=s->rng; x^=x<<13; x^=x>>17; x^=x<<5; s->rng=x;
  return (float)(x>>8)*(1.f/8388608.f)-1.f;
@@ -97,9 +107,10 @@ void jb_defaults(uint8_t *kit) {
 void jb_silence(void) { uint32_t m=lock(); memset(layers,0,sizeof(layers)); unlock(m); }
 void jb_loadKit(const uint8_t *kit) {
  uint32_t m=lock(); memcpy(jb_parameters,kit,JB_KIT_BYTES);
- memset(layers,0,sizeof(layers)); unlock(m);
+ memset(layers,0,sizeof(layers));
+ memset(jb_attack,0,sizeof(jb_attack));memset(jb_sustain,0,sizeof(jb_sustain)); unlock(m);
 }
-void jb_init(void) { jb_defaults(&jb_parameters[0][0]); jb_silence(); }
+void jb_init(void) { jb_defaults(&jb_parameters[0][0]); memset(jb_attack,0,sizeof(jb_attack));memset(jb_sustain,0,sizeof(jb_sustain));jb_silence(); }
 void jb_trigger(uint8_t v,uint8_t velocity,uint8_t note,uint8_t open) {
  if(v>=JB_VOICES) return;
  Layer next={0}, *s=&next; const uint8_t *p=jb_parameters[v];
@@ -229,6 +240,7 @@ void jb_render(uint8_t v,int16_t *buffer,unsigned size,float gain) {
    out+=wet*((soft+(hard-soft)*character)-out);
   }
   if(p[JB_BITS] || s->aggression>0) { float q=out*steps; out=(int)(q+(q<0?-.5f:.5f))/steps; }
+  if(jb_attack[v] || jb_sustain[v]) out=jb_transient_process(&s->transientShaper,out,(float)jb_attack[v]/64.f,(float)jb_sustain[v]/64.f);
   out=out*s->envelope*s->velocity;
   /* Match the previous output at the boundary, rather than adding it to the
      new attack. The correction decays in ~2.5 ms; there is no event delay. */
