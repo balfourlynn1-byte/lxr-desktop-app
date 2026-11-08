@@ -23,7 +23,7 @@
 | P0 | DSP + Embedded | JB-19A — six-lane send gate | **Draft PR #8 implemented; host tests passed locally; ARM/hardware not verified** |
 | P0 | DSP + Embedded | JB-19B — parallel FX mixer tap | **Draft PR #9; GitHub host + ARM CI passed, hardware pending** |
 | P1 | DSP + Embedded | JB-20 — tempo-synced dub delay using current FX buffer | **Research complete, buffer limits known; implementation needed** |
-| P0 | Embedded + Verification | JB-21 — all 16 buttons toggle and LEDs, per-voice send UI | **Source locations mapped; implementation needed** |
+| P0 | Embedded + Verification | JB-21 — all 16 buttons toggle and LEDs, per-voice send UI | **Draft PR #10 coded; host+ARM CI green, actual LED/device verification pending** |
 | P0 | Verification + Integration | JB-22 — baseline/CPU/host/ARM/hardware release gates | **Hardware failure evidence recorded; test implementation needed** |
 
 ## Individual work orders
@@ -131,8 +131,8 @@
 
 ### JB-21 — Step FX buttons, LED parity and send controls
 - **Priority:** P0. **Owners:** Embedded + Verification.
-- **Scope:** Press to enable, press again disable, for all sixteen steps. Fix step 1 LED; preserve separate CPU diagnostic reset; provide send amount, gate length, voice mask.
-- **State:** UI code mapped, not implemented; [Codex handoff](agents/dub_step_send_v184.md).
+- **Scope:** Press to enable, press again disable, for all sixteen steps. Step 1 is DUB SEND; preserve separate CPU diagnostic reset, enable per-voice send amount, 1/4–1/32-note gate lengths, voice mask.
+- **State:** Implemented in stacked draft [PR #10](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/10) on top of #9/#8, host+ARM CI passed [run #42482118609](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42482118609). Real physical LED and CPU/FX output test pending; not merged, not flashable. [Control mapping](https://github.com/balfourlynn1-byte/lxr-desktop-app/blob/agents/jb-21-stepfx-toggle-dub-ui-v184/docs/agents/stepfx_ui_jb21.md).
 
 ### JB-22 — Experimental integration and regression gate
 - **Priority:** P0. **Owners:** Verification + Integration.
@@ -141,7 +141,7 @@
 
 ## Findings and constraints
 
-- **Next implementation job:** JB-21 Step FX button + LED parity and send gate controls (or JB-20 tempo-synced dub delay). Review JB-19A PR #8 before stacked JB-19B PR #9. Dry voice remains untouched. GitHub ARM checks and real-device CPU headroom/hardware acceptance are required; no firmware has been flashed for the new send.
+- **Next implementation job:** JB-20 tempo-synced dub delay on existing FX bus with buffer bounds and feedback tail tests. Review JB-19A PR #8 before stacked JB-19B PR #9. Dry voice remains untouched. GitHub ARM checks and real-device CPU headroom/hardware acceptance are required; no firmware has been flashed for the new send.
 
 - Earlier v1.8.03 ARM CI passed, AND v1.8.03 subsequently **booted on tester's actual LXR-02**. It is **NOT safe/validated**: DSP crunch/overrun reproduced; idle readings after restart DSP 62%, PK 66%, LATE 0, RAIL 0; under load DSP 101%, PK 105%, LATE 999 (UI cap), RAIL 240. These meter fields have distinct semantics. No v1.8.04 firmware build exists yet.
 - CPU instrumentation and multi-voice crunch are first engineering priorities; any new send must reuse existing FX processing and default OFF. User explicitly shelved Metallic FM and moved wavetable, dub send, step toggle/LED fix and comb-filter feasibility higher. The upstream LXR02Open license is **non-commercial**, not automatically compatible with GPL-3.0-only: study ideas, do not copy source.
