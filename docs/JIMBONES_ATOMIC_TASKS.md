@@ -10,6 +10,12 @@
 - **ABSOLUTE ARM HOLD:** no ARM compilation, firmware .img packaging, workflow re-enablement, main merge, or hardware-ready claim until the user explicitly approves the chosen feature-frozen candidate.
 - Keep experimental Metallic FM disabled. Preserve original voices, 3 ms No Clip fade and user-approved bouncing skull.
 
+## November 10 Codex handover deadline
+- **By end of November 9 (UK time):** prioritise A01–A05, B01–B07 and evidence-backed D01–D02; finish compatibility mapping, licence decision brief, No Clip and skull preservation specifications, and a single proposed implementation architecture. Where possible prepare host-only fixtures/patches; do not pretend all tasks are done.
+- **November 10:** provide Codex a handover document with exact branch and source SHAs, upstream references, accepted/excluded features, implementation order, test commands, known failures, unresolved decisions, and strict ARM approval gate. Codex may implement and test but must not ARM-build before explicit user approval.
+- **Do not let deadline override correctness:** tasks C/D/E not genuinely completed must remain TODO/BLOCKED with precise instructions for Codex. User expects a more substantial improvement over v1.8.06, particularly wavetable and velocity control.
+- **Handover deliverable:** `docs/CODEX_HANDOVER_2026-11-10.md` kept current as discoveries are made.
+
 ## Atomic task checklist (ordered; dependencies explicit)
 
 ### A — Baseline, fade, screensaver
