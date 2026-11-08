@@ -32,4 +32,6 @@ extern volatile uint32_t jb_layerSaturationHits;
 uint8_t jb_limit(unsigned parameter);
 void jb_setControl(unsigned voice,unsigned parameter,uint8_t value);
 void jb_adjust(unsigned voice, unsigned parameter, int delta);
+void jb_setWaveInterpolation(uint8_t enabled);
+uint8_t jb_getWaveInterpolation(void);
 #endif
