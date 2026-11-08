@@ -58,9 +58,13 @@ static float sine(float phase) {
  return (sine_table[i]+(pos-i)*(sine_table[i+1]-sine_table[i]))*(1.f/32768.f);
 }
 /* Crossfade existing, octave-banded oscillator tables; no duplicated wave bank. */
+static volatile uint8_t jb_waveInterpEnabled=1;
+void jb_setWaveInterpolation(uint8_t enabled) { jb_waveInterpEnabled=(enabled!=0); }
+uint8_t jb_getWaveInterpolation(void) { return jb_waveInterpEnabled; }
 static float wave(float phase, float position, unsigned band) {
  float p=wrap(phase)*1024.f; unsigned i=(unsigned)p, j=(i+1)&1023;
  float f=p-i, a, b; position=clamp(position,0.f,3.f);
+ if(!jb_waveInterpEnabled) position=clamp((float)((unsigned)(position+0.5f)),0.f,3.f);
  unsigned w=(unsigned)position; float mix=position-w;
  if(w==0) { a=sine(phase); b=(triTable[band][i]+f*(triTable[band][j]-triTable[band][i]))/32768.f; }
  else if(w==1) { a=(triTable[band][i]+f*(triTable[band][j]-triTable[band][i]))/32768.f; b=(sawTable[band][i]+f*(sawTable[band][j]-sawTable[band][i]))/32768.f; }
