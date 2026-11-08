@@ -117,5 +117,21 @@ static void audio(const char *path) {
  }
  fclose(f);
 }
-int main(int argc,char **argv) { interpolation_audio();
+static void srr_integration(void) {
+ int16_t baseline[2048],bypass[2048],reduced[2048];
+ jb_init();jb_parameters[1][JB_MODE]=1;
+ jb_trigger(1,100,48,0);render(1,baseline,2048);
+ jb_init();jb_parameters[1][JB_MODE]=1;
+ jb_setSampleRateReduction(1,1);jb_trigger(1,100,48,0);render(1,bypass,2048);
+ assert(!memcmp(baseline,bypass,sizeof(baseline)));
+ jb_init();jb_parameters[1][JB_MODE]=1;
+ jb_setSampleRateReduction(1,8);jb_trigger(1,100,48,0);render(1,reduced,2048);
+ assert(memcmp(baseline,reduced,sizeof(baseline)));
+ jb_setSampleRateReduction(1,33); /* invalid input leaves setting unchanged */
+ jb_init();jb_parameters[1][JB_MODE]=1;
+ jb_trigger(1,100,48,0);render(1,bypass,2048);
+ assert(!memcmp(baseline,bypass,sizeof(baseline)));
+ puts("PASS SRR bypass identity, opt-in audio change, init reset");
+}
+int main(int argc,char **argv) { srr_integration(); interpolation_audio();
  interpolation_control(); bypass(); storage(); voices(); reproducible(); stress(); if(argc>1) audio(argv[1]); return 0; }
