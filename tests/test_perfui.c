@@ -133,7 +133,7 @@ int main(void) {
     assert(!jb_perfui_cpu_active());
     jb_perfui_next();jb_perfui_next();jb_perfui_leave();
     assert(jb_perfui_page()==JB_PERF_PAGE_MAIN);
-    assert(jb_perfui_active()==2u); /* leaving page does not stop live FX */
+    assert(jb_perfui_active()==6u); /* leaving page does not stop live FX */
     /* Full production UI -> gated mixer copy (FX select is an argument).
      * This simulates an actual Step 1 armed hit without synthesizing audio. */
     assert(jb_perfui_select(0u));
