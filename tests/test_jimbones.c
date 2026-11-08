@@ -8,6 +8,16 @@
 #include <math.h>
 static void render(unsigned v,int16_t *b,unsigned n) { memset(b,0,n*sizeof(*b)); jb_render(v,b,n,1); }
 static double energy(const int16_t *b,unsigned n) { double e=0; for(unsigned i=0;i<n;i++) e+=(double)b[i]*b[i]; return e; }
+static void interpolation_control(void) {
+ jb_setWaveInterpolation(1);
+ assert(jb_getWaveInterpolation()==1);
+ jb_setWaveInterpolation(0);
+ assert(jb_getWaveInterpolation()==0);
+ jb_setWaveInterpolation(2);
+ assert(jb_getWaveInterpolation()==1);
+ jb_setWaveInterpolation(1);
+ puts("PASS interpolation global control ON/OFF and normalization");
+}
 static void bypass(void) {
  jb_init(); int16_t b[256],ref[256];
  for(unsigned i=0;i<256;i++) b[i]=ref[i]=(int16_t)(i*257-32768);
@@ -90,4 +100,5 @@ static void audio(const char *path) {
  }
  fclose(f);
 }
-int main(int argc,char **argv) { bypass(); storage(); voices(); reproducible(); stress(); if(argc>1) audio(argv[1]); return 0; }
+int main(int argc,char **argv) {
+ interpolation_control(); bypass(); storage(); voices(); reproducible(); stress(); if(argc>1) audio(argv[1]); return 0; }
