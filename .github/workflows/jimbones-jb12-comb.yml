@@ -1,0 +1,52 @@
+name: JB-12 Comb Filter - Experimental Verification
+on:
+  push:
+    branches:
+      - agents/jb-12-comb-filter-v184
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  host:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - name: Source revision
+        run: |
+          echo "JB-12 COMB: experimental, hardware not verified"
+          git rev-parse HEAD
+      - name: Comb exact bypass, impulse, six-voice stress tests (GCC)
+        run: sh tests/run_jb12_comb.sh
+      - name: Full host regression (GCC)
+        run: sh tests/run_host.sh
+      - name: Full host regression (Clang)
+        env:
+          CC: clang
+        run: sh tests/run_host.sh
+      - name: Existing Step FX regression
+        run: bash tests/run_combined_stepfx.sh
+  arm:
+    needs: host
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ARM cross compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build python3 gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
+      - name: Configure
+        run: cmake --preset release
+      - name: Build while retaining linker memory report
+        shell: bash
+        run: |
+          set -o pipefail
+          cmake --build --preset release --parallel 2 2>&1 | tee build/release/arm-build.log
+      - name: ITCM memory margin >=512 bytes
+        run: python3 tests/check_jb22_memory.py build/release/arm-build.log
+      - name: Firmware format integrity only
+        run: |
+          python3 tests/validate_image.py build/release/LXR_V2_V1.8.04.img --binary build/release/LXR_V2_STM32F765.bin
+          sha256sum build/release/LXR_V2_V1.8.04.img
+          echo "No image uploaded, published or approved for flashing"

@@ -70,6 +70,7 @@ add_library(lxr_dsp OBJECT
     Src/Soundengine/DSPAudio/1PoleLp.c
     Src/Soundengine/DSPAudio/automationNode.c
     Src/Soundengine/DSPAudio/BufferTools.c
+    Src/Soundengine/DSPAudio/CombFilter.c
     Src/Soundengine/DSPAudio/CymbalVoice.c
     Src/Soundengine/DSPAudio/Decay.c
     Src/Soundengine/DSPAudio/distortion.c
