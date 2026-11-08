@@ -13,6 +13,14 @@ int main(void) {
  jb_audio_telemetry_queue(&m,1,2);
  jb_audio_telemetry_queue(&m,0,2);
  assert(m.peak_pressure_percent==100 && m.pressure_sum==150 && m.pressure_samples==3);
+ /* Large capacities previously overflowed free_slots * 100. */
+ jb_audio_telemetry_queue(&m,UINT32_MAX,UINT32_MAX);
+ assert(m.pressure_sum==150 && m.pressure_samples==4);
+ /* A long-running meter must not overflow its accumulator. */
+ m.pressure_sum=UINT32_MAX-10u;
+ m.pressure_samples=UINT32_MAX-1u;
+ jb_audio_telemetry_queue(&m,0,2);
+ assert(m.pressure_sum==100u && m.pressure_samples==1u);
  jb_audio_telemetry_init(&m,0,0,0);
  assert(m.budget_cycles==0 && jb_audio_telemetry_load(&m)==0);
  puts("PASS cycle wrap, deadline, peak, queue pressure and zero budget");
