@@ -66,18 +66,20 @@ static void storage(void) {
 static void voices(void) {
  int16_t a[4096],b[4096];
  for(unsigned v=0;v<6;v++) for(unsigned mode=1;mode<=3;mode++) {
-  jb_init(); jb_parameters[v][JB_MODE]=mode; jb_trigger(v,127,48,1); render(v,a,4096); assert(energy(a,4096)>10000);
+  jb_init(); jb_parameters[v][JB_MODE]=mode; jb_trigger(v,127,48,1); render(v,a,4096);
+  if(mode==1u) assert(energy(a,4096)==0); /* FM-only stored mode now exact native bypass */
+  else assert(energy(a,4096)>10000);
   for(unsigned other=0;other<6;other++) if(other!=v) { render(other,b,4096); assert(energy(b,4096)==0); }
   jb_parameters[v][JB_METAL_LEVEL]=0; jb_parameters[v][JB_WAVE_LEVEL]=0;
   jb_silence(); jb_trigger(v,127,48,1); render(v,b,4096); assert(energy(b,4096)==0);
  }
- jb_init(); jb_parameters[0][JB_MODE]=1;
+ jb_init(); jb_parameters[0][JB_MODE]=2;
  jb_trigger(0,16,48,0); render(0,a,4096);
  jb_silence(); jb_trigger(0,127,48,0); render(0,b,4096); assert(energy(b,4096)>energy(a,4096)*10);
  jb_init(); jb_parameters[5][JB_MODE]=3; jb_parameters[5][JB_DECAY]=127;
  jb_trigger(5,127,48,1); render(5,a,4096); assert(energy(a,4096)>1000);
  jb_trigger(5,127,48,0); for(unsigned i=0;i<10;i++) render(5,b,4096); assert(energy(b,4096)==0);
- puts("PASS all voice/mode combinations, isolation, zero levels, velocity response, open-to-closed tail replacement");
+ puts("PASS FM-only mode bypass, wavetable mode 2/3 across 6 voices, isolation, zero levels, velocity and hat choking");
 }
 static void reproducible(void) {
  int16_t a[4096],b[4096];
