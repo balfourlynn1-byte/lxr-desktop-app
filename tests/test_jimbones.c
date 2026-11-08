@@ -35,6 +35,20 @@ static void interpolation_audio(void) {
  assert(memcmp(a,c,sizeof(a))==0);
  puts("PASS waveform interpolation ON/OFF changes sound and ON restores exact waveform");
 }
+static void kit_revision_reset(void) {
+ uint8_t kit[JB_KIT_BYTES];
+ jb_defaults(kit);
+ uint32_t before=jb_kitRevision();
+ jb_init();
+ assert(jb_kitRevision()!=before);
+ before=jb_kitRevision();
+ jb_setTransient(0,32,-24);
+ jb_setSampleRateReduction(0,8);
+ jb_loadKit(kit);
+ assert(jb_kitRevision()!=before);
+ assert(jb_parameters[0][JB_MODE]==0);
+ puts("PASS kit revision invalidates transient/SRR temporary UI state");
+}
 static void bypass(void) {
  jb_init(); int16_t b[256],ref[256];
  for(unsigned i=0;i<256;i++) b[i]=ref[i]=(int16_t)(i*257-32768);
@@ -180,5 +194,6 @@ static void srr_integration(void) {
  assert(!memcmp(baseline,bypass,sizeof(baseline)));
  puts("PASS SRR bypass identity, opt-in audio change, init reset");
 }
-int main(int argc,char **argv) { srr_integration(); transient_four_voice_stress(); transient_integration(); interpolation_audio();
+int main(int argc,char **argv) {
+ kit_revision_reset(); srr_integration(); transient_four_voice_stress(); transient_integration(); interpolation_audio();
  interpolation_control(); bypass(); storage(); voices(); reproducible(); stress(); if(argc>1) audio(argv[1]); return 0; }
