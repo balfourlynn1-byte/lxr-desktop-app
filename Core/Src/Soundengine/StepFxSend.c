@@ -32,10 +32,12 @@ static SendLane lanes[STEPFX_SEND_VOICES];
 static uint8_t send_enabled;
 static uint8_t send_mask;
 static uint8_t send_levels[STEPFX_SEND_VOICES];
+static uint8_t send_division = 16u; /* 1/16-note snippet by default */
 
 void stepfx_send_init(void) {
     __atomic_store_n(&send_enabled, 0u, __ATOMIC_RELAXED);
     __atomic_store_n(&send_mask, SEND_DEFAULT_MASK, __ATOMIC_RELAXED);
+    __atomic_store_n(&send_division, 16u, __ATOMIC_RELAXED);
     for (unsigned v = 0; v < STEPFX_SEND_VOICES; ++v) {
         SendLane *s = &lanes[v];
         s->request_frames = 0;
@@ -62,6 +64,44 @@ void stepfx_send_set_level(uint8_t voice, uint8_t level) {
     if (voice >= STEPFX_SEND_VOICES) return;
     if (level > 127u) level = 127u;
     __atomic_store_n(&send_levels[voice], level, __ATOMIC_RELAXED);
+}
+
+uint8_t stepfx_send_mask(void) {
+    return __atomic_load_n(&send_mask, __ATOMIC_RELAXED);
+}
+uint8_t stepfx_send_level(uint8_t voice) {
+    if (voice >= STEPFX_SEND_VOICES) return 0u;
+    return __atomic_load_n(&send_levels[voice], __ATOMIC_RELAXED);
+}
+uint8_t stepfx_send_division(void) {
+    return __atomic_load_n(&send_division, __ATOMIC_RELAXED);
+}
+void stepfx_send_adjust_division(int delta) {
+    if (!delta) return;
+    const uint8_t current = stepfx_send_division();
+    uint8_t d = current;
+    /* Faster (right turn) = shorter snippets: 1/4 -> 1/8 -> 1/16 -> 1/32.
+     * Input is an encoder delta but each call changes one subdivision only. */
+    if (delta > 0 && d < 32u) d = (uint8_t)(d * 2u);
+    if (delta < 0 && d > 4u) d = (uint8_t)(d / 2u);
+    __atomic_store_n(&send_division, d, __ATOMIC_RELAXED);
+}
+
+void stepfx_send_on_note(uint8_t voice, uint8_t velocity, uint16_t bpm) {
+    if (!velocity || voice > 6u ||
+        !__atomic_load_n(&send_enabled, __ATOMIC_RELAXED)) return;
+    const uint8_t lane = voice > 5u ? 5u : voice;
+    if (!(__atomic_load_n(&send_mask, __ATOMIC_RELAXED) & (1u << lane)))
+        return;
+    if (!__atomic_load_n(&send_levels[lane], __ATOMIC_RELAXED)) return;
+    /* If external BPM is not yet available, default to 120 for the
+     * *snippet gate only*. Beat-synced feedback is Job JB-20. */
+    if (bpm < 10u) bpm = 120u;
+    if (bpm > 400u) bpm = 400u;
+    const uint8_t division = stepfx_send_division();
+    uint32_t frames = (44140u * 60u * 4u) / ((uint32_t)bpm * division);
+    if (frames > STEPFX_SEND_MAX_FRAMES) frames = STEPFX_SEND_MAX_FRAMES;
+    stepfx_send_gate(lane, frames);
 }
 
 void stepfx_send_gate(uint8_t voice, uint32_t hold_frames) {
