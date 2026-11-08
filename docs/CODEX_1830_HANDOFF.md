@@ -1,6 +1,6 @@
 # CODEX 18:30 UK — JIMBONES full-build handoff (2026-11-08)
 
-**Read this file first, then [lean execution rules](CODEX_EXECUTION_RULES.md).** Minimal context. The user wants **one fully functioning LXR-02 firmware build** containing the already implemented features **including the Comb filter**, not another disconnected prototype. Prioritise completing, verifying and packaging existing work; do not restart old jobs or rewrite code that has already passed CI. No automatic flash/merge.
+**Codex entrypoint: [CODEX_START_HERE.md](CODEX_START_HERE.md).** This longer document is reference only; read specific sections if the short packet leaves an unresolved question. Minimal context. The user wants **one fully functioning LXR-02 firmware build** containing the already implemented features **including the Comb filter**, not another disconnected prototype. Prioritise completing, verifying and packaging existing work; do not restart old jobs or rewrite code that has already passed CI. No automatic flash/merge.
 
 ## Exact starting point
 
@@ -52,4 +52,4 @@ The user confirms existing Step FX effects work; they lack musical usefulness du
 
 ## Copy-paste Codex launch prompt
 
-> Continue JIMBONES in `balfourlynn1-byte/lxr-desktop-app` on `agents/jb-28-full-integration-v186`. Read ONLY `docs/CODEX_1830_HANDOFF.md` and the JB-12 comb design it links. Do **JB-28A only**: transplant the already-tested Comb filter from PR #15 into the latest JB-26 skull/LCD source, retaining the five dub timing buttons and all existing fixes. Append Comb as ninth FILTER Type without changing old preset IDs. Integrate tests, build GCC/Clang host + ARM, require >=512 B ITCM free, validate a v1.8.07 test-only image, open a draft PR and report exact SHA, checksum, memory and risks. Preserve rollback and do not claim hardware validation. Then stop for review.
+> Continue JIMBONES in `balfourlynn1-byte/lxr-desktop-app` on `agents/jb-28-full-integration-v186`. Read `docs/CODEX_START_HERE.md` first and only its named source files; consult the longer handoff if blocked. Do **JB-28A only**: transplant the already-tested Comb filter from PR #15 into the latest JB-26 skull/LCD source, retaining the five dub timing buttons and all existing fixes. Append Comb as ninth FILTER Type without changing old preset IDs. Integrate tests, build GCC/Clang host + ARM, require >=512 B ITCM free, validate a v1.8.07 test-only image, open a draft PR and report exact SHA, checksum, memory and risks. Preserve rollback and do not claim hardware validation. Then stop for review.
