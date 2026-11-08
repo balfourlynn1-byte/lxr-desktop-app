@@ -35,6 +35,23 @@ static void interpolation_audio(void) {
  assert(memcmp(a,c,sizeof(a))==0);
  puts("PASS waveform interpolation ON/OFF changes sound and ON restores exact waveform");
 }
+static void lofi_live_toggle_smoke(void) {
+ int16_t a[256],b[256];
+ jb_init();
+ jb_parameters[0][JB_MODE]=2;
+ jb_trigger(0,110,48,0);
+ render(0,a,256);
+ jb_setSampleRateReduction(0,16);
+ render(0,b,256);
+ jb_setSampleRateReduction(0,0);
+ render(0,b,256);
+ jb_setSampleRateReduction(0,32);
+ render(0,b,256);
+ jb_setSampleRateReduction(0,0);
+ render(0,b,256);
+ /* Deterministic host smoke; audio quality still requires hardware listening. */
+ puts("PASS live LOFI bypass and factor-change render smoke");
+}
 static void kit_revision_reset(void) {
  uint8_t kit[JB_KIT_BYTES];
  jb_defaults(kit);
@@ -194,6 +211,6 @@ static void srr_integration(void) {
  assert(!memcmp(baseline,bypass,sizeof(baseline)));
  puts("PASS SRR bypass identity, opt-in audio change, init reset");
 }
-int main(int argc,char **argv) {
+int main(int argc,char **argv) { lofi_live_toggle_smoke();
  kit_revision_reset(); srr_integration(); transient_four_voice_stress(); transient_integration(); interpolation_audio();
  interpolation_control(); bypass(); storage(); voices(); reproducible(); stress(); if(argc>1) audio(argv[1]); return 0; }
