@@ -1,5 +1,6 @@
 /* JIMBONES experimental layers. SPDX-License-Identifier: GPL-3.0-only */
 #include "Soundengine/DSPAudio/Jimbones.h"
+#include "Soundengine/DSPAudio/JimbonesSampleRateReducer.h"
 #include "Soundengine/DSPAudio/wavetable.h"
 #include "Soundengine/config.h"
 #include "Soundengine/MIDI/MidiNoteNumbers.h"
@@ -14,8 +15,11 @@ typedef struct {
  uint8_t table, restart, editPending, fadeLeft;
  float lastAdded, editStep;
  float hitVelocity;
+ JbSampleHold sampleHold;
 } Layer;
 static Layer layers[JB_VOICES];
+/* Runtime-only until CLICK/FX menu mapping and kit format are reviewed. */
+static uint8_t jb_srrFactor[JB_VOICES];
 volatile uint32_t jb_layerSaturationHits;
 static float clamp(float x, float a, float b) { return x<a?a:(x>b?b:x); }
 static float unit(uint8_t x) { return x*(1.f/127.f); }
@@ -49,6 +53,10 @@ static float jb_waveScan(float x) {
 }
 static uint32_t lock(void) { uint32_t mask=__get_PRIMASK(); __disable_irq(); return mask; }
 static void unlock(uint32_t mask) { __DMB(); __set_PRIMASK(mask); }
+void jb_setSampleRateReduction(unsigned voice,uint8_t factor) {
+ if(voice>=JB_VOICES || factor>32u)return;
+ uint32_t m=lock();jb_srrFactor[voice]=factor;layers[voice].sampleHold.counter=0;unlock(m);
+}
 static float noise(Layer *s) {
  uint32_t x=s->rng; x^=x<<13; x^=x>>17; x^=x<<5; s->rng=x;
  return (float)(x>>8)*(1.f/8388608.f)-1.f;
@@ -94,12 +102,12 @@ void jb_defaults(uint8_t *kit) {
  48,24,32,0, 64,0,64,20, 0,0,0,127, 0,0,0,64, 127,64,127,64};
  for(unsigned v=0;v<JB_VOICES;v++) memcpy(kit+v*JB_PARAMS,defaults,JB_PARAMS);
 }
-void jb_silence(void) { uint32_t m=lock(); memset(layers,0,sizeof(layers)); unlock(m); }
+void jb_silence(void) { uint32_t m=lock(); memset(layers,0,sizeof(layers)); memset(jb_srrFactor,0,sizeof(jb_srrFactor)); unlock(m); }
 void jb_loadKit(const uint8_t *kit) {
  uint32_t m=lock(); memcpy(jb_parameters,kit,JB_KIT_BYTES);
  memset(layers,0,sizeof(layers)); unlock(m);
 }
-void jb_init(void) { jb_defaults(&jb_parameters[0][0]); jb_silence(); }
+void jb_init(void) { jb_defaults(&jb_parameters[0][0]); memset(jb_srrFactor,0,sizeof(jb_srrFactor)); jb_silence(); }
 void jb_trigger(uint8_t v,uint8_t velocity,uint8_t note,uint8_t open) {
  if(v>=JB_VOICES) return;
  Layer next={0}, *s=&next; const uint8_t *p=jb_parameters[v];
@@ -229,6 +237,7 @@ void jb_render(uint8_t v,int16_t *buffer,unsigned size,float gain) {
    out+=wet*((soft+(hard-soft)*character)-out);
   }
   if(p[JB_BITS] || s->aggression>0) { float q=out*steps; out=(int)(q+(q<0?-.5f:.5f))/steps; }
+  if(jb_srrFactor[v]>1u) out=jb_sample_hold_process(&s->sampleHold,out,jb_srrFactor[v]);
   out=out*s->envelope*s->velocity;
   /* Match the previous output at the boundary, rather than adding it to the
      new attack. The correction decays in ~2.5 ms; there is no event delay. */
