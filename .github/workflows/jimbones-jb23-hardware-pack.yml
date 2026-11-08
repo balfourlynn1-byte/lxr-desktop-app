@@ -1,0 +1,82 @@
+name: JB-23 Experimental Hardware Test Package -- UNVERIFIED
+on:
+  push:
+    branches:
+      - agents/jb-23-from-waveui-v184
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  host:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Source revision and test-only statement
+        run: |
+          git rev-parse HEAD
+          echo "JB-23 source branch only. ARTIFACTS ARE UNVERIFIED. No device has been flashed by CI."
+      - name: Check pack generator syntax
+        run: python3 -m py_compile tests/jb23_candidate_manifest.py
+      - name: Host regression (GCC)
+        run: sh tests/run_host.sh
+      - name: Host regression (Clang)
+        env:
+          CC: clang
+        run: sh tests/run_host.sh
+      - name: Standalone Step FX regression
+        run: bash tests/run_combined_stepfx.sh
+  arm-and-artifact:
+    needs: host
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cross compiler install
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build python3 gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
+      - name: Build firmware only, not bootloader
+        run: cmake --preset release
+      - name: Compile ARM and capture linker evidence
+        shell: bash
+        run: |
+          set -o pipefail
+          cmake --build --preset release --parallel 2 2>&1 | tee build/release/arm-build.log
+      - name: Validate memory, desktop image, and binary payload
+        run: |
+          python3 tests/check_jb22_memory.py build/release/arm-build.log
+          python3 tests/validate_image.py build/release/LXR_V2_V1.8.04.img --binary build/release/LXR_V2_STM32F765.bin
+          arm-none-eabi-size build/release/LXR_V2_STM32F765.elf
+      - name: Generate SHA-pinned TEST ONLY manifest
+        run: |
+          python3 tests/jb23_candidate_manifest.py \
+            --image build/release/LXR_V2_V1.8.04.img \
+            --binary build/release/LXR_V2_STM32F765.bin \
+            --build-log build/release/arm-build.log \
+            --output build/release/jb23-test-pack \
+            --sha "${{ github.sha }}" \
+            --workflow-run "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            --branch "${{ github.ref_name }}" \
+            --version 1.8.04
+          cp build/release/LXR_V2_V1.8.04.img build/release/jb23-test-pack/
+          cp docs/agents/jb23_hardware_test_sheet.md build/release/jb23-test-pack/TEST_SHEET.md
+          cp docs/agents/jb23_rollback_and_install.md build/release/jb23-test-pack/READ_FIRST_ROLLBACK.md
+          cp docs/agents/jb24_waveui.md build/release/jb23-test-pack/WAVETABLE_UI_GUIDE.md
+      - name: Cross-check packaged updater SHA256
+        run: |
+          cd build/release/jb23-test-pack
+          sha256sum --check SHA256SUMS.txt
+          python3 -c 'import json; d=json.load(open("MANIFEST.json")); assert d["hardware_tested"] is False and d["safe_for_live_performance"] is False'
+      - name: Upload experimental hardware test ZIP as GitHub Actions artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: JB23-UNVERIFIED-TEST-ONLY-${{ github.sha }}
+          path: build/release/jb23-test-pack/
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 6
+      - name: No release and no automatic flash
+        run: |
+          echo "Artifact is hardware UNVERIFIED. No main merge, GitHub Release, OTA push or device flash."
+          echo "Back up working image, verify SHA256 and complete supervised test sheet before installation."
