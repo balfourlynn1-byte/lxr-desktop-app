@@ -1,6 +1,6 @@
 # JIMBONES — next sprint assignments (2026-11-08)
 
-**Execution model:** Named agent roles are work orders, NOT autonomous processes. Each owner works on its own `agents/*-research` branch; coordinator reviews PRs into the experimental branch. Do not merge or flash automatically.
+**Execution model:** Each task has two collaborating roles: a primary implementer and an independent partner responsible for review, benchmarks, and edge cases. Named roles are work orders, NOT autonomous processes. Each owner works on its own `agents/*-research` branch; coordinator reviews PRs into the experimental branch. Do not merge or flash automatically.
 
 | Order | Owner | Immediate task | Evidence required | Dependency |
 |---|---|---|---|---|
@@ -30,3 +30,29 @@
 1. Review JB-03 PR #2 host CI and address failures.
 2. Review JB-02 instrumented callback implementation when available.
 3. Approve only measured features for staged merge; defer USB multitrack if infeasible.
+
+## Two-agent collaboration protocol (all JB-01 through JB-13)
+
+Each row above lists its **primary agent + partner agent** in the Owner column. They work together as follows:
+
+1. **Agent A — Implementer:** investigate the code path, propose a minimal change and implement on the dedicated task branch.
+2. **Agent B — Reviewer/Test Engineer:** independently challenge assumptions, design reproduction/benchmark tests, check CPU and memory, review licensing and verify six-voice compatibility.
+3. **Joint review:** exchange findings, reconcile conflicts, record measured evidence and submit one focused draft PR per task.
+4. **Integration agent:** only accepts verified changes after host regression, ARM build and image integrity checks; on-device confirmation still required.
+
+### First paired handoffs
+- **JB-02 Embedded + DSP:** Embedded integrates DWT/queue diagnostics into real render path; DSP reviews measurement accuracy and performance overhead. PR #3 is the starting point.
+- **JB-03 DSP + Verification:** DSP isolates gain staging/crunch; Verification runs 1–4 voice stress fixtures and checks full-mix evidence. PR #2 is the starting point.
+- **JB-04 DSP + Embedded:** DSP designs smooth A/B/C morph interpolation; Embedded handles UI, kit persistence and kick exclusion.
+- **JB-05 DSP + Verification:** DSP prototypes per-voice saturation; Verification measures aliasing, headroom and worst-case CPU.
+- **JB-06 Research + Embedded:** Research evaluates external USB implementations/licensing; Embedded audits STM32 peripherals, descriptors and RAM.
+- **JB-07 DSP + Embedded:** DSP develops tempo FX scheduling; Embedded verifies transport, memory and kick routing.
+- **JB-08 DSP + Research:** DSP benchmarks metallic FM; Research compares efficient algorithms and licensing.
+- **JB-09 DSP + Research:** DSP profiles wavetable/waveshaping; Research evaluates bandlimiting references and license compatibility.
+- **JB-10 Embedded + Verification:** Embedded specifies MIDI/FD-8 state handling; Verification builds event fixtures.
+- **JB-11 DSP + Embedded:** DSP develops deterministic snare variation; Embedded handles kit-level controls.
+- **JB-12 DSP + Embedded:** DSP tests filter stability; Embedded verifies memory, UI and CPU constraints.
+- **JB-13 Embedded + Verification:** Embedded integrates diagnostics pages; Verification checks menu navigation and non-blocking updates.
+- **JB-01 Verification + Integration:** Verification compares builds and rollback; Integration controls acceptance and release gates.
+
+**Important:** These assignments do not start twelve pairs of autonomous background agents. Actual simultaneous execution requires an external agent runner with model credentials and GitHub permissions; do not claim parallel work or completed testing until observed.
