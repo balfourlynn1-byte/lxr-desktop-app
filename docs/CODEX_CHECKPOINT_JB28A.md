@@ -93,3 +93,8 @@ Each update must include UTC time, pushed commit SHA, stage, files inspected/cha
 - Upstream `brendanclarke/LXR02Open` `prime` resolved to commit `c896bfd0efe86a4037418bf9f46f1fcc39255958`; fetched six exact-commit blobs including LICENSE, oscillator, modulation and interpolation audit. Blob hashes recorded in `docs/JB_WAVETABLE_UPSTREAM_PORT_PLAN.md` (pushed evidence commit `a5c51dc2a60b25108ca8689593e81932c5629711`).
 - Licence expressly forbids commercial use and requires modified-source redistribution; no upstream code imported. No host or ARM tests run.
 - Next: A01 locate original 3 ms No Clip source and compare to v1.8.06; continue B04 architecture mapping if A01 history inaccessible.
+
+### 2026-11-08 UTC — A01 original No Clip source found, history pending
+- Historical branch `jimbones-noclip-baseline` contains the exact 132-sample (~2.99 ms) retrigger smoother. Header blob `2818d420`, C blob `b8b480d6`, DrumVoice blob `6d276b54`. The 3 primary drums capture active envelope before note-on and apply correction after voice render; snare/hat are not covered by this code.
+- Full paths, lines, and regression requirements are recorded in `docs/CODEX_HANDOVER_2026-11-10.md`. GitHub commit-message search found no introducing SHA, so A01 remains PARTIAL.
+- Next command in a checkout: `git log --follow --format='%H %ad %s' --date=iso -- Core/Src/Soundengine/DSPAudio/RetriggerSmoother.c` on `jimbones-noclip-baseline`; inspect oldest introducing diff and compare with v1.8.06. No tests, ARM, image or hardware verification.
