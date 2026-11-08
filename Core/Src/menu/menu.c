@@ -1559,7 +1559,17 @@ static uint8_t jb_extCount(uint8_t native) {
 }
 static int8_t jb_extAttack[JB_VOICES],jb_extSustain[JB_VOICES];
 static uint8_t jb_extSrr[JB_VOICES];
-static uint8_t jb_extActive(void) { return jb_extPage!=JB_EXT_NONE && menu_activePage<7; }
+static uint32_t jb_extSeenRevision;
+static void jb_extSyncKit(void) {
+ uint32_t revision=jb_kitRevision();
+ if(jb_extSeenRevision==revision)return;
+ memset(jb_extAttack,0,sizeof(jb_extAttack));
+ memset(jb_extSustain,0,sizeof(jb_extSustain));
+ memset(jb_extSrr,0,sizeof(jb_extSrr));
+ jb_extPage=JB_EXT_NONE; jb_extArmed=0; jb_extSlot=0;
+ jb_extSeenRevision=revision;
+}
+static uint8_t jb_extActive(void) { jb_extSyncKit(); return jb_extPage!=JB_EXT_NONE && menu_activePage<7; }
 static void jb_extPaint(void) {
  unsigned v=menu_getActiveVoice();if(v>=JB_VOICES)v=JB_VOICES-1;
  char top[17],bottom[17];
@@ -1575,6 +1585,7 @@ static void jb_extPaint(void) {
  editDisplayBuffer[0][16]=0;editDisplayBuffer[1][16]=0;
 }
 static void jb_extPot(unsigned pot,int diff) {
+ jb_extSyncKit();
  unsigned v=menu_getActiveVoice();if(v>=JB_VOICES)v=JB_VOICES-1;
  if(jb_extPage==JB_EXT_CLICK && pot<2) {
   int x=(pot==0?jb_extAttack[v]:jb_extSustain[v])+diff;
@@ -3388,6 +3399,7 @@ void menu_resetSaveParameters()
 // if its the global menu, and there are multiple pages will toggle to the next page
 void menu_switchSubPage(uint8_t subPageNr, uint8_t toggle)
 {
+ jb_extSyncKit();
  /* Original first press is always preserved. Repeated native section presses
   * cycle the assigned extension pages; the next press exits to native.
   * OSC retains its existing legacy experimental parameter-bank cycle.
