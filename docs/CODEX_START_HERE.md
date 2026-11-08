@@ -6,6 +6,10 @@
 
 **Before researching anything:** read [persistence protocol](CODEX_PERSISTENCE_PROTOCOL.md), [active queue](JIMBONES_WORK_QUEUE.md) and [JB-28A checkpoint](CODEX_CHECKPOINT_JB28A.md). Record the base SHA and next action, then **commit and PUSH** the checkpoint. Repeat after source mapping, after meaningful code changes, **before** full tests/CI, after failures, and before stopping. Update `docs/JIMBONES_WORK_QUEUE.md` as the branch-local workload tree. The canonical tree on `agents/wavetable-research` is a different branch: do not assume a working-branch edit updates it. A local-only file is **not saved**. Future Codex sessions resume from the last pushed checkpoint and avoid redoing research.
 
+## Review package and source register
+
+For a comprehensive review, consult [engineering handover](CODEX_COMPREHENSIVE_HANDOVER.md), [verified repositories/PRs/source map](CODEX_SOURCE_REGISTER.md) and [physical acceptance checklist](JIMBONES_HARDWARE_ACCEPTANCE.md). Run `sh scripts/codex_review_inventory.sh` for a **read-only** branch/commit/file inventory. These are **reference files**: do not load them all for routine JB-28A implementation unless needed. The JB-27 native wave-scan branch already contains experimental code; do not reimplement it as part of JB-28A.
+
 ## Desired outcome
 On `agents/jb-28-full-integration-v186`, integrate **existing Comb implementation from PR #15** into the latest skull/LCD and dub branch. Produce a **v1.8.07 hardware-unverified TEST ONLY** image *only if* host, ARM, >=512 B ITCM free, checksum/integrity all pass. Open draft PR against `agents/jb-26-skull-screensaver-v185`. Stop. **No JB-29, wavetable rewrite, or unrelated feature.**
 
