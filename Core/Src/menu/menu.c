@@ -1559,7 +1559,7 @@ static void jb_uiPaint(void) {
   char b[17]; int value=jb_parameters[voice][jb_selected];
   if((jb_selected>=JB_VMETAL && jb_selected<=JB_VTEXTURE) || jb_selected==JB_VBLEND) value-=64;
   if(jb_selected==JB_MODE) {
-   static const char *const modes[]={"Original","Orig + Metal","Orig + Wave","Orig + Both"};
+   static const char *const modes[]={"Original","FM off","Orig + Wave","Wave (FM off)"};
    snprintf(b,sizeof(b),"%s",modes[value]);
   } else snprintf(b,sizeof(b),"V%u  %d",voice+1,value);
   memcpy(editDisplayBuffer[1],b,strlen(b));
