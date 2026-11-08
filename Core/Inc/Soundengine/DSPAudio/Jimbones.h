@@ -23,6 +23,7 @@ void jb_stageVoice(uint8_t voice,int16_t *samples,unsigned size,float fader);
 void jb_defaults(uint8_t *kit);
 void jb_init(void);
 void jb_loadKit(const uint8_t *kit);
+uint32_t jb_kitRevision(void);
 void jb_silence(void);
 void jb_trigger(uint8_t voice, uint8_t velocity, uint8_t note, uint8_t open);
 void jb_render(uint8_t voice, int16_t *buffer, unsigned size, float gain);
