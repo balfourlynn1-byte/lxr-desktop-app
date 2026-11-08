@@ -604,6 +604,12 @@ __attribute__((noinline)) static void mixer_dub_delay_prepare(void)
                       fxBus.parameter[0],fxBus.parameter[1],
                       fxBus.parameter[3],OUTPUT_DMA_SIZE);
 }
+/* These four jack-detect GPIO reads happen once per block; keep their
+ * control-path instructions in flash instead of 16KiB audio ITCM. */
+__attribute__((noinline)) static void mixer_refreshJackAvailability(void)
+{
+	mixer_refreshJackAvailability();
+}
 IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 {
 
