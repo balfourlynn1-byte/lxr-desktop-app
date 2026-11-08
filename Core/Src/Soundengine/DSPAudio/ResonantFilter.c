@@ -37,6 +37,7 @@ void SVF_init(ResonantFilter* filter)
 		filter->q = 0.9f;
 
 		filter->drive = 0.315f;
+		jb_comb_init(&filter->comb);
 
 		SVF_directSetFilterValue(filter,0.25f);
 
@@ -49,6 +50,7 @@ void SVF_reset(ResonantFilter* filter)
 {
 	filter->s1 = 0;
 	filter->s2 = 0;
+	jb_comb_reset(&filter->comb);
 
 #if ENABLE_NONLINEAR_INTEGRATORS
 	filter->zi = 0;	//input z^(-1)
@@ -163,6 +165,10 @@ IN_ITCM_RAM void SVF_calcBlockZDF(ResonantFilter* filter, const uint8_t type, in
 	const float ff 	= f*f;
 
 	if(type== FILTER_OFF) return;
+	if(type== FILTER_COMB) {
+		jb_comb_process(&filter->comb,buf,size,filter->f,1.f-filter->q);
+		return;
+	}
 	if(type == FILTER_NAIVE_2_POLE)
 	{
 
@@ -384,6 +390,10 @@ IN_ITCM_RAM void SVF_calcBlockCheapZDF(ResonantFilter* filter, const uint8_t typ
 	const float ff 	= f*f;
 
 	if(type== FILTER_OFF) return;
+	if(type== FILTER_COMB) {
+		jb_comb_process(&filter->comb,buf,size,filter->f,1.f-filter->q);
+		return;
+	}
 	if(type == FILTER_NAIVE_2_POLE)
 	{
 
