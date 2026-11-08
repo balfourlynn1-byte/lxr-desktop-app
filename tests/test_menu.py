@@ -44,7 +44,7 @@ int main(void) {
   menu_switchSubPage(2,1); assert(menuIndex==16);
  }
  menu_activePage=MENU_MIDI_PAGE; menuIndex=0; menu_switchSubPage(0,1); assert(!jb_screen);
- puts("PASS actual menu transition: first OSC original, second macros, all layer pages, exit, six voices plus open-hat page, legacy second page/global behavior");
+ puts("PASS actual menu transition: first OSC original, eight macro banks plus interpolation bank, exit, six voices plus open-hat page, legacy second page/global behavior");
 }
 '''
 out=root/'build/host/menu_fixture.c'; out.write_text(fixture+fn+test)
