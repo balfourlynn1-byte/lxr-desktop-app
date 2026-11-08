@@ -1,4 +1,4 @@
-/* JIMBONES experimental Metallic and Wavetable layers.
+/* JIMBONES wave layer: legacy Metallic FM settings retained for kit compatibility.
  * SPDX-License-Identifier: GPL-3.0-only
  */
 #ifndef JIMBONES_H
@@ -12,6 +12,10 @@ enum { JB_MODE, JB_METAL_LEVEL, JB_WAVE_LEVEL, JB_DECAY,
  JB_DRIVE, JB_CHARACTER, JB_BITS, JB_VELOCITY,
  JB_POSITION, JB_MOVEMENT, JB_RANDOM, JB_PITCH_ENV,
  JB_BLEND, JB_SHAPE, JB_FX_AMOUNT, JB_VBLEND, JB_PARAMS };
+/* JB-22: permanently disable the expensive legacy experimental FM engine
+ * in this candidate. Preserve the packed parameter IDs and kit trailers so
+ * existing presets can still be loaded, edited and rolled back. */
+#define JB_METALLIC_ENABLED 0
 #define JB_EXTENDED_CONTROLS 1
 #define JB_VOICES 6
 #define JB_KIT_BYTES (JB_VOICES * JB_PARAMS)

@@ -604,16 +604,22 @@ __attribute__((noinline)) static void mixer_dub_delay_prepare(void)
                       fxBus.parameter[0],fxBus.parameter[1],
                       fxBus.parameter[3],OUTPUT_DMA_SIZE);
 }
+/* These four jack-detect GPIO reads happen once per block; keep their
+ * control-path instructions in flash instead of 16KiB audio ITCM. */
+__attribute__((noinline)) static void mixer_refreshJackAvailability(void)
+{
+	r2_Available = (switch_r2_GPIO_Port->IDR & switch_r2_Pin)>0;
+	l1_Available = (switch_l1_GPIO_Port->IDR & switch_l1_Pin)>0;
+	l2_Available = (switch_l2_GPIO_Port->IDR & switch_l2_Pin)>0;
+	r1_Available = (switch_r1_GPIO_Port->IDR & switch_r1_Pin)>0;
+}
 IN_ITCM_RAM void mixer_calcNextSampleBlock(int16_t* output,int16_t* output2)
 {
 
 	/* Keep block-rate clock logic out of the scarce 16KB ITCM. */
 	mixer_dub_delay_prepare();
 	jb_prepareBalance();
-	r2_Available = (switch_r2_GPIO_Port->IDR & switch_r2_Pin)>0;
-	l1_Available = (switch_l1_GPIO_Port->IDR & switch_l1_Pin)>0;
-	l2_Available = (switch_l2_GPIO_Port->IDR & switch_l2_Pin)>0;
-	r1_Available = (switch_r1_GPIO_Port->IDR & switch_r1_Pin)>0;
+	mixer_refreshJackAvailability();
 
 	modNode_resetTargets();
 	//re assign velocity modulation

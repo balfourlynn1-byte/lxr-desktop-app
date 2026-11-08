@@ -46,8 +46,6 @@ IN_ITCM_RAM void FxBus_process(int16_t *fxBuffer, int16_t* outL,int16_t* outR,in
 	int16_t* out2 = NULL;
 	// < MIXER_ROUTING_DAC1_L -> stereo 1 or 2
 	const uint8_t channels = fxBus.audioRouting < MIXER_ROUTING_DAC1_L ? 2 : 1;
-	/* One shared check, not duplicated inside mono/pingpong branches. */
-	const float delayWet = dub_delay_wet_only()?1.f:fxBus.dryWet;
 	switch(fxBus.audioRouting)
 	{
 	default:
@@ -119,17 +117,21 @@ IN_ITCM_RAM void FxBus_process(int16_t *fxBuffer, int16_t* outL,int16_t* outR,in
 		break;
 
 	case FX_DELAY:
+	{
+		/* One wet-only lookup for both delay types; no work for FX OFF. */
+		const float delayWet = dub_delay_wet_only()?1.f:fxBus.dryWet;
 		if(fxBus.delay.delayType == DELAY_NORMAL)
 		{
 			Delay_process(&fxBus.delay, fxBuffer, out, out2, size, channels,
-			             dub_delay_wet_only()?1.f:fxBus.dryWet);
+			             delayWet);
 		}
 		else
 		{
 			Delay_processPingPong(&fxBus.delay, fxBuffer, out, out2, size, channels,
-			                     dub_delay_wet_only()?1.f:fxBus.dryWet);
+			                     delayWet);
 		}
 		break;
+	}
 #if USE_REVERB
 	case FX_REVERB:
 		Reverb_process(&fxBus.reverb, fxBuffer, out, out2, size, channels, fxBus.dryWet);
@@ -146,7 +148,9 @@ void FxBus_prepareFxChange()
 //	Ringmod_resetPhase(&fxBus.ringmod);
 }
 
-IN_ITCM_RAM void FxBus_updateParameter()
+/* Control-rate FX parameter updates belong in flash, preserving scarce ITCM
+ * for per-sample audio render functions. */
+void FxBus_updateParameter()
 {
 	switch(fxBus.fxType)
 	{
@@ -196,7 +200,7 @@ IN_ITCM_RAM void FxBus_updateParameter()
 	}
 }
 
-IN_ITCM_RAM void FxBus_setParameter(uint8_t idx, float value)
+void FxBus_setParameter(uint8_t idx, float value)
 {
 	fxBus.parameter[idx] = value;
 
