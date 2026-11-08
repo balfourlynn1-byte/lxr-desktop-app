@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-only
- * JB-19A: isolated Step FX send gates, no mixer or DSP integration yet.
+ * JB-19A/B: Step FX send gates feeding an optional, separate mixer tap.
  *
  * Per-voice aligned atomic command mailbox is written by a single control
  * producer; only the audio thread owns the render state. Retrigger extends
@@ -91,8 +91,20 @@ void stepfx_send_begin_block(uint8_t voice) {
     const uint8_t level =
         __atomic_load_n(&send_levels[voice], __ATOMIC_RELAXED);
     s->block_enabled = (uint8_t)(enabled && (mask & (1u << voice)));
-    if (!s->block_enabled) s->held_frames = 0;
+    if (!s->block_enabled) {
+        s->held_frames = 0;
+        s->env = 0;
+        s->smoothed_level = 0;
+    }
     s->target_level = (uint16_t)(((uint32_t)level * STEPFX_SEND_Q15_MAX) / 127u);
+}
+
+uint8_t stepfx_send_active(uint8_t voice) {
+    if (voice >= STEPFX_SEND_VOICES) return 0u;
+    const SendLane *s = &lanes[voice];
+    /* Keep stepping while a zero-level gate is held so a later level
+     * adjustment cannot resurrect an expired send window. */
+    return (uint8_t)(s->block_enabled && (s->held_frames || s->env));
 }
 
 uint16_t stepfx_send_next_gain_q15(uint8_t voice) {
