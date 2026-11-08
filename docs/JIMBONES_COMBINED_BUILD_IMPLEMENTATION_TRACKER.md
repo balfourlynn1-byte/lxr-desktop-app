@@ -52,7 +52,7 @@ Updated 2026-11-08. **All percentages are engineering estimates of end-to-end re
 | Detuned oscillator cluster | 5% | Assignment; unimplemented |
 | CLICK custom transient samples | 5% | Requirement only; sample format/storage unresolved |
 | UI double-press / performance page | 20% | UI work order; full menu hardware validation absent |
-| Combined firmware build and release qualification | 25% | Previous integration CI passed; new feature branches not merged/qualified as one exact candidate |
+| Combined firmware build and release qualification | 30% | Draft combined JB-14 + JB-18 integration PR #6 now exists; exact combined CI running, hardware test pending |
 | Four-channel USB multitrack | Deferred | Excluded from this candidate by design |
 
 **These are rough readiness estimates, not percent of lines coded or pass probabilities.** Prioritize stability and working test image over attempting all features at once. Every feature needs implementation, independent review, CI, ARM build, hardware test; defer costly features explicitly rather than silently drop them. The new JB-14 draft PR is https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/4 ; its CI run 42459381928 host-regression and firmware jobs passed, but CLICK UI is not connected and no device test occurred.
@@ -67,3 +67,9 @@ Updated 2026-11-08. **All percentages are engineering estimates of end-to-end re
 - JB-14 latest four-voice stress fixture commit `406712da`: GitHub Actions run `42459662194` **host-regression success, firmware success**. CLICK submenu and persistent controls still absent.
 - JB-18 SRR opt-in audio path and regression in draft PR #5: https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/5. Controls are runtime-only, bypass default, no kit serialization. Latest host/ARM CI not yet verified; reviewer must inspect reset/trigger edge cases and switching clicks.
 - Next integration gates: locate native CLICK submenu code, implement menu control mapping with backwards-compatible persistence; compare four-voice DSP load and output rail statistics for JB-14 and JB-18 together before merging either.
+
+## Combined qualification milestone — 2026-11-08
+- Integration branch `integration/jb14-jb18-combined-ci`, draft PR #6: https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/6. Both opt-in DSP effects and regression suites are staged **in one exact combined source tree**, rather than separate branch builds.
+- Candidate commit `6b085005ab7233c58ba912d10ed004eecd5f4d42`; Actions run `42459948064` started. Do not claim combined success until both host and firmware jobs complete.
+- Next hard gates: pass exact combined CI; review PCM rails/deadline and CPU budget with 4 concurrent voices; implement physical CLICK and SRR menu controls and compatible kit persistence; independently validate on device; then merge only after review.
+- Release readiness estimated 30% based on actual combined branch/PR/test execution, **not hardware pass**. Working v1.8.02 remains frozen.
