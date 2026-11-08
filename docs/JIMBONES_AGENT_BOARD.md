@@ -20,7 +20,7 @@
 | P1 | DSP + Embedded | Bass and comb filters | Comb: research/source audit required before implementation |
 | P1 | Embedded + Verification | UI navigation and performance diagnostics | Step 1 and modal controls urgent; CPU monitor kept |
  
-| P0 | DSP + Embedded | JB-19 — parallel Step FX gated send | **Research complete, ready for Codex implementation** |
+| P0 | DSP + Embedded | JB-19A — six-lane send gate | **Draft PR #8 implemented; host tests passed locally; ARM/hardware not verified** |
 | P1 | DSP + Embedded | JB-20 — tempo-synced dub delay using current FX buffer | **Research complete, buffer limits known; implementation needed** |
 | P0 | Embedded + Verification | JB-21 — all 16 buttons toggle and LEDs, per-voice send UI | **Source locations mapped; implementation needed** |
 | P0 | Verification + Integration | JB-22 — baseline/CPU/host/ARM/hardware release gates | **Hardware failure evidence recorded; test implementation needed** |
@@ -121,7 +121,7 @@
 ### JB-19 — Parallel gated send from existing rendered voices
 - **Priority:** P0. **Owners:** DSP + Embedded.
 - **Scope:** Preserve physical dry routing; tap rendered voice to FX buffer on bounded per-voice Step FX gate; no voice retrigger; no additional delay engine.
-- **State:** Research/design complete, implementation not started; **[Codex job and source audit](agents/dub_step_send_v184.md)** (subtasks JB-19A, JB-19B).
+- **State:** JB-19A implemented on isolated draft [PR #8](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/8). A mirrored copy of the source and regression fixture passed strict GCC and Clang host tests with sanitizers (2026-11-08). **Not merged, no GitHub CI/ARM or device test yet; no audible send exists.** JB-19B mixer tap remains unimplemented. [Source audit](agents/dub_step_send_v184.md).
 
 ### JB-20 — Dub tempo-synced delay and feedback tails
 - **Priority:** P1. **Owners:** DSP + Embedded.
@@ -139,6 +139,8 @@
 - **State:** Test checklist complete, tests and firmware build not yet done; [Codex handoff](CODEX_V184_HANDOVER.md).
 
 ## Findings and constraints
+
+- **Next implementation job:** JB-19B, read PR #8 and add a parallel, gated copy of already-rendered voice audio to the existing FX bus, without rerouting or retriggering the dry voice. Review and merge the JB-19A primitive into a verified integration branch before building on it; no firmware has been flashed for the new send.
 
 - Earlier v1.8.03 ARM CI passed, AND v1.8.03 subsequently **booted on tester's actual LXR-02**. It is **NOT safe/validated**: DSP crunch/overrun reproduced; idle readings after restart DSP 62%, PK 66%, LATE 0, RAIL 0; under load DSP 101%, PK 105%, LATE 999 (UI cap), RAIL 240. These meter fields have distinct semantics. No v1.8.04 firmware build exists yet.
 - CPU instrumentation and multi-voice crunch are first engineering priorities; any new send must reuse existing FX processing and default OFF. User explicitly shelved Metallic FM and moved wavetable, dub send, step toggle/LED fix and comb-filter feasibility higher. The upstream LXR02Open license is **non-commercial**, not automatically compatible with GPL-3.0-only: study ideas, do not copy source.
