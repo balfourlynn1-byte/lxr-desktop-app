@@ -1,6 +1,16 @@
 # JIMBONES — non-negotiable user goals and hardware-test acceptance
 2026-11-08. This document is the authoritative goal check for the experimental integration branch; it does not imply the features below are implemented.
 
+## P0 RELEASE BLOCKER — sound quality and No Clip (user directive 2026-11-08)
+**Absolute priority above feature count, UI completeness, release dates and progress percentages.** Any unintentional clipping, crunch, crackle, distortion, pop, or audio dropout anywhere in the native or combined signal path is a **FAIL / NO RELEASE**, including two or more modulated voices and long overlapping decays. CI compile success does not waive this gate.
+
+- Preserve clean six-voice native output and original-kit parity with all experimental features OFF. New processing must be bypass-transparent where promised.
+- Deliberate saturation, waveshaping, bit crushing and sample-rate reduction may alter sound **only when explicitly enabled**. No unintended artifacts in unrelated voices, particularly protected kick. Switching effects or kits must not create clicks/pops.
+- JB-03 owns final post-FX mixer clipping/rail, saturation and audio-deadline correlation; JB-02 owns CPU/deadline proof; JB-20 blocks merging or marking hardware-test release PASS without objective tests and an actual device listening test.
+- Required regression: 1, 2, 3 and 4 concurrent stick/pad-triggered voices with long tails; at least two voices using modulation; native vs bypassed A/B PCM comparisons; peak/rail counters at final output; underrun/deadline misses; gain/level matching; explicit FX-on tests distinguish intentional coloration from faults.
+- If any audible unintended crunch persists, stop expanding the release, isolate the signal path and fix it. Feature can be disabled or deferred rather than weakening audio integrity.
+- Release report must state **NO CLIP: PASS/FAIL/UNVERIFIED**, with the evidence. Until actual hardware listening confirms, status is **UNVERIFIED**, not PASS.
+
 ## Non-negotiable sound and compatibility
 - Preserve all **six original LXR-02 voices**, their original sound, existing kits, and normal performance. No overclocking.
 - Protect working v1.8.02 and maintain SD-card firmware-only recovery; no bootloader changes.
