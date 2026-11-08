@@ -35,3 +35,6 @@
 
 ## Review sequence
 JB-13 audits all UI diffs and consolidates shared routing; JB-02/JB-03 validate CPU/audio measurements; JB-20 runs independent regression and blocks any No Clip failure. PRs stay draft until reviewed. No auto-merge and no claim of autonomous work completion.
+
+## Specialist reinforcement — JB-21 through JB-26 (2026-11-08)
+Six independent specialist work-order branches have been created: `agents/jb-21-specialist` through `agents/jb-26-specialist`. Their tasks: JB-21 overlapping modulation/No Clip root cause, JB-22 CPU deadlines, JB-23 independent PCM/audio regression, JB-24 ARM build and memory, JB-25 Morph A/B/C and protected voices, JB-26 layered DSP optimisation. These are **assignments, not running autonomous agents or completed implementations**. Prioritize JB-21–24 before feature growth. Every candidate needs real independent PR review and JB-20 signoff; no unverified ARM release.
