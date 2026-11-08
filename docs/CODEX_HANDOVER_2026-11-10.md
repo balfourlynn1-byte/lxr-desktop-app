@@ -52,3 +52,6 @@
 
 ## Handover progress
 - 2026-11-08: Initial handover drafted. B02/B03 verified. Remaining items above are **not yet done**.
+
+## 2026-11-08 B01 immutable upstream reference
+Verified upstream `prime` HEAD at `c896bfd0efe86a4037418bf9f46f1fcc39255958` through GitHub commit lookup, then fetched six source/audit/licence blobs by exact commit; all blob hashes are recorded in `docs/JB_WAVETABLE_UPSTREAM_PORT_PLAN.md`. The LICENSE expressly forbids commercial use and imposes modified-source redistribution obligations; copying code to the public GPL repository remains blocked pending B07. Evidence commit `a5c51dc2a60b25108ca8689593e81932c5629711`. No compilation or audio testing.
