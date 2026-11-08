@@ -48,3 +48,9 @@ Real code merged into reviewed integration branch; deterministic host tests pass
 
 ## Constraints
 These are assignments and estimates, not running background agents. No peer reviews have been submitted; no new ARM image or hardware qualification was produced in this audit. Working firmware untouched.
+
+## Progress update — 2026-11-08
+- **JB-23 audio QA:** added `four_voice_mix_regression` to production DSP host tests: four voices, transient and SRR enabled, long decays, conservative 1/4 PCM summing, assert non-silent and no full-scale sample rails. This is a meaningful **new test implementation** in shared integration, not an independent JB-23 agent PR. Test has not been run in CI. Planning estimate JB-23 **5% → 12%** (test written, unverified).
+- **JB-03/JB-21:** no root-cause fix for the original hardware crunch; 15%/5% unchanged. A conservative PCM mixer fixture cannot prove hardware mixer integrity.
+- **JB-13/JB-20:** corrected a misleading kit-revision test label; UI reset still requires actual end-to-end test. Progress unchanged.
+- **Next:** compile and run `tests/test_jimbones.c` and menu fixture for exact commit, then inspect audio peaks and compare with actual LXR mixer; no ARM image or hardware PASS yet.
