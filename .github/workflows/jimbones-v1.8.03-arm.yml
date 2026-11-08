@@ -1,6 +1,9 @@
 name: JIMBONES v1.8.03 ARM test build
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - jimbones-v1.8.03-hardware-test
 permissions:
   contents: read
 jobs:
