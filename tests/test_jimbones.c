@@ -117,5 +117,68 @@ static void audio(const char *path) {
  }
  fclose(f);
 }
-int main(int argc,char **argv) { interpolation_audio();
+static void transient_four_voice_stress(void) {
+ int16_t dry[4][64],wet[4][64];
+ jb_init();
+ for(unsigned v=0;v<4;v++) {
+  jb_parameters[v][JB_MODE]=3;
+  jb_parameters[v][JB_DECAY]=127;
+  jb_setTransient(v,64,64);
+  jb_trigger(v,127,48+v*4,0);
+ }
+ unsigned nonzero=0,rails=0;
+ for(unsigned block=0;block<300;block++) {
+  for(unsigned v=0;v<4;v++) {
+   for(unsigned i=0;i<64;i++)dry[v][i]=wet[v][i]=(int16_t)((i%2)?12000:-12000);
+   jb_render(v,wet[v],64,1.f);
+   for(unsigned i=0;i<64;i++) {
+    nonzero+=(wet[v][i]!=dry[v][i]);
+    rails+=(wet[v][i]==32767 || wet[v][i]==-32768);
+   }
+  }
+ }
+ assert(nonzero>0);
+ /* Per-voice renderer must not drive a pre-existing 12k PCM fixture to rails. */
+ assert(rails==0);
+ jb_init();
+ for(unsigned v=0;v<4;v++) {
+  jb_parameters[v][JB_MODE]=3;
+  jb_trigger(v,127,48+v*4,0);
+  render(v,dry[v],64);
+ }
+ puts("PASS four concurrent transient-enabled voices, long decays, no output rails");
+}
+static void transient_integration(void) {
+ int16_t baseline[2048],bypass[2048],boost[2048];
+ jb_init();jb_parameters[1][JB_MODE]=1;
+ jb_trigger(1,100,48,0);render(1,baseline,2048);
+ jb_init();jb_parameters[1][JB_MODE]=1;
+ jb_setTransient(1,0,0);jb_trigger(1,100,48,0);render(1,bypass,2048);
+ assert(memcmp(baseline,bypass,sizeof(baseline))==0);
+ jb_init();jb_parameters[1][JB_MODE]=1;
+ jb_setTransient(1,64,0);jb_trigger(1,100,48,0);render(1,boost,2048);
+ assert(memcmp(baseline,boost,sizeof(baseline))!=0);
+ jb_setTransient(9,64,64);jb_setTransient(1,100,0);
+ jb_init();jb_parameters[1][JB_MODE]=1;
+ jb_trigger(1,100,48,0);render(1,bypass,2048);
+ assert(memcmp(baseline,bypass,sizeof(baseline))==0);
+ puts("PASS transient default-off bit identity, optional audio change, init reset");
+}
+static void srr_integration(void) {
+ int16_t baseline[2048],bypass[2048],reduced[2048];
+ jb_init();jb_parameters[1][JB_MODE]=1;
+ jb_trigger(1,100,48,0);render(1,baseline,2048);
+ jb_init();jb_parameters[1][JB_MODE]=1;
+ jb_setSampleRateReduction(1,1);jb_trigger(1,100,48,0);render(1,bypass,2048);
+ assert(!memcmp(baseline,bypass,sizeof(baseline)));
+ jb_init();jb_parameters[1][JB_MODE]=1;
+ jb_setSampleRateReduction(1,8);jb_trigger(1,100,48,0);render(1,reduced,2048);
+ assert(memcmp(baseline,reduced,sizeof(baseline)));
+ jb_setSampleRateReduction(1,33); /* invalid input leaves setting unchanged */
+ jb_init();jb_parameters[1][JB_MODE]=1;
+ jb_trigger(1,100,48,0);render(1,bypass,2048);
+ assert(!memcmp(baseline,bypass,sizeof(baseline)));
+ puts("PASS SRR bypass identity, opt-in audio change, init reset");
+}
+int main(int argc,char **argv) { srr_integration(); transient_four_voice_stress(); transient_integration(); interpolation_audio();
  interpolation_control(); bypass(); storage(); voices(); reproducible(); stress(); if(argc>1) audio(argv[1]); return 0; }
