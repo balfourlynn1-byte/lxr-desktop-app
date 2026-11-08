@@ -53,3 +53,6 @@ See [combined implementation tracker](JIMBONES_COMBINED_BUILD_IMPLEMENTATION_TRA
 
 ## All-agent UI submission request (2026-11-08)
 Every JB-01 through JB-20 workstream (JB-06 research-only/deferred) is assigned a feature-specific native submenu recommendation brief in [JIMBONES_UI_SUBMENU_RECOMMENDATION_REQUEST.md](agents/JIMBONES_UI_SUBMENU_RECOMMENDATION_REQUEST.md). Each must submit source-verified navigation, controls, defaults, kit storage, bypass, cost and tests in `docs/agents/ui-submissions/JB-XX-UI.md`. JB-13 consolidates a collision-free master navigation tree and JB-20 independently reviews. These are tracked assignments, **not autonomous agents actively submitting reports**.
+
+## P0 No Clip audio-quality directive — applies to EVERY feature owner
+Every JB agent must supply bypass transparency, output peak/rail and deadline-miss tests, two-or-more modulated voice overlap, and audible A/B verification steps. Intentional effect coloration must be opt-in and confined to selected voices; unintended clipping/crunch/dropouts are an automatic FAIL, regardless of feature completeness or green CI. JB-02/JB-03 instrument and diagnose; JB-20 blocks release until hardware listening evidence confirms. See `docs/JIMBONES_USER_GOALS_ACCEPTANCE.md`. Current status: **NO CLIP UNVERIFIED**.
