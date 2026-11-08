@@ -16,3 +16,10 @@ ${CC:-cc} -std=gnu11 -O2 -Wall -Wextra \
   tests/test_stepfx_dub.c Core/Src/Soundengine/StepFX.c \
   -o build/host/test_stepfx_dub
 build/host/test_stepfx_dub
+
+# Compile the real Step FX Performance selector against the scheduler.
+${CC:-cc} -std=gnu11 -O2 -Wall -Wextra \
+  -Itests/host_include -ICore/Inc \
+  tests/test_stepfx_ui.c Core/Src/menu/JimbonesPerfUI.c \
+  Core/Src/Soundengine/StepFX.c -o build/host/test_stepfx_ui
+build/host/test_stepfx_ui
