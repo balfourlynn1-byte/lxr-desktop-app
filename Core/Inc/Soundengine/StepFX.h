@@ -18,4 +18,16 @@ void stepfx_process(uint32_t frames,uint16_t bpm,uint8_t external,StepFxEmit emi
 void stepfx_clock(void);
 void stepfx_stop(void);
 unsigned stepfx_pending(void);
+/* Dub send controller only: routing to the native FX bus is separately gated.
+ * Voice 0 (kick) excluded by default; no audio-path changes in this revision. */
+void stepfx_dubEnable(uint8_t enabled);
+void stepfx_dubVoice(uint8_t voice,uint8_t enabled);
+void stepfx_dubThrow(uint8_t voice,uint8_t enabled);
+uint8_t stepfx_dubEnabled(void);
+uint8_t stepfx_dubSendMask(void);
+uint8_t stepfx_dubThrowMask(void);
+uint8_t stepfx_dubEffectiveMask(void);
+/* Bounded PCM send tap: add mono voice to interleaved stereo FX bus.
+ * Caller must gate on FX_DELAY and avoid double routing. */
+void stepfx_dubTap(uint8_t voice,const int16_t *samples,int16_t *fxStereo,unsigned frames);
 #endif

@@ -1519,6 +1519,87 @@ static void menu_displayModTargetShort(uint8_t curParmVal, char *valueAsText, ch
 /* OSC extension is separate from packed legacy menuIndex and does not alter the sequencer. */
 extern volatile uint8_t jb_audioLoadPercent;
 static uint8_t jb_screen=0, jb_selected=JB_METAL, jb_oscArmed=0;
+/* JB-13 native subpage extensions: index 4 is CLICK/transient, index 7 MIX/LOFI.
+ * Legacy page and original parameter bank remain first; next press opens extension.
+ * No kit serialization is claimed: these controls are TEMP until versioned storage.
+ */
+/* Native submenu extension router. Every assigned feature has a dedicated
+ * non-destructive display slot. Only JB-14 and JB-18 are connected to DSP.
+ * All unimplemented slots are visibly labelled PENDING and are read-only.
+ */
+enum { JB_EXT_NONE=0, JB_EXT_MORPH, JB_EXT_HAT, JB_EXT_SNARE,
+ JB_EXT_VELOCITY, JB_EXT_FMDRUM, JB_EXT_CLICK, JB_EXT_BASS,
+ JB_EXT_COMB, JB_EXT_COMB_ROUTE, JB_EXT_TAPE, JB_EXT_LOFI,
+ JB_EXT_CLUSTER, JB_EXT_METAL, JB_EXT_WAVE };
+static const char *const jb_extLabels[]={
+ "", "JB04 MORPH", "JB10 HAT", "JB11 SNARE", "JB16 VEL",
+ "JB15 FM DRUM", "JB14 TRANSIENT", "JB12 BASS", "JB12 COMB",
+ "JB17 COMB ROUTE", "JB05 TAPE", "JB18 LOFI",
+ "JB19 CLUSTER", "JB08 METAL", "JB09 WAVE"
+};
+static uint8_t jb_extPage=JB_EXT_NONE,jb_extArmed=0,jb_extSlot=0;
+static uint8_t jb_extSelect(uint8_t native,unsigned slot) {
+ static const uint8_t mod[]={JB_EXT_MORPH,JB_EXT_HAT,JB_EXT_SNARE,JB_EXT_VELOCITY};
+ static const uint8_t filter[]={JB_EXT_BASS,JB_EXT_COMB,JB_EXT_COMB_ROUTE};
+ static const uint8_t mix[]={JB_EXT_TAPE,JB_EXT_LOFI};
+ static const uint8_t osc[]={JB_EXT_METAL,JB_EXT_WAVE,JB_EXT_CLUSTER};
+ if(native==0)return osc[slot%3u];
+ if(native==2)return mod[slot%4u];
+ if(native==3)return JB_EXT_FMDRUM;
+ if(native==4)return JB_EXT_CLICK;
+ if(native==5)return filter[slot%3u];
+ if(native==7)return mix[slot%2u];
+ return JB_EXT_NONE;
+}
+static uint8_t jb_extCount(uint8_t native) {
+ if(native==0||native==5)return 3;
+ if(native==2)return 4;
+ if(native==7)return 2;
+ return (native==3||native==4)?1:0;
+}
+static int8_t jb_extAttack[JB_VOICES],jb_extSustain[JB_VOICES];
+static uint8_t jb_extSrr[JB_VOICES];
+static uint32_t jb_extSeenRevision;
+static void jb_extSyncKit(void) {
+ uint32_t revision=jb_kitRevision();
+ if(jb_extSeenRevision==revision)return;
+ memset(jb_extAttack,0,sizeof(jb_extAttack));
+ memset(jb_extSustain,0,sizeof(jb_extSustain));
+ memset(jb_extSrr,0,sizeof(jb_extSrr));
+ jb_extPage=JB_EXT_NONE; jb_extArmed=0; jb_extSlot=0;
+ jb_extSeenRevision=revision;
+}
+static uint8_t jb_extActive(void) { jb_extSyncKit(); return jb_extPage!=JB_EXT_NONE && menu_activePage<7; }
+static void jb_extPaint(void) {
+ unsigned v=menu_getActiveVoice();if(v>=JB_VOICES)v=JB_VOICES-1;
+ char top[17],bottom[17];
+ memset(editDisplayBuffer,' ',sizeof(editDisplayBuffer));
+ snprintf(top,sizeof(top),"%.16s",jb_extLabels[jb_extPage]);
+ if(jb_extPage==JB_EXT_CLICK)
+  snprintf(bottom,sizeof(bottom),"V%u A%+3d S%+3d",v+1,(int)jb_extAttack[v],(int)jb_extSustain[v]);
+ else if(jb_extPage==JB_EXT_LOFI)
+  snprintf(bottom,sizeof(bottom),"V%u SRR%2u TEMP",v+1,(unsigned)jb_extSrr[v]);
+ else snprintf(bottom,sizeof(bottom),"V%u PENDING",v+1);
+ memcpy(editDisplayBuffer[0],top,strlen(top));
+ memcpy(editDisplayBuffer[1],bottom,strlen(bottom));
+ editDisplayBuffer[0][16]=0;editDisplayBuffer[1][16]=0;
+}
+static void jb_extPot(unsigned pot,int diff) {
+ jb_extSyncKit();
+ unsigned v=menu_getActiveVoice();if(v>=JB_VOICES)v=JB_VOICES-1;
+ if(jb_extPage==JB_EXT_CLICK && pot<2) {
+  int x=(pot==0?jb_extAttack[v]:jb_extSustain[v])+diff;
+  if(x>64)x=64;if(x< -64)x= -64;
+  if(pot==0)jb_extAttack[v]=(int8_t)x;else jb_extSustain[v]=(int8_t)x;
+  jb_setTransient(v,jb_extAttack[v],jb_extSustain[v]);
+ } else if(jb_extPage==JB_EXT_LOFI && pot==0) {
+  int x=(int)jb_extSrr[v]+diff;
+  if(x<0)x=0;if(x>32)x=32;
+  jb_extSrr[v]=(uint8_t)x;
+  jb_setSampleRateReduction(v,jb_extSrr[v]);
+ }
+ menu_repaintAll();
+}
 static const char *const jb_short[JB_PARAMS]={
  "Mod","FML","WTL","Dec", "Met","Noi","Agg","Tex",
  "vMt","vNo","vAg","vTx", "Pit","Rat","Dep","Fbk",
@@ -1648,6 +1729,7 @@ void menu_repaintGeneric()
 {
  if(menu_cpuPageActive()) { jb_cpuPaint(); return; }
  if(menu_stepFxPageActive()) { jb_stepfxPaint(); return; }
+ if(jb_extActive()) { jb_extPaint(); return; }
  if(jb_uiActive()) { jb_uiPaint(); return; }
 	//first get the active sub-page and parameter from the menuIndex
 	const uint8_t activeParameter	= menuIndex & MASK_PARAMETER; // this will be 0 to 7 for the 4 columns
@@ -2901,6 +2983,7 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
   if(btnClicked)stepfx_include(jb_fxVoice,!(stepfx_mask()&(1u<<jb_fxVoice)));
   menu_repaintAll(); return;
  }
+ if(jb_extActive() && copyClear_Mode==MODE_NONE) { if(inc) jb_extPot(0,inc); return; }
  if(jb_uiActive() && copyClear_Mode==MODE_NONE) {
   if(jb_selected==JB_PARAMS) {
    if(inc || btnClicked) jb_setWaveInterpolation(inc?inc>0:!jb_getWaveInterpolation());
@@ -3316,6 +3399,23 @@ void menu_resetSaveParameters()
 // if its the global menu, and there are multiple pages will toggle to the next page
 void menu_switchSubPage(uint8_t subPageNr, uint8_t toggle)
 {
+ jb_extSyncKit();
+ /* Original first press is always preserved. Repeated native section presses
+  * cycle the assigned extension pages; the next press exits to native.
+  * OSC retains its existing legacy experimental parameter-bank cycle.
+  */
+ if(menu_activePage<7 && toggle && jb_extCount(subPageNr) && subPageNr!=0) {
+  if(jb_extArmed && menu_getSubPage()==subPageNr) {
+   if(jb_extPage==JB_EXT_NONE) jb_extSlot=0;
+   else jb_extSlot++;
+   jb_extPage=(jb_extSlot>=jb_extCount(subPageNr))?
+       JB_EXT_NONE:jb_extSelect(subPageNr,jb_extSlot);
+   if(jb_extPage==JB_EXT_NONE)jb_extArmed=0;
+   editModeActive=0;return;
+  }
+  jb_extArmed=1; jb_extPage=JB_EXT_NONE; jb_extSlot=0;
+ } else { jb_extArmed=0; jb_extPage=JB_EXT_NONE; jb_extSlot=0; }
+
  if(menu_activePage<7 && subPageNr==0 && toggle) {
   if(jb_oscArmed && menu_getSubPage()==0) {
    if(!jb_screen) { jb_screen=1; jb_selected=JB_MODE; }
@@ -3396,6 +3496,7 @@ void menu_switchPage(uint8_t pageNr)
  /* A voice-page reselect must not erase the OSC extension's position.
   * Otherwise the extra banks become inaccessible on repeated button presses. */
  if(pageNr >= 7u || pageNr != menu_activePage) {
+  jb_extPage=0; jb_extArmed=0;
   jb_screen=0;
   jb_oscArmed=0;
  }
@@ -4115,6 +4216,7 @@ uint8_t menu_parseKnobValue(uint8_t potNr, int16_t diff)
   else if(potNr==3 && diff)stepfx_include(jb_fxVoice,diff>0);
   screensaver_touch();menu_repaintAll();return 1;
  }
+ if(jb_extActive() && copyClear_Mode==MODE_NONE && potNr<4) { screensaver_touch();jb_extPot(potNr,diff);return 1; }
  if(jb_uiActive() && copyClear_Mode==MODE_NONE && potNr<4) {
   if(jb_selected==JB_PARAMS) {
    if(potNr==0 && diff) jb_setWaveInterpolation(diff>0);

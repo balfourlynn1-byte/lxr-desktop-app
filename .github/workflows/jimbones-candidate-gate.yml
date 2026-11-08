@@ -1,0 +1,52 @@
+name: JIMBONES candidate gates
+on:
+  push:
+    branches:
+      - agents/jb13-native-submenu-ui
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  host-menu:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Host menu navigation fixture
+        run: python3 tests/test_menu.py
+
+  host-dsp:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and execute production DSP host regression
+        run: bash tests/run_jimbones_host.sh
+
+  arm-compile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ARM GNU compiler and build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build gcc-arm-none-eabi libnewlib-arm-none-eabi
+      - name: Configure firmware
+        run: cmake --preset release
+      - name: Build firmware
+        run: cmake --build --preset release --parallel 2
+      - name: Record image checksums
+        run: |
+          find build/release -name '*.img' -type f -print -exec sha256sum {} \;
+      - name: Upload candidate for engineering inspection only
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jimbones-unverified-arm-candidate
+          path: build/release/*.img
+          if-no-files-found: error
+          retention-days: 7

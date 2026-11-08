@@ -23,12 +23,15 @@ void jb_stageVoice(uint8_t voice,int16_t *samples,unsigned size,float fader);
 void jb_defaults(uint8_t *kit);
 void jb_init(void);
 void jb_loadKit(const uint8_t *kit);
+uint32_t jb_kitRevision(void);
 void jb_silence(void);
 void jb_trigger(uint8_t voice, uint8_t velocity, uint8_t note, uint8_t open);
 void jb_render(uint8_t voice, int16_t *buffer, unsigned size, float gain);
 /* Add experimental noise to native voice signal BEFORE its original filter. */
 void jb_preFilterNoise(uint8_t voice, int16_t *buffer, unsigned size);
 extern volatile uint32_t jb_layerSaturationHits;
+/* JIMBONES layer PCM rail hits; excludes native mixer, FX and DAC. */
+extern volatile uint32_t jb_layerOutputRailHits;
 uint8_t jb_limit(unsigned parameter);
 void jb_setControl(unsigned voice,unsigned parameter,uint8_t value);
 void jb_adjust(unsigned voice, unsigned parameter, int delta);

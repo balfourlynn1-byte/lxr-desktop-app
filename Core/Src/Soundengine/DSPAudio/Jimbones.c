@@ -18,6 +18,7 @@ typedef struct {
  float hitVelocity;
  JbTransientState transientShaper;
  JbSampleHold sampleHold;
+ float srrWet;
 } Layer;
 static Layer layers[JB_VOICES];
 /* Runtime-only controls until CLICK UI and backward-compatible kit storage land. */
@@ -25,6 +26,7 @@ static int8_t jb_attack[JB_VOICES],jb_sustain[JB_VOICES];
 static uint8_t jb_srrFactor[JB_VOICES];
 
 volatile uint32_t jb_layerSaturationHits;
+volatile uint32_t jb_layerOutputRailHits;
 static float clamp(float x, float a, float b) { return x<a?a:(x>b?b:x); }
 static float unit(uint8_t x) { return x*(1.f/127.f); }
 /* All callers pass bounded phases. Integer conversion avoids libm floorf per sample. */
@@ -59,7 +61,9 @@ static uint32_t lock(void) { uint32_t mask=__get_PRIMASK(); __disable_irq(); ret
 static void unlock(uint32_t mask) { __DMB(); __set_PRIMASK(mask); }
 void jb_setSampleRateReduction(unsigned v,uint8_t factor) {
  if(v>=JB_VOICES || factor>32u)return;
- uint32_t m=lock();jb_srrFactor[v]=factor;layers[v].sampleHold.counter=0;unlock(m);
+ /* Preserve the held sample when changing the factor. The audio renderer
+  * crossfades the wet path, avoiding an immediate held-sample jump. */
+ uint32_t m=lock();jb_srrFactor[v]=factor;unlock(m);
 }
 void jb_setTransient(unsigned v,int8_t attack,int8_t sustain) {
  if(v>=JB_VOICES || attack< -64 || attack>64 || sustain< -64 || sustain>64)return;
@@ -112,12 +116,14 @@ void jb_defaults(uint8_t *kit) {
  for(unsigned v=0;v<JB_VOICES;v++) memcpy(kit+v*JB_PARAMS,defaults,JB_PARAMS);
 }
 void jb_silence(void) { uint32_t m=lock(); memset(layers,0,sizeof(layers)); unlock(m); }
+static volatile uint32_t jb_kitEpoch;
+uint32_t jb_kitRevision(void) { return jb_kitEpoch; }
 void jb_loadKit(const uint8_t *kit) {
  uint32_t m=lock(); memcpy(jb_parameters,kit,JB_KIT_BYTES);
  memset(layers,0,sizeof(layers));
- memset(jb_attack,0,sizeof(jb_attack));memset(jb_sustain,0,sizeof(jb_sustain));memset(jb_srrFactor,0,sizeof(jb_srrFactor)); unlock(m);
+ memset(jb_attack,0,sizeof(jb_attack));memset(jb_sustain,0,sizeof(jb_sustain));memset(jb_srrFactor,0,sizeof(jb_srrFactor)); jb_kitEpoch++; unlock(m);
 }
-void jb_init(void) { jb_defaults(&jb_parameters[0][0]); memset(jb_attack,0,sizeof(jb_attack));memset(jb_sustain,0,sizeof(jb_sustain));memset(jb_srrFactor,0,sizeof(jb_srrFactor));jb_silence(); }
+void jb_init(void) { jb_layerOutputRailHits=0; jb_kitEpoch++; jb_defaults(&jb_parameters[0][0]); memset(jb_attack,0,sizeof(jb_attack));memset(jb_sustain,0,sizeof(jb_sustain));memset(jb_srrFactor,0,sizeof(jb_srrFactor));jb_silence(); }
 void jb_trigger(uint8_t v,uint8_t velocity,uint8_t note,uint8_t open) {
  if(v>=JB_VOICES) return;
  Layer next={0}, *s=&next; const uint8_t *p=jb_parameters[v];
@@ -248,7 +254,19 @@ void jb_render(uint8_t v,int16_t *buffer,unsigned size,float gain) {
   }
   if(p[JB_BITS] || s->aggression>0) { float q=out*steps; out=(int)(q+(q<0?-.5f:.5f))/steps; }
   if(jb_attack[v] || jb_sustain[v]) out=jb_transient_process(&s->transientShaper,out,(float)jb_attack[v]/64.f,(float)jb_sustain[v]/64.f);
-  if(jb_srrFactor[v]>1u) out=jb_sample_hold_process(&s->sampleHold,out,jb_srrFactor[v]);
+  /* JB-18: 64-sample wet/dry transition for knob changes. This does not
+   * remove deliberate LOFI coloration, but avoids abrupt bypass steps.
+   * A physical multi-voice listening test is still mandatory.
+   */
+  {
+   const uint8_t factor=jb_srrFactor[v];
+   const float dry=out;
+   const float wet=jb_sample_hold_process(&s->sampleHold,dry,factor);
+   const float target=factor>1u?1.f:0.f;
+   if(s->srrWet<target) { s->srrWet+=1.f/64.f; if(s->srrWet>target)s->srrWet=target; }
+   else if(s->srrWet>target) { s->srrWet-=1.f/64.f; if(s->srrWet<target)s->srrWet=target; }
+   out=dry+(wet-dry)*s->srrWet;
+  }
   out=out*s->envelope*s->velocity;
   /* Match the previous output at the boundary, rather than adding it to the
      new attack. The correction decays in ~2.5 ms; there is no event delay. */
@@ -274,6 +292,7 @@ void jb_render(uint8_t v,int16_t *buffer,unsigned size,float gain) {
   float dry=buffer[i];
   float room=1.f-fmaxf(0.f,(added<0.f?-dry:dry)/32768.f);
   float mixed=dry+added*room;
+  if(mixed>=32767.f || mixed<=-32768.f) ++jb_layerOutputRailHits;
   buffer[i]=(int16_t)clamp(mixed,-32768.f,32767.f);
  }
 }
