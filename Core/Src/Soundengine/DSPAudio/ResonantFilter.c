@@ -20,7 +20,8 @@
 //------------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------------
-IN_ITCM_RAM void SVF_setReso(ResonantFilter* filter, float feedback)
+/* Control-rate setter: keep precious audio ITCM for per-sample DSP. */
+void SVF_setReso(ResonantFilter* filter, float feedback)
 {
 	filter->q = 1-feedback;
 	if(filter->q<0.1f)filter->q = 0.02f;
@@ -88,7 +89,8 @@ IN_ITCM_RAM void SVF_recalcFreq(ResonantFilter* filter)
 #endif
 }
 //------------------------------------------------------------------------------------
-IN_ITCM_RAM void SVF_setDrive(ResonantFilter* filter,float drive)
+/* Control-rate setter: keep precious audio ITCM for per-sample DSP. */
+void SVF_setDrive(ResonantFilter* filter,float drive)
 {
 #if USE_SHAPER_NONLINEARITY
 	filter->drive = drive;
@@ -99,7 +101,8 @@ IN_ITCM_RAM void SVF_setDrive(ResonantFilter* filter,float drive)
 
 }
 //------------------------------------------------------------------------------------
-IN_ITCM_RAM void SVF_directSetFilterValue(ResonantFilter* filter, float val)
+/* Control-rate setter: keep precious audio ITCM for per-sample DSP. */
+void SVF_directSetFilterValue(ResonantFilter* filter, float val)
 {
 	filter->f = val*(0.5f*0.90f);
 	filter->g  = fastTan(M_PI * filter->f );
