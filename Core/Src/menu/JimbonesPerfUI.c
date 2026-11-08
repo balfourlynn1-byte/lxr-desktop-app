@@ -1,12 +1,13 @@
 /* JIMBONES Performance mode: one active Step FX action at a time.
  * The 16 physical buttons each toggle ON on first press, OFF on second.
- * Step 1 (index 0) is DUB SEND, NOT a master-off button.
+ * Steps 1-5 are five tempo-division DUB SEND presets, not master OFF.
  *
  * SPDX-License-Identifier: GPL-3.0-only
  */
 #include "menu/JimbonesPerfUI.h"
 #include "Soundengine/StepFX.h"
 #include "Soundengine/StepFxSend.h"
+#include "Soundengine/DubDelaySync.h"
 
 static uint8_t active_page = JB_PERF_PAGE_MAIN;
 static uint8_t selected_fx = 0; /* browsing / edit focus */
@@ -37,21 +38,28 @@ uint8_t jb_perfui_select(uint8_t index) {
     }
 
     armed_fx = index;
-    /* Index 0 uses a separate audio send gate; existing repeat/stutter
-     * scheduler keeps zero as its internal OFF value. */
-    stepfx_select(index);
-    if (index == 0u && !dub_levels_initialised) {
+    /* First 5 pads control a single existing dub processor, with one
+     * exclusive effect armed at a time. The legacy repeat scheduler stays
+     * OFF for these five; buttons 6-16 keep their original effects. */
+    static const uint8_t dub_divisions[5]={2u,1u,4u,0u,5u};
+    const uint8_t dub=(uint8_t)(index<5u);
+    stepfx_select(dub?0u:index);
+    if (dub) dub_delay_set_division(dub_divisions[index]);
+    if (dub && !dub_levels_initialised) {
         /* Conservative first-use dub level, leaving kick protection to
          * StepFxSend mask (voices 1..5 enabled, voice 0 excluded). */
         for (uint8_t v=1u;v<STEPFX_SEND_VOICES;v++)
             stepfx_send_set_level(v,64u);
         dub_levels_initialised = 1u;
     }
-    stepfx_send_set_enabled((uint8_t)(index==0u));
+    stepfx_send_set_enabled(dub);
     return 1;
 }
 uint8_t jb_perfui_selected(void) { return selected_fx; }
 uint8_t jb_perfui_active(void) { return armed_fx; }
 const char *jb_perfui_effect_name(uint8_t index) {
-    return index == 0u ? "DUBSEND" : stepfx_name(index);
+    static const char *const dub_names[5]={
+        "DUB 1/4","DUB 1/8","DUB T8","DUB 1/16","DUB 1/32"
+    };
+    return index<5u?dub_names[index]:stepfx_name(index);
 }
