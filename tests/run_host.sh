@@ -29,3 +29,10 @@ ${CC:-cc} -std=c11 -O2 -g -Wall -Wextra -Werror -fsanitize=address,undefined,flo
  Core/Src/Soundengine/DSPAudio/Jimbones.c Core/Src/Soundengine/DSPAudio/wavetable.c \
  -lm -o build/host/test_texture_noise
 build/host/test_texture_noise
+
+# A03: isolated original 132-sample No Clip smoother regression (host only)
+${CC:-cc} -std=c11 -O2 -g -Wall -Wextra -Werror -fsanitize=address,undefined \
+ -ICore/Inc tests/test_noclip_132.c \
+ Core/Src/Soundengine/DSPAudio/RetriggerSmoother.c \
+ -o build/host/test_noclip_132
+build/host/test_noclip_132
