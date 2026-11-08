@@ -50,6 +50,14 @@ int main(void) {
   menu_switchSubPage(2,1); assert(jb_extPage==JB_EXT_SNARE);
   menu_switchSubPage(2,1); assert(jb_extPage==JB_EXT_VELOCITY);
   menu_switchSubPage(2,1); assert(!jb_extPage);
+  menu_switchSubPage(5,1); assert(menu_getSubPage()==5 && !jb_extPage);
+  menu_switchSubPage(5,1); assert(jb_extPage==JB_EXT_BASS);
+  menu_switchSubPage(5,1); assert(jb_extPage==JB_EXT_COMB);
+  menu_switchSubPage(5,1); assert(jb_extPage==JB_EXT_COMB_ROUTE);
+  menu_switchSubPage(5,1); assert(!jb_extPage);
+  menu_switchSubPage(3,1); assert(menu_getSubPage()==3 && !jb_extPage);
+  menu_switchSubPage(3,1); assert(jb_extPage==JB_EXT_FMDRUM);
+  menu_switchSubPage(3,1); assert(!jb_extPage);
   menu_switchSubPage(4,1); assert(menu_getSubPage()==4 && !jb_extPage);
   menu_switchSubPage(4,1); assert(jb_extPage==JB_EXT_CLICK);
   menu_switchSubPage(4,1); assert(!jb_extPage);
@@ -59,7 +67,7 @@ int main(void) {
   menu_switchSubPage(7,1); assert(!jb_extPage);
  }
  menu_activePage=MENU_MIDI_PAGE; menuIndex=0; menu_switchSubPage(0,1); assert(!jb_screen);
- puts("PASS native agent submenu router: first OSC original, eight macro banks plus interpolation bank, exit, six voices plus open-hat page, MOD/MIX/CLICK extension cycles and global behavior");
+ puts("PASS native agent submenu router: first OSC original, eight macro banks plus interpolation bank, exit, six voices plus open-hat page, MOD/FM/CLICK/FILTER/MIX extension cycles and global behavior");
 }
 '''
 out=root/'build/host/menu_fixture.c'; out.write_text(fixture+fn+test)
