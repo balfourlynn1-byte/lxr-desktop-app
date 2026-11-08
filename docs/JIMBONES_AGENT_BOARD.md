@@ -21,7 +21,7 @@
 | P1 | Embedded + Verification | UI navigation and performance diagnostics | Step 1 and modal controls urgent; CPU monitor kept |
  
 | P0 | DSP + Embedded | JB-19A — six-lane send gate | **Draft PR #8 implemented; host tests passed locally; ARM/hardware not verified** |
-| P0 | DSP + Embedded | JB-19B — parallel FX mixer tap | **Draft PR #9 implemented; GitHub host CI passed, ARM and hardware pending** |
+| P0 | DSP + Embedded | JB-19B — parallel FX mixer tap | **Draft PR #9; GitHub host + ARM CI passed, hardware pending** |
 | P1 | DSP + Embedded | JB-20 — tempo-synced dub delay using current FX buffer | **Research complete, buffer limits known; implementation needed** |
 | P0 | Embedded + Verification | JB-21 — all 16 buttons toggle and LEDs, per-voice send UI | **Source locations mapped; implementation needed** |
 | P0 | Verification + Integration | JB-22 — baseline/CPU/host/ARM/hardware release gates | **Hardware failure evidence recorded; test implementation needed** |
@@ -122,7 +122,7 @@
 ### JB-19 — Parallel gated send from existing rendered voices
 - **Priority:** P0. **Owners:** DSP + Embedded.
 - **Scope:** Preserve physical dry routing; tap rendered voice to FX buffer on bounded per-voice Step FX gate; no voice retrigger; no additional delay engine.
-- **State:** JB-19A draft [PR #8](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/8); JB-19B stacked draft [PR #9](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/9) now wires an optional additive tap from six rendered voices to the existing global FX bus. GitHub Actions JB-19B host checks **passed** on 2026-11-08; ARM CI was running at last check. **Neither PR merged or device-tested.** A user-facing Step FX send control is still required (JB-21), so a usable dub throw does not yet exist. [Source audit](agents/dub_step_send_v184.md).
+- **State:** JB-19A draft [PR #8](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/8); JB-19B stacked draft [PR #9](https://github.com/balfourlynn1-byte/lxr-desktop-app/pull/9) now wires an optional additive tap from six rendered voices to the existing global FX bus. GitHub Actions JB-19B **host and ARM build checks passed** on 2026-11-08 ([run #42480313654](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42480313654), commit `cc8cd0ff20fafb52e05269b487246889ca0fa806`). **Neither PR merged or device-tested.** A user-facing Step FX send control is still required (JB-21), so a usable dub throw does not yet exist. [Source audit](agents/dub_step_send_v184.md).
 
 ### JB-20 — Dub tempo-synced delay and feedback tails
 - **Priority:** P1. **Owners:** DSP + Embedded.
