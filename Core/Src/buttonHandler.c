@@ -803,10 +803,11 @@ static void buttonHandler_setRemoveStep(uint8_t ledNr, uint8_t seqButtonPressed)
 #else
 	//frontPanel_sendData(MAIN_STEP_CC, value, seqButtonPressed);
 	seq_toggleMainStep(trackNr, seqButtonPressed + 16*menu_activeBar, patternNr);
-	if(seq_isMainStepActive(trackNr, seqButtonPressed + 16*menu_activeBar, patternNr))
-	{
-		led_setValue(1,led_idx2StepLed(seqButtonPressed));
-	}
+	/* Always mirror the toggled sequencer step, including step index 0.
+	 * A stale temporary LED state must not leave an unarmed step lit. */
+	led_setValue(seq_isMainStepActive(trackNr,
+		seqButtonPressed + 16*menu_activeBar, patternNr) ? 1u : 0u,
+		led_idx2StepLed(seqButtonPressed));
 #endif
 	//autosave changes
 	preset_touchTimer(PRESET_PAT_TIMER);
