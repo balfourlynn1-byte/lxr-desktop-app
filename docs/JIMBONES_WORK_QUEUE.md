@@ -75,3 +75,7 @@ Added deterministic 64/0/64/4/16-sample segmentation to `tests/test_noclip_132.c
 
 ### A04 checkpoint — 2026-11-09
 Source map completed in `docs/JB_A04_SKULL_PRESERVATION_MAP.md` (commit `098ff972`): 170ms skull frames, LCD drain/latching and wake repaint; existing host test entrypoint identified. Execution NOT RUN; no hardware image claim. Next A05 or A03 execution when checkout available.
+
+
+### 2026-11-09 B06b native sample boundary
+Pinned native oscillator dispatch and inactive sample playback in `docs/JB_B06B_SAMPLE_DISPATCH_GATE.md` (commit `3cbb1fb2`). Sample asset exists but playable sample path is not established; no upstream sample IDs may be assumed compatible. B06 remains PARTIAL; host tests NOT RUN; ARM held.
