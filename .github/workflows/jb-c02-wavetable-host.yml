@@ -1,0 +1,32 @@
+name: JIMBONES C02 isolated wavetable audio fixture
+on:
+  push:
+    branches:
+      - agents/jb-wavetable-host-experiment
+    paths:
+      - 'tests/test_c02_wavetable_audio.py'
+      - '.github/workflows/jb-c02-wavetable-host.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  isolated-audio:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Execute deterministic isolated WAV fixture
+        run: python3 tests/test_c02_wavetable_audio.py
+      - name: Validate WAV metadata and compute checksum
+        run: |
+          python3 - <<'PY'
+          import wave, hashlib
+          p='build/host/wavetable-c02.wav'
+          with wave.open(p,'rb') as f:
+              assert (f.getnchannels(),f.getsampwidth(),f.getframerate(),f.getnframes()) == (1,2,44140,22070)
+          print('SHA256', hashlib.sha256(open(p,'rb').read()).hexdigest())
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: c02-isolated-wavetable-audio
+          path: build/host/wavetable-c02.wav
+          if-no-files-found: error
