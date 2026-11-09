@@ -310,3 +310,7 @@ L03 partial (2026-11-09): source audit identified two 120 BPM initial defaults i
 
 ### 2026-11-09 — one-day Codex handover preparation
 - Created `docs/CODEX_EXECUTION_BRIEF_2026-11-10.md` commit `a1df5a447788729777e5840ea02a7da75635bbc6`: prioritized executable handover, exact branch references, C02/C04 confirmed Actions, C05/C06 unverified status, native build/legacy OFF identity/wavetable ownership/LFO/UI/SD/CPU gates, candidate manifest, explicit ARM approval hold and first Codex instruction. No build or new validation claimed.
+
+### 2026-11-09 20:19 UTC — C05/C06 source guards verified by GitHub Actions
+- Previously unobserved workflow `JIMBONES C05-C06 source guards` run **42687294056** is now **COMPLETED SUCCESS** at commit `36fc6aac62a74409f226f0432a504520a65e5757`: https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42687294056 . Both C05 and C06 Python **source guards passed in CI**. This is source-pattern verification only; native C compilation, actual OFF-path audio identity, LFO feed, waveform-table lifetime, CPU and hardware remain NOT RUN / OPEN.
+- Committed `.github/workflows/jb-c04-wave-velocity.yml` update `84bf478e8e9428318543f0496287299768f3fcaa` to additionally execute both source guards in the existing GCC/Clang host regression matrix. **No run of this new matrix revision observed yet**. Next task: real native host compilation and OFF-path reference audio fixture; do not claim C05/C06 engine PASS. ARM hold unchanged.
