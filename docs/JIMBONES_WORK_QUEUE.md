@@ -64,3 +64,6 @@ Source-only B05 DONE: map and proposed default-OFF wave-position/shape destinati
 
 ### 2026-11-09 B06a native compatibility checkpoint
 Source-only partial progress: verified native oscillator ABI, 64-frame DMA, 44140 Hz, six velocity nodes, fixed JB kit layout and Metallic OFF. Evidence `docs/JB_B06_NATIVE_ABI_GATE.md`. B06 remains OPEN pending upstream sample/kit/MIDI/display comparisons; executable host tests NOT RUN. ARM hold remains absolute.
+
+### 2026-11-09 B07 licence decision
+B07 DONE (research/decision only): public JIMBONES remains native GPL-only; independently authored bounded waveform extension is the selected route, upstream noncommercial source must not be copied. Evidence `docs/JB_B07_LICENCE_ARCHITECTURE_DECISION.md`, commit `8f6ea7de38a51006c037494cbdcd80b91a929938`. B06 and A03 still open; no tests executed. ARM hold unchanged.
