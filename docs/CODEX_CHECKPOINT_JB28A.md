@@ -115,3 +115,7 @@ Velocity destination research completed, see `docs/JB_B05_VELOCITY_DESTINATION_M
 - Reviewed pinned upstream `LICENSE` at `c896bfd0efe86a4037418bf9f46f1fcc39255958`, blob `635ea7ee4e54922c03fad5795ba7c734048857b9`, plus previously pinned native/upstream oscillator ABI maps.
 - Selected independently authored Erica-native bounded interpolation for public GPL-only branch; no upstream noncommercial source transplant. Decision evidence `docs/JB_B07_LICENCE_ARCHITECTURE_DECISION.md`, commit `8f6ea7de38a51006c037494cbdcd80b91a929938`.
 - Tests: NOT RUN; code: documentation only; ARM: HELD. Next unblocked work: A03 GCC/Clang host execution if checkout available, or B06 remaining source mapping.
+
+
+### A04 source trace — 2026-11-09
+Pinned approved skull and wake paths in `docs/JB_A04_SKULL_PRESERVATION_MAP.md` (commit `098ff972`); source-only DONE, host tests NOT RUN. ARM HOLD remains.
