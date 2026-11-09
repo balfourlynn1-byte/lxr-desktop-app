@@ -31,4 +31,30 @@ static inline int16_t jb_wave_scan_sample(const int16_t waves[4][256],
     if (v < -32768.f) v = -32768.f;
     return (int16_t)v;
 }
+/* Note-on velocity mapping: velocity 1..127, base scan position 0..3,
+ * signed depth -3..3. The result is clamped before the wave lookup.
+ * Zero depth is an exact bypass of velocity modulation.
+ * The calling MIDI/voice layer must provide the captured note-on velocity.
+ */
+static inline float jb_wave_velocity_position(float base, float depth,
+                                               uint8_t velocity)
+{
+    if (!(base >= 0.f)) base = 0.f;
+    if (base > 3.f) base = 3.f;
+    if (!(depth >= -3.f && depth <= 3.f)) depth = 0.f;
+    if (velocity > 127u) velocity = 127u;
+    if (depth == 0.f) return base;
+    const float v = (float)velocity * (1.f / 127.f);
+    float position = base + depth * v;
+    if (position < 0.f) position = 0.f;
+    if (position > 3.f) position = 3.f;
+    return position;
+}
+static inline int16_t jb_wave_scan_velocity_sample(const int16_t waves[4][256],
+                                                     uint32_t phase, float base,
+                                                     float depth, uint8_t velocity)
+{
+    return jb_wave_scan_sample(waves, phase,
+                              jb_wave_velocity_position(base, depth, velocity));
+}
 #endif
