@@ -275,3 +275,6 @@ User wants Torso Electronics S-4-style press-and-hold behavior and Digitakt TRAC
 6. **Audio gate (P0):** Finish real native DrumVoice wavetable-ON/OFF PCM rendering and overlapping-hit/CPU tests before any UI feature promotion.
 
 **Guardrails:** Experimental branch only, no ARM compilation or flashable image without explicit approval, no claims of hardware readiness, commit and push each atomic task and update live checkpoint.
+
+### 2026-11-09 — X01a host CI integration
+- Added `tests/test_jb_shift_relative_host.c` to push-path triggers and GCC/Clang native sanitizer test steps in `.github/workflows/jb-c04-wave-velocity.yml`, commit `42e79402d821d205a766c2d578822f7bc23d1892`. New workflow execution **not yet verified**; last observed previous successful run `42702335053` (head `9c26d45cbe`, before this commit). Next inspect CI run for commit `42e79402`, confirm both compiler jobs and record logs; if failed, fix and push atomic commit. Strict ARM hold remains, no hardware firmware change.
