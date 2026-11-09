@@ -151,3 +151,7 @@ L03 partial (2026-11-09): source audit identified two 120 BPM initial defaults i
 
 ### 2026-11-09 — one-day Codex handover preparation
 - Created `docs/CODEX_EXECUTION_BRIEF_2026-11-10.md` commit `a1df5a447788729777e5840ea02a7da75635bbc6`: prioritized executable handover, exact branch references, C02/C04 confirmed Actions, C05/C06 unverified status, native build/legacy OFF identity/wavetable ownership/LFO/UI/SD/CPU gates, candidate manifest, explicit ARM approval hold and first Codex instruction. No build or new validation claimed.
+
+### 2026-11-09 — reference review: RN01MA LXRE_MX v1.1 (RESEARCH ONLY)
+- Verified release: https://github.com/RN01MA/lxr-eurorack-app/releases/tag/v1.1 (published 2026-11-09); Eurorack-only, not compatible desktop .img. Includes GLT 17 microsound recipes, CLS/EXP kit generator, per-voice regeneration, automatic level balancing, click-free kit morphing, CPU display, DJ filter, FX-bus voice routing.
+- Source tree tag v1.1: `Core/Src/Preset/Randomizer.c`, `RandomizerUi.c`, `Core/Src/Soundengine/DSPAudio/FX/DjFilter.c`, `Core/Src/menu/menu.c`, `Core/Src/Soundengine/Soundengine.c`. **No code ported or tested**. Prioritize source-level review of CPU monitoring and morph click mitigation as potential help for current blockers; GLT recipes and DJ filter are **future features** subordinate to Nov 10 handover. Check GPL and NOTICE attribution before any reuse. No ARM build or hardware claim.
