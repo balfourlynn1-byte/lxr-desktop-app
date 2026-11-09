@@ -71,3 +71,7 @@ B07 DONE (research/decision only): public JIMBONES remains native GPL-only; inde
 
 ### 2026-11-09 A03 mixed-block boundary fixture (NOT RUN)
 Added deterministic 64/0/64/4/16-sample segmentation to `tests/test_noclip_132.c` in commit `1ffba1a5bc47f9204e0b34d33e0a2747c605ae6c`. Asserts first sample equals previous output, sample 132 returns to unmodified input, zero-length call preserves state, remaining countdown and no correction after boundary. Existing `tests/run_host.sh` already compiles this file; no runner modification necessary. Local checkout unavailable (`Could not resolve host: github.com`); no GCC/Clang test run, CI PASS or hardware evidence. Next: run `CC=gcc sh tests/run_host.sh` and `CC=clang sh tests/run_host.sh` in GitHub-enabled checkout, then review sanitizer logs. ARM hold unchanged.
+
+
+### A04 checkpoint — 2026-11-09
+Source map completed in `docs/JB_A04_SKULL_PRESERVATION_MAP.md` (commit `098ff972`): 170ms skull frames, LCD drain/latching and wake repaint; existing host test entrypoint identified. Execution NOT RUN; no hardware image claim. Next A05 or A03 execution when checkout available.
