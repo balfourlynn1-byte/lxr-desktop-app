@@ -57,3 +57,6 @@ The 132-sample smoother C/header blobs and enabled config are identical across `
 
 ### 2026-11-08 B04 compatibility checkpoint
 B04 source-only DONE: pinned Erica/upstream OscInfo and modulation header blobs, waveform ID collision (Erica PWM=5 versus upstream CRASH=5), and six main voice target scope. Full mapping `docs/JB_B04_OSCILLATOR_COMPATIBILITY_MAP.md`, commit `ed00f8c97fa952935115d6f14a38df94edd4bf27`. B05 velocity destination map next; no host/audio test executed, ARM held.
+
+### 2026-11-09 B05 velocity research checkpoint
+Source-only B05 DONE: map and proposed default-OFF wave-position/shape destinations in `docs/JB_B05_VELOCITY_DESTINATION_MAP.md`; drive deferred, existing velocity semantics preserved. Host test NOT RUN. Next B06/A03.
