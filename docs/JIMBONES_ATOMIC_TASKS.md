@@ -274,3 +274,8 @@ L03 partial (2026-11-09): source audit identified two 120 BPM initial defaults i
 
 
 **2026-11-09 H03 CI guard repair (PENDING rerun):** PR #18 run [42663528291](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42663528291) checked out merge SHA `bebb4a6c`; Comb focused test passed, GCC host runner stopped at `tests/test_h03_native_morph_contract.py` because its regex required `{` immediately followed by `morph = 0`, but native `Core/Src/menu/menu.c` has a legitimate explanatory comment between them. Updated guard to permit comments without crossing braces in commit `3cd0f13845f4c04f366122cbacb061ddb1d2d928`. This is a source-guard correction, **not a DSP fix**. CI has **not been rerun**; H03 and A03 remain OPEN; Clang skipped, no hardware verification. ARM HOLD unchanged.
+
+### Wavetable experiment checkpoint — 2026-11-09 (C02 PARTIAL)
+- C01 isolated branch `agents/jb-wavetable-host-experiment` created from `bb7d5bd8dd5cd3dea57fc776241770f19c83c0ab`, with C01 notes committed at `20b34317525e789927cf2b98582b8016c5e6d0e6`.
+- C02 standalone four-frame sweep fixture committed `3823de5ff81a804eb69a5952e8dda32b63a7c1ec`, **locally executed and PASS**: 22070 mono PCM16 frames at 44140 Hz; SHA-256 `20396bc4f995544882b27bb49b0b68f001a3093b2822012818062bd93b41a94c`. Workflow committed `614f2ead51c0ba554605e5039917417900e987a0` but no Actions run verified.
+- **Do not check C02 as DONE:** fixture is independent Python, not original native oscillator legacy OFF bit-identical regression. Native DSP, LFO/velocity, emulator and CPU remain NOT TESTED. Next: exact native OFF fixture with GCC/Clang before any integration claim.
