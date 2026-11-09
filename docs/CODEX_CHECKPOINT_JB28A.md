@@ -106,3 +106,7 @@ Each update must include UTC time, pushed commit SHA, stage, files inspected/cha
 ### 2026-11-08 — B04 oscillator compatibility research checkpoint
 - Pushed source-only compatibility map `docs/JB_B04_OSCILLATOR_COMPATIBILITY_MAP.md` at `ed00f8c97fa952935115d6f14a38df94edd4bf27`. Erica PWM=5 conflicts with upstream CRASH=5; `OscInfo` layouts, sample caches, and native modulation paths are not binary-compatible.
 - Test ledger: source audit VERIFIED via exact GitHub file blobs; native GCC/Clang, WAV, ARM and hardware NOT RUN. Next B05 velocity destination routing, bounds and default-OFF tests. ARM hold unchanged.
+
+
+### 2026-11-09 B05
+Velocity destination research completed, see `docs/JB_B05_VELOCITY_DESTINATION_MAP.md`: six upstream/native velocity nodes; wave-position and shape recommended default OFF; drive deferred. Source-only, tests NOT RUN. ARM hold remains.
