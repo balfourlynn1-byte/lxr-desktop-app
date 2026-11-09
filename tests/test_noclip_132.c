@@ -55,12 +55,38 @@ static void test_independent_voices(void) {
     retrigger_smoother_process(&a,&x,1); retrigger_smoother_process(&b,&y,1);
     assert(x == 1200 && y == 400 && a.remaining == 131 && b.remaining == 0);
 }
+
+/* A03 edge: exact 132-sample boundary with mixed real-world DMA block sizes.
+ * A zero-length call must not consume a pending note-on or fade sample. */
+static void test_mixed_block_boundaries(void) {
+    RetriggerSmoother s; retrigger_smoother_init(&s);
+    int16_t seed = -1200;
+    retrigger_smoother_process(&s, &seed, 1);
+    retrigger_smoother_note_on(&s, 1);
+    const uint8_t sizes[] = {64, 0, 64, 4, 16};
+    unsigned offset = 0;
+    for (unsigned b = 0; b < sizeof(sizes)/sizeof(sizes[0]); ++b) {
+        int16_t samples[64];
+        for (unsigned j = 0; j < 64; ++j) samples[j] = 0;
+        retrigger_smoother_process(&s, samples, sizes[b]);
+        for (unsigned j = 0; j < sizes[b]; ++j) {
+            unsigned index = offset + j;
+            if (index == 0) assert(samples[j] == -1200);
+            if (index == 131) assert(samples[j] == 0);
+            if (index >= 132) assert(samples[j] == 0);
+        }
+        offset += sizes[b];
+        assert(s.remaining == (offset < 132 ? 132 - offset : 0));
+    }
+    assert(offset == 148 && s.pending == 0 && s.correction == 0.0f);
+}
 int main(void) {
     assert(LXR_RETRIGGER_FADE_SAMPLES == 132u);
     test_fresh_note_and_zero_length();
     test_exact_ramp_across_blocks();
     test_retrigger_mid_ramp_and_saturation();
     test_independent_voices();
+    test_mixed_block_boundaries();
     puts("No Clip 132-sample host regression PASS");
     return 0;
 }
