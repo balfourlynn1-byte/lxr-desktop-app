@@ -123,3 +123,7 @@ Pinned approved skull and wake paths in `docs/JB_A04_SKULL_PRESERVATION_MAP.md` 
 
 ### 2026-11-09 B06b checkpoint
 Completed native sample-dispatch source audit: oscillator IDs 0–5 active, default sample dispatch commented, sample helpers `#if 0`; 32768-byte crash asset is not proof of playable sample support. Evidence `docs/JB_B06B_SAMPLE_DISPATCH_GATE.md` commit `3cbb1fb2`. B06 PARTIAL; tests NOT RUN; ARM held. Next: upstream sample memory and serialization mapping or A03 host execution.
+
+### 2026-11-09 UTC — B06c native MIDI/clock audit
+- Pushed `59084b2f78dc5ffd3d4313e68fa567839bbdb923`: `docs/JB_B06C_MIDI_CLOCK_COMPATIBILITY.md` records exact native MIDI parser blob/line map, clock filter gates, six velocity modulation destinations, NRPN bounds and deterministic host test specifications.
+- Test status: NOT RUN (no full host checkout); no ARM/image/hardware work. B06 PARTIAL; next research: upstream MIDI/clock and native preset serialization.
