@@ -86,6 +86,7 @@ add_library(lxr_dsp OBJECT
     Src/Soundengine/DSPAudio/ResonantFilter.c
     Src/Soundengine/DSPAudio/RetriggerSmoother.c
     Src/Soundengine/DSPAudio/Jimbones.c
+    Src/Soundengine/DSPAudio/JimbonesNativeWaveBank.c
     Src/Soundengine/DSPAudio/Samples.c
     Src/Soundengine/DSPAudio/SlopeEg2.c
     Src/Soundengine/DSPAudio/snapEg.c
