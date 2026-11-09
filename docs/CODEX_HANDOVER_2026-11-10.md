@@ -101,3 +101,7 @@ Source audit `docs/JB_B06B_SAMPLE_DISPATCH_GATE.md` (commit `3cbb1fb2`) confirms
 
 ### 2026-11-09 — B06c native MIDI and clock source gate
 Native `MidiParser.c` blob `04f3d03ffcee0b20f6d58e26d7a91f34e4b89bca`: note-on routes to `voiceControl_noteOn` then `stepfx_live` (1497–1555), note-off/zero velocity ignored (1858–1891), external MIDI clock gated by system filter + ext sync (1766–1789), six velocity modulation CCs (1171–1178), bounded JIMBONES NRPN banks 96–101 (39–52). Exact fixture plan and caveats: `docs/JB_B06C_MIDI_CLOCK_COMPATIBILITY.md`, evidence commit `59084b2f`. Source-only; tests NOT RUN. B06 still PARTIAL; upstream MIDI, serialization and display mapping pending. ARM HOLD unchanged.
+
+
+### 2026-11-09 D01 verified historical comb CI
+GitHub run [42512010361](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42512010361), SHA `05e1722`: focused Comb, full host GCC and Clang, standalone Step FX all SUCCESS (host job `128826896630`). Separate artifact job `128826975121` failed at `tests/jb23_candidate_manifest.py:38`: `ValueError: Unexpected version for JB-23 candidate: 1.8.07`; artifact skipped. Root cause is manifest version validation, not proven comb DSP failure. Exact evidence `docs/JB_D01_COMB_CI_EVIDENCE.md`, commit `6351b76c`; D01 checklist update `137efcce`. Historical CI evidence only; latest HEAD and hardware NOT VERIFIED; no ARM work performed. Next D02 Step 1 LED/Step FX source test or A03 host execution when checkout available.
