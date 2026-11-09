@@ -1,0 +1,28 @@
+name: JIMBONES A03 No Clip host regression
+on:
+  push:
+    branches:
+      - agents/jb-28-full-integration-v186
+    paths:
+      - 'tests/test_noclip_132.c'
+      - 'Core/Src/Soundengine/DSPAudio/RetriggerSmoother.c'
+      - 'Core/Inc/Soundengine/DSPAudio/RetriggerSmoother.h'
+      - 'tests/run_noclip_132.sh'
+      - '.github/workflows/jb-a03-noclip-host.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  host-no-clip:
+    name: No Clip 132 / ${{ matrix.compiler }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [gcc, clang]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run A03 isolated host-only sanitizer regression
+        env:
+          CC: ${{ matrix.compiler }}
+        run: sh tests/run_noclip_132.sh
