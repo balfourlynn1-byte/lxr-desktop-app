@@ -9,6 +9,7 @@ on:
       - '.github/workflows/jb-c04-wave-velocity.yml'
       - 'Core/Src/Soundengine/DSPAudio/DrumVoice.c'
       - 'tests/test_c08_voice_local_scan_bank_source.py'
+      - 'tests/test_c06_drum_scan_source.py'
   workflow_dispatch:
 permissions:
   contents: read
