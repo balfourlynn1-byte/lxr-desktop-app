@@ -110,3 +110,8 @@ Each update must include UTC time, pushed commit SHA, stage, files inspected/cha
 
 ### 2026-11-09 B05
 Velocity destination research completed, see `docs/JB_B05_VELOCITY_DESTINATION_MAP.md`: six upstream/native velocity nodes; wave-position and shape recommended default OFF; drive deferred. Source-only, tests NOT RUN. ARM hold remains.
+
+### 2026-11-09 UTC — B07 source/licence architecture decision
+- Reviewed pinned upstream `LICENSE` at `c896bfd0efe86a4037418bf9f46f1fcc39255958`, blob `635ea7ee4e54922c03fad5795ba7c734048857b9`, plus previously pinned native/upstream oscillator ABI maps.
+- Selected independently authored Erica-native bounded interpolation for public GPL-only branch; no upstream noncommercial source transplant. Decision evidence `docs/JB_B07_LICENCE_ARCHITECTURE_DECISION.md`, commit `8f6ea7de38a51006c037494cbdcd80b91a929938`.
+- Tests: NOT RUN; code: documentation only; ARM: HELD. Next unblocked work: A03 GCC/Clang host execution if checkout available, or B06 remaining source mapping.
