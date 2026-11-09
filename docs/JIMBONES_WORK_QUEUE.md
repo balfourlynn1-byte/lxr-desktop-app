@@ -60,3 +60,7 @@ B04 source-only DONE: pinned Erica/upstream OscInfo and modulation header blobs,
 
 ### 2026-11-09 B05 velocity research checkpoint
 Source-only B05 DONE: map and proposed default-OFF wave-position/shape destinations in `docs/JB_B05_VELOCITY_DESTINATION_MAP.md`; drive deferred, existing velocity semantics preserved. Host test NOT RUN. Next B06/A03.
+
+
+### 2026-11-09 B06a native compatibility checkpoint
+Source-only partial progress: verified native oscillator ABI, 64-frame DMA, 44140 Hz, six velocity nodes, fixed JB kit layout and Metallic OFF. Evidence `docs/JB_B06_NATIVE_ABI_GATE.md`. B06 remains OPEN pending upstream sample/kit/MIDI/display comparisons; executable host tests NOT RUN. ARM hold remains absolute.
