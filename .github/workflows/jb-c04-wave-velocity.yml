@@ -1,0 +1,28 @@
+name: JIMBONES C04 velocity scan host regression
+on:
+  push:
+    branches:
+      - agents/jb-wavetable-host-experiment
+    paths:
+      - 'Core/Inc/Soundengine/DSPAudio/JimbonesNativeWaveScan.h'
+      - 'tests/test_c04_wave_velocity.c'
+      - '.github/workflows/jb-c04-wave-velocity.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  velocity:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [gcc, clang]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and test bounded note-on velocity mapping
+        env:
+          CC: ${{ matrix.compiler }}
+        run: |
+          mkdir -p build/host
+          "$CC" -std=c11 -O2 -Wall -Wextra -Werror -fsanitize=undefined,float-cast-overflow -ICore/Inc tests/test_c04_wave_velocity.c -o build/host/test_c04_wave_velocity
+          build/host/test_c04_wave_velocity
