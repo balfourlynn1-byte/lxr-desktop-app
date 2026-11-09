@@ -31,7 +31,7 @@
 - [x] **B03** Trace upstream `Oscillator.c` two-wave block rendering, sample/FM/noise/crash dispatch and fallback. DONE 2026-11-08; pinned oscillator blob 5c1bf056; evidence in `docs/JB_WAVETABLE_UPSTREAM_PORT_PLAN.md` (lines 98–155, 186–211, 229–253, 552–590).
 - [x] **B04** DONE 2026-11-08 (source-only): mapped OscInfo ABI/layout, six primary waveform destinations, native ID 5 PWM vs upstream CRASH, native modulation dispatch and API mismatches. Evidence `docs/JB_B04_OSCILLATOR_COMPATIBILITY_MAP.md`, source commit `ed00f8c97fa952935115d6f14a38df94edd4bf27`. No tests run; exact numeric destination registry mapping remains for B05/B06.
 - [x] **B05** DONE 2026-11-09 (source-only): upstream/native six velocity nodes, reset/CC dispatch, and JIMBONES existing velocity/blend semantics mapped. Proposed wave position first, shape second, drive deferred, default OFF/zero and versioned extension. Evidence `docs/JB_B05_VELOCITY_DESTINATION_MAP.md`. No host test run.
-- [ ] **B06** Compare sample memory, kit/global format, MIDI/clock and screen APIs; identify blockers to a full upstream firmware base.
+- [ ] **B06** PARTIAL 2026-11-09: native OscInfo ABI, 64-frame DMA, six velocity-node DTCM state, 44140 Hz timing, fixed JB kit byte contract and Metallic OFF verified in `docs/JB_B06_NATIVE_ABI_GATE.md` (source-only). Upstream sample memory, kit/global serialization, MIDI/clock and screen APIs still unverified; no host tests run. Do not mark DONE.
 - [ ] **B07** Record licence-compliant implementation route: independently authored Erica adaptation versus separately licensed non-commercial fork; do not transplant incompatible files.
 
 ### C — Isolated host implementation
