@@ -131,5 +131,8 @@ void jb_drumScanConfigure(const int16_t tables[4][256], uint8_t voice,
                           uint8_t enabled, float base, float velocityDepth,
                           float lfoDepth);
 void jb_drumScanSetLfoValue(uint8_t voice, float normalizedLfo);
+/* Explicitly opt in to the firmware-owned immutable wave bank. */
+void jb_drumScanConfigureBuiltin(uint8_t voice, uint8_t enabled,
+                                 float base, float velocityDepth, float lfoDepth);
 
 #endif /* DRUMVOICE_H_ */
