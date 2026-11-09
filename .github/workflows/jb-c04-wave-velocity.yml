@@ -17,6 +17,7 @@ on:
       - 'Core/CMakeLists.txt'
       - 'tests/test_c11_native_build_registration.py'
       - 'tests/test_c12_wave_off_source.py'
+      - 'tests/test_jb_shift_relative_host.c'
   workflow_dispatch:
 permissions:
   contents: read
@@ -63,3 +64,10 @@ jobs:
 
       - name: C12 default OFF legacy oscillator source guard
         run: python3 tests/test_c12_wave_off_source.py
+
+      - name: X01a SHIFT relative edit host regression
+        env:
+          CC: ${{ matrix.compiler }}
+        run: |
+          "$CC" -std=c11 -O2 -Wall -Wextra -Werror -fsanitize=undefined -ICore/Inc tests/test_jb_shift_relative_host.c -o build/host/test_jb_shift_relative_host
+          build/host/test_jb_shift_relative_host
