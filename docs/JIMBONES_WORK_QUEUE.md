@@ -203,3 +203,18 @@ L03 partial (2026-11-09): source audit identified two 120 BPM initial defaults i
 - Next unblocked: inspect C12 CI and fix if red; then complete native DrumVoice host compile and OFF-path PCM identity test. No ARM build, .img, main merge or hardware-ready claim. Mandatory checkpoint-and-push instructions apply; each GitHub contents write creates an immediately remote-backed commit.
 
 **C12 CI verified PASS:** GitHub Actions run `42702335053`, commit `9c26d45cbe3e3917c93adba4319504d4d9ed3c8c`, both compiler matrix jobs completed successfully. Source guard only; native DrumVoice compile and OFF PCM bit identity remain NOT RUN. https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42702335053
+
+### 2026-11-09 — Approved UI roadmap (design only; implement AFTER native wavetable ON audio is validated)
+User approved the proposed UI direction. **Do not mistake approval of this roadmap for approval to compile ARM firmware or ship a hardware image.** Maintain strict ARM hold and mandatory commit/push checkpoint policy in `docs/CODEX_CHECKPOINT_AND_RECOVERY.md`.
+
+**Priority order and acceptance gates:**
+1. **WT Macro (P1 after native ON audio):** OSC double-press opens a clearly labelled extra page with four controls: WAVE, SCAN, VEL, LFO. Preserve original OSC screen, navigation and all six original voice sounds; ensure no accidental parameter changes when switching pages.
+2. **Per-voice wavetable toggle (P1):** explicit OFF/ON for each voice, with six-voice overview and quick kick exclusion. Never silently enable wavetable; ON uses durable built-in waveform data and OFF preserves exact factory path.
+3. **Kit save/recall status (P1):** modified-kit indicator, save confirmation, error/recovery warnings; save/reload wavetable per-voice settings and kit BPM safely without breaking factory kit ABI or cold-start recovery. No false 'saved' indicator on SD failure.
+4. **Performance FX (P2):** steps 1–16 independent toggle behavior; Step 1 all-FX bypass and Step 16 morph LFO; correct sequencer Step 1 LED when armed. Define unambiguous mode separation so FX mapping cannot interfere with sequencer editing.
+5. **Diagnostics (P2):** DSP %, peak-hold, LATE and RAIL counters on an accessible page; keep CPU impact negligible and show resets clearly.
+6. **WT detail and modulation pages (P2):** OSC additional presses reveal BANK/POS/BLEND/MODE and velocity/LFO rate/depth controls, subject to hardware display/encoder constraints and real engine support.
+7. **Waveform mini-display (P3):** lightweight static/slowly refreshed waveform and scan-position marker; no full oscilloscope unless proven CPU-safe. Drop animation if DSP margin suffers.
+8. **Hold-to-audition A/B (P2):** temporary original oscillator audition while holding an assigned control; release returns to configured wavetable without modifying saved state. Choose a non-conflicting physical control after hardware button-map review.
+
+**Codex implementation requirements:** first inspect actual LXR-02 menu/button/encoder architecture and document feasible page mappings; prototype on host/emulator, validate UI state transitions and audio OFF/ON switching, check DSP headroom and persistence. Each atomic UI change must be committed and **pushed** with test evidence and live checkpoint. Do not implement UI ahead of native ON-path PCM acceptance.
