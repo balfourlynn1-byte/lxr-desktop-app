@@ -48,7 +48,7 @@
 - [ ] **C11** Run focused plus full GCC/Clang host suites; fix real regressions with one commit per defect.
 
 ### D — Performance integration
-- [ ] **D01** Confirm Comb PR #18 full host CI after v1.8.07 assertion fix; record exact run.
+- [x] **D01** DONE 2026-11-09: verified historical Comb PR #18 host CI on SHA `05e1722`, run `42512010361`: focused Comb, GCC/Clang full host, Step FX all SUCCESS. Artifact job failed because JB-23 manifest rejected version 1.8.07, **not** comb DSP. Exact log evidence `docs/JB_D01_COMB_CI_EVIDENCE.md` (commit `6351b76c`). Latest HEAD/hardware NOT VERIFIED; no new ARM run.
 - [ ] **D02** Verify Step 1 LED and five dub timing toggles in source and tests; record outstanding hardware-only uncertainty.
 - [ ] **D03** Implement per-slot Step FX voice masks in isolated host-tested patch; keep kick protected by default.
 - [ ] **D04** Implement four-knob VOICE/RATE/DEPTH/CHAR UI after D03; verify persistence and backwards compatibility.
