@@ -247,3 +247,5 @@ Use **GitHub source history**, not user-uploaded `.img` files: source branches a
 **Acceptance:** armed sequencer Step 1 LED reflects state; documented safe autosave semantics; tempo is recalled predictably after reboot and kit loading, with backwards-compatible storage and explicit sync precedence. **Status: QUEUED / NOT IMPLEMENTED / NOT TESTED.** ARM hold unchanged.
 
 - **D02 partial source audit 2026-11-09:** Step 1 index maps correctly to LED_STEP1, but Performance/CPU branches can override sequencer LEDs; five dub timings and existing host fixtures mapped. Cause of ordinary sequencer Step 1 fault NOT CONFIRMED; tests NOT RUN. See `docs/JB_D02_STEP1_SOURCE_AUDIT.md` commit `532ddf29`. D02 remains OPEN.
+
+2026-11-09 D02/L01 candidate fix: `Core/Src/buttonHandler.c` now mirrors both ON and OFF sequencer step LED state after toggle, including step index zero (`c9317850`). Added `tests/test_seq_step_led_source.py` (`a604f735`) and wired it into host runner (`5772dc84`). Source guard is NOT RUN; does not prove hardware Step 1 fault resolved. Need executable behavioral LED test, GCC/Clang CI and hardware check; keep D02/L01 OPEN and ARM HOLD.
