@@ -13,11 +13,39 @@
 
 
 #include "Soundengine/DSPAudio/Oscillator.h"
+#include "Soundengine/DSPAudio/JimbonesNativeWaveScan.h"
 #include "Soundengine/DSPAudio/random.h"
 #include "Soundengine/DSPAudio/Samples.h"
 #include "Soundengine/MIDI/MidiParser.h"
 #include "Soundengine/MIDI/MidiNoteNumbers.h"
 #include "Soundengine/Sequencer/sequencer.h"
+
+/* C05 opt-in scan renderer; no changes to factory oscillator dispatch.
+ * Uses the native OscInfo phase accumulator and pitch phase increment.
+ * Note-on velocity is supplied by the caller, never inferred from audio gain.
+ */
+void jb_calcNativeWaveScanBlock(OscInfo* osc, const int16_t waves[4][256],
+                               int16_t* buf, uint8_t size, float gain,
+                               float basePosition, float velocityDepth,
+                               uint8_t noteVelocity, float lfoDepth,
+                               float lfoValue)
+{
+    if (!osc || !waves || !buf) return;
+    if (!(lfoDepth >= -3.f && lfoDepth <= 3.f)) lfoDepth = 0.f;
+    if (!(lfoValue >= -1.f && lfoValue <= 1.f)) lfoValue = 0.f;
+    const float position = jb_wave_velocity_position(basePosition, velocityDepth,
+                                                     noteVelocity) +
+                           lfoDepth * lfoValue;
+    for (uint8_t i = 0; i < size; ++i) {
+        const int16_t sample = jb_wave_scan_sample(waves, osc->phase, position);
+        osc->phase += osc->phaseInc;
+        osc->output = sample;
+        float out = (float)sample * gain;
+        if (out > 32767.f) out = 32767.f;
+        if (out < -32768.f) out = -32768.f;
+        buf[i] = (int16_t)out;
+    }
+}
 
 static __inline uint32_t freq2PhaseIncr(const float f) //4096
 {
