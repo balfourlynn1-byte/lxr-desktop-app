@@ -7,6 +7,8 @@ on:
       - 'Core/Inc/Soundengine/DSPAudio/JimbonesNativeWaveScan.h'
       - 'tests/test_c04_wave_velocity.c'
       - '.github/workflows/jb-c04-wave-velocity.yml'
+      - 'Core/Src/Soundengine/DSPAudio/DrumVoice.c'
+      - 'tests/test_c08_voice_local_scan_bank_source.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -30,3 +32,6 @@ jobs:
         run: python3 tests/test_c05_native_scan_source.py
       - name: C06 guarded drum routing source guard
         run: python3 tests/test_c06_drum_scan_source.py
+
+      - name: C08 per-voice bank isolation source guard
+        run: python3 tests/test_c08_voice_local_scan_bank_source.py
