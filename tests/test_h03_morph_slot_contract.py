@@ -7,7 +7,8 @@ def branch(label, following):
     start=src.index(label)
     end=src.index(following,start)
     return src[start:end]
-save=branch("case SAVE_TYPE_MORPH:", "case SAVE_TYPE_GLO:")
+save_start=src.rfind("case SAVE_TYPE_MORPH:", 0, src.index("preset_saveDrumsetRam(menu_selectedPresetNr[SAVE_TYPE_MORPH],1)"))
+save=src[save_start:src.index("case SAVE_TYPE_GLO:",save_start)]
 assert re.search(r"preset_saveDrumsetRam\s*\(\s*menu_selectedPresetNr\[SAVE_TYPE_MORPH\]\s*,\s*1\s*\)",save)
 load=src[src.index("case SAVE_TYPE_MORPH:",src.index("preset_loadDrumset(menu_selectedPresetNr")):]
 load=load[:load.index("case SAVE_TYPE_SONG:")]
