@@ -127,3 +127,7 @@ Completed native sample-dispatch source audit: oscillator IDs 0–5 active, defa
 ### 2026-11-09 UTC — B06c native MIDI/clock audit
 - Pushed `59084b2f78dc5ffd3d4313e68fa567839bbdb923`: `docs/JB_B06C_MIDI_CLOCK_COMPATIBILITY.md` records exact native MIDI parser blob/line map, clock filter gates, six velocity modulation destinations, NRPN bounds and deterministic host test specifications.
 - Test status: NOT RUN (no full host checkout); no ARM/image/hardware work. B06 PARTIAL; next research: upstream MIDI/clock and native preset serialization.
+
+
+### 2026-11-09 D01 verified historical comb CI
+GitHub run [42512010361](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42512010361), SHA `05e1722`: focused Comb, full host GCC and Clang, standalone Step FX all SUCCESS (host job `128826896630`). Separate artifact job `128826975121` failed at `tests/jb23_candidate_manifest.py:38`: `ValueError: Unexpected version for JB-23 candidate: 1.8.07`; artifact skipped. Root cause is manifest version validation, not proven comb DSP failure. Exact evidence `docs/JB_D01_COMB_CI_EVIDENCE.md`, commit `6351b76c`; D01 checklist update `137efcce`. Historical CI evidence only; latest HEAD and hardware NOT VERIFIED; no ARM work performed. Next D02 Step 1 LED/Step FX source test or A03 host execution when checkout available.
