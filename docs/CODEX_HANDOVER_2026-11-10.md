@@ -105,3 +105,6 @@ Native `MidiParser.c` blob `04f3d03ffcee0b20f6d58e26d7a91f34e4b89bca`: note-on r
 
 ### 2026-11-09 D01 verified historical comb CI
 GitHub run [42512010361](https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42512010361), SHA `05e1722`: focused Comb, full host GCC and Clang, standalone Step FX all SUCCESS (host job `128826896630`). Separate artifact job `128826975121` failed at `tests/jb23_candidate_manifest.py:38`: `ValueError: Unexpected version for JB-23 candidate: 1.8.07`; artifact skipped. Root cause is manifest version validation, not proven comb DSP failure. Exact evidence `docs/JB_D01_COMB_CI_EVIDENCE.md`, commit `6351b76c`; D01 checklist update `137efcce`. Historical CI evidence only; latest HEAD and hardware NOT VERIFIED; no ARM work performed. Next D02 Step 1 LED/Step FX source test or A03 host execution when checkout available.
+
+## 2026-11-09 D02 partial — Step 1 LED / dub mapping
+Source evidence `docs/JB_D02_STEP1_SOURCE_AUDIT.md` commit `532ddf29`: LED index zero maps to LED_STEP1; sequencer and Performance/CPU LED paths differ; five dub divisions and existing tests identified. Sequencer Step 1 defect remains unresolved; test execution NOT RUN, hardware NOT VERIFIED. Next inspect LED transport/priority and add executable sequencer LED fixture. ARM HOLD.
