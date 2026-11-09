@@ -90,3 +90,7 @@ Selected independently authored Erica-native waveform extension, with default-OF
 
 ### 2026-11-09 A03 mixed-block boundary fixture (NOT RUN)
 Added deterministic 64/0/64/4/16-sample segmentation to `tests/test_noclip_132.c` in commit `1ffba1a5bc47f9204e0b34d33e0a2747c605ae6c`. Asserts first sample equals previous output, sample 132 returns to unmodified input, zero-length call preserves state, remaining countdown and no correction after boundary. Existing `tests/run_host.sh` already compiles this file; no runner modification necessary. Local checkout unavailable (`Could not resolve host: github.com`); no GCC/Clang test run, CI PASS or hardware evidence. Next: run `CC=gcc sh tests/run_host.sh` and `CC=clang sh tests/run_host.sh` in GitHub-enabled checkout, then review sanitizer logs. ARM hold unchanged.
+
+
+## A04 approved skull source preservation (2026-11-09)
+Source trace DONE, execution NOT RUN. See `docs/JB_A04_SKULL_PRESERVATION_MAP.md` (commit `098ff972`): approved JB-26 skull C blob `0f6ee956`, screensaver state machine `38395dc3`, LCD latch `6282d73b`; 170ms animation and nonblocking wake/repaint. Existing executable C/Python tests run via `sh tests/run_jb26_skull.sh`; also run with `CC=clang`. No verified image-to-source identity yet (A05), no hardware validation.
