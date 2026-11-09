@@ -15,7 +15,7 @@ must(r"menu_loadedPresetNr\[CURRENT_MORPH\]\s*=\s*menu_selectedPresetNr")
 # The menu delegates morph position to the preset engine.
 must(r"case PAR_MORPH:\s*\{[^}]*preset_morph\(value\);")
 # Routing must remain on source kit even while sound parameters morph.
-must(r"if\(\(paramNr >= PAR_AUDIO_OUT1\).*?paramNr <= PAR_AUDIO_OUT6\).*?\{\s*morph = 0;")
+must(r"if\(\(paramNr >= PAR_AUDIO_OUT1\).*?paramNr <= PAR_AUDIO_OUT6\)[^{}]*\{[^{}]*morph = 0;")
 must(r"morph = activeParameters\[PAR_MORPH\];\s*//morph = preset_morphValue;\s*dtypeValue = preset_getMorphValue\(paramNr, morph\);")
 # Six existing velocity destinations remain connected to native modulation nodes.
 must(r"modNode_setDestination\(&velocityModulators\[\(uint8_t\)\(paramNr - PAR_VEL_DEST_1\)\], value\);")
