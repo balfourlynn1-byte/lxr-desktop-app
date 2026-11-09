@@ -28,6 +28,35 @@
 INDTCM static float ampSmoothValue = 0.1f;
 //---------------------------------------------------
 INDTCMZ DrumVoice voiceArray[NUM_DRUM_VOICES];
+/* C06: experimental, volatile-only routing. No kit/ABI changes.
+ * Disabled until an explicit caller supplies tables and enables a voice.
+ */
+static const int16_t (*jbScanTables)[256] = 0;
+static uint8_t jbScanEnabled[NUM_DRUM_VOICES];
+static uint8_t jbScanNoteVelocity[NUM_DRUM_VOICES];
+static float jbScanBase[NUM_DRUM_VOICES];
+static float jbScanVelocityDepth[NUM_DRUM_VOICES];
+static float jbScanLfoDepth[NUM_DRUM_VOICES];
+static float jbScanLfoValue[NUM_DRUM_VOICES];
+
+void jb_drumScanConfigure(const int16_t tables[4][256], uint8_t voice,
+                          uint8_t enabled, float base, float velocityDepth,
+                          float lfoDepth)
+{
+    if (voice >= NUM_DRUM_VOICES) return;
+    jbScanEnabled[voice] = 0;
+    if (!tables || !enabled) return;
+    jbScanTables = tables;
+    jbScanBase[voice] = base;
+    jbScanVelocityDepth[voice] = velocityDepth;
+    jbScanLfoDepth[voice] = lfoDepth;
+    jbScanEnabled[voice] = 1;
+}
+void jb_drumScanSetLfoValue(uint8_t voice, float normalizedLfo)
+{
+    if (voice < NUM_DRUM_VOICES) jbScanLfoValue[voice] = normalizedLfo;
+}
+
 //---------------------------------------------------
 IN_ITCM_RAM void setPan(const uint8_t voiceNr, const uint8_t pan)
 {
@@ -124,6 +153,7 @@ void Drum_updatePan(const uint8_t voiceNr)
 //---------------------------------------------------
 void Drum_trigger(const uint8_t voiceNr, const uint8_t vol, const uint8_t note)
 {
+	if (voiceNr < NUM_DRUM_VOICES) jbScanNoteVelocity[voiceNr] = vol;
 #if LXR_RETRIGGER_SMOOTH
 	/* Capture retriggers while the previous main-drum amplitude EG is active.
 	 * Call BEFORE slopeEg2_trigger changes the EG state.  No changes to
@@ -266,7 +296,14 @@ IN_ITCM_RAM void calcDrumVoiceSyncBlock(const uint8_t voiceNr, int16_t* buf, con
 	if(voiceArray[voiceNr].mixOscs)
 	{
 		//calc main osc buffer - int16_t processing
-		calcNextOscSampleBlock(&voiceArray[voiceNr].osc,buf,size, (1.f-voiceArray[voiceNr].fmModAmount), voiceArray[voiceNr].pwm);
+		if (jbScanEnabled[voiceNr] && jbScanTables)
+            jb_calcNativeWaveScanBlock(&voiceArray[voiceNr].osc, jbScanTables,
+                                      buf, size, (1.f-voiceArray[voiceNr].fmModAmount),
+                                      jbScanBase[voiceNr], jbScanVelocityDepth[voiceNr],
+                                      jbScanNoteVelocity[voiceNr], jbScanLfoDepth[voiceNr],
+                                      jbScanLfoValue[voiceNr]);
+        else
+            calcNextOscSampleBlock(&voiceArray[voiceNr].osc,buf,size, (1.f-voiceArray[voiceNr].fmModAmount), voiceArray[voiceNr].pwm);
 		//add mod buffer to main osc buffer - int16_t processing
 		bufferTool_addBuffersSaturating(buf,modBuf,size);
 	}
