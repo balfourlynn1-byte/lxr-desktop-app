@@ -104,9 +104,27 @@ static void test_full_scale_opposite_polarity(void) {
     }
 }
 
+/* A03: a zero-frame callback immediately after note-on must preserve the pending trigger. */
+static void test_pending_survives_zero_frame(void) {
+    RetriggerSmoother s; retrigger_smoother_init(&s);
+    int16_t seed = 2718;
+    retrigger_smoother_process(&s, &seed, 1);
+    retrigger_smoother_note_on(&s, 1);
+    unsigned pending_before = s.pending;
+    unsigned remaining_before = s.remaining;
+    int16_t untouched = -1234;
+    retrigger_smoother_process(&s, &untouched, 0);
+    assert(untouched == -1234);
+    assert(s.pending == pending_before && s.remaining == remaining_before);
+    int16_t next = -3000;
+    retrigger_smoother_process(&s, &next, 1);
+    assert(next == 2718 && s.remaining == LXR_RETRIGGER_FADE_SAMPLES - 1u);
+}
+
 int main(void) {
     assert(LXR_RETRIGGER_FADE_SAMPLES == 132u);
     test_fresh_note_and_zero_length();
+    test_pending_survives_zero_frame();
     test_exact_ramp_across_blocks();
     test_retrigger_mid_ramp_and_saturation();
     test_independent_voices();
