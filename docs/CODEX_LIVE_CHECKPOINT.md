@@ -18,3 +18,7 @@ Updated 2026-11-09 (UTC). Branch: `agents/jb-wavetable-host-experiment`.
 4. Update checkpoint with exact latest pushed SHA and next task after each atomic change.
 
 **Strict ARM HOLD:** No ARM compilation, firmware image, merge or hardware-ready claim without explicit user approval of a frozen candidate.
+
+### 2026-11-09 — C11 desktop build registration
+- Added `Src/Soundengine/DSPAudio/JimbonesNativeWaveBank.c` to the actual desktop `Core/CMakeLists.txt` app source list, commit `04e5089a2f9b8496228be2decc814384672b5356`. Added source guard `tests/test_c11_native_build_registration.py` and wired into GCC/Clang CI commit `3ee234c3c0d4e8a331ed14bceabad0733d1bbdca`.
+- **NOT full native compile yet:** C11 guard checks CMake source registration and API text; the complete DrumVoice/Oscillator compilation, linking, PCM and CPU remain unverified. Continue to prioritize actual native host harness, wavetable ON rendering, OFF identity. Strict ARM hold. Mandatory Codex checkpoint and push protocol remains in force (`docs/CODEX_CHECKPOINT_AND_RECOVERY.md`).
