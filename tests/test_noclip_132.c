@@ -80,6 +80,30 @@ static void test_mixed_block_boundaries(void) {
     }
     assert(offset == 148 && s.pending == 0 && s.correction == 0.0f);
 }
+/* A03: extreme opposite-polarity retrigger must clamp safely and settle. */
+static void test_full_scale_opposite_polarity(void) {
+    const int16_t old_values[2] = {-32768, 32767};
+    const int16_t new_values[2] = {32767, -32768};
+    for (unsigned polarity = 0; polarity < 2; ++polarity) {
+        RetriggerSmoother s; retrigger_smoother_init(&s);
+        int16_t seed = old_values[polarity];
+        retrigger_smoother_process(&s, &seed, 1);
+        retrigger_smoother_note_on(&s, 1);
+        for (unsigned i = 0; i < LXR_RETRIGGER_FADE_SAMPLES; ++i) {
+            int16_t sample = new_values[polarity];
+            retrigger_smoother_process(&s, &sample, 1);
+            if (i == 0) assert(sample == old_values[polarity]);
+            if (i == LXR_RETRIGGER_FADE_SAMPLES - 1u)
+                assert(sample >= new_values[polarity] - (new_values[polarity] > 0 ? 1 : 0) &&
+                       sample <= new_values[polarity] + (new_values[polarity] < 0 ? 1 : 0));
+        }
+        assert(s.remaining == 0u && s.correction == 0.0f);
+        int16_t after = new_values[polarity];
+        retrigger_smoother_process(&s, &after, 1);
+        assert(after == new_values[polarity]);
+    }
+}
+
 int main(void) {
     assert(LXR_RETRIGGER_FADE_SAMPLES == 132u);
     test_fresh_note_and_zero_length();
@@ -87,6 +111,7 @@ int main(void) {
     test_retrigger_mid_ramp_and_saturation();
     test_independent_voices();
     test_mixed_block_boundaries();
+    test_full_scale_opposite_polarity();
     puts("No Clip 132-sample host regression PASS");
     return 0;
 }
