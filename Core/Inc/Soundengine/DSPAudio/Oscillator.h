@@ -121,4 +121,14 @@ void osc_setBaseNote(OscInfo* osc, uint8_t baseNote);
 /** recalculate the frequency if either the base note or the offset note value changed*/
 void osc_recalcFreq(OscInfo* osc);
 
+/* Experimental opt-in native render: caller owns tables and captured note-on velocity.
+ * Existing calcNextOscSampleBlock dispatch is unchanged. Not serialized.
+ * LFO is a normalized signed modulation value [-1,1], applied per audio block.
+ */
+void jb_calcNativeWaveScanBlock(OscInfo* osc, const int16_t waves[4][256],
+                               int16_t* buf, uint8_t size, float gain,
+                               float basePosition, float velocityDepth,
+                               uint8_t noteVelocity, float lfoDepth,
+                               float lfoValue);
+
 #endif /* OSCILLATOR_H_ */
