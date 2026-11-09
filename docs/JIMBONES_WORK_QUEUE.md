@@ -79,3 +79,6 @@ Source map completed in `docs/JB_A04_SKULL_PRESERVATION_MAP.md` (commit `098ff97
 
 ### 2026-11-09 B06b native sample boundary
 Pinned native oscillator dispatch and inactive sample playback in `docs/JB_B06B_SAMPLE_DISPATCH_GATE.md` (commit `3cbb1fb2`). Sample asset exists but playable sample path is not established; no upstream sample IDs may be assumed compatible. B06 remains PARTIAL; host tests NOT RUN; ARM held.
+
+### 2026-11-09 B06c checkpoint
+Native MIDI/clock, six velocity CCs, global/dedicated note routing and JIMBONES NRPN boundaries mapped from `MidiParser.c` blob `04f3d03f` in `docs/JB_B06C_MIDI_CLOCK_COMPATIBILITY.md` (commit `59084b2f`). Source-only, no host tests executed; B06 remains PARTIAL. Next: sample/preset serialization and upstream comparison. ARM hold unchanged.
