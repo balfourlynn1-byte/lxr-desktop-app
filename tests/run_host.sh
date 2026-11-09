@@ -8,6 +8,7 @@ sh tests/run_stepfx_ui.sh
 python3 tests/test_seq_step_led_source.py
 python3 tests/test_h03_native_midi_contract.py
 python3 tests/test_h03_native_morph_contract.py
+python3 tests/test_h03_morph_slot_contract.py
 sh tests/run_dub_delay_sync.sh
 python3 tests/test_dub_delay_source.py
 sh tests/run_jb22_metallic_off.sh
