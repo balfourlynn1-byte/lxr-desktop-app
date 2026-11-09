@@ -262,3 +262,16 @@ User wants Torso Electronics S-4-style press-and-hold behavior and Digitakt TRAC
 
 ### 2026-11-09 — First actual host experiment X01
 - Ran C11 host test with `-Wall -Wextra -Werror -fsanitize=address,undefined`: **PASS** for six distinct initial voice values, positive/negative relative delta, voice exclusion and saturation. Checked-in source `tests/test_jb_shift_relative_host.c` commit `9d28bce4cfb251066feb14e74323a07e5ecaa273`. Recorded details/limits in `docs/JB_EXPERIMENTS_2026-11-09.md` commit `805232bf34b26f1683a41c5d9baf2f3e211552a8`. This is only a pure host algorithm experiment, NOT firmware integration, CI, emulation, DSP or hardware. New source lead: LXR QEONDA already advertises change-all knob edits; investigate exact implementation. lxrpy docs describe BPM as project-global, so per-kit BPM requires separate compatibility-safe design. Next: wire checked-in C test to host CI, inspect QEONDA code, disposable lxrpy round-trip fixtures. Strict ARM hold unchanged.
+
+### 2026-11-09 — Experimental findings consolidated into job tree
+**Completed (host-only):** X01 SHIFT + RELATIVE EDIT signed-delta algorithm test PASS for six independent voice values, positive/negative edits, exclusion mask, and saturation; checked-in `tests/test_jb_shift_relative_host.c`. This does **not** validate actual firmware routing, UI, persistence or audio. Details: `docs/JB_EXPERIMENTS_2026-11-09.md`.
+
+**New actionable jobs, ordered:**
+1. **X01a (P1):** Run the checked-in host C test in GitHub native CI with GCC/Clang and sanitizers; record actual CI results.
+2. **X02 (P2):** Inspect LXR QEONDA's existing change-all knob feature, source and licence; compare relative vs absolute behavior, SHIFT handling, voice mappings and clamping. Research only until compatible.
+3. **X03 (P1):** Build disposable `lxrpy` fixture tests for `.SND`, `.PAT`, `GLO.CFG` round-tripping and truncated/corrupt files; never touch the user's SD card. Confirm per-kit BPM needs custom persistence because stock format documents global BPM.
+4. **X04 (P1):** Review FatFs async/save ordering and rollback failure windows against LXR02Open memory notes; verify actual local code rather than assuming identical architecture.
+5. **R01/R02 (P2):** Complete semantic six-voice parameter ID mapping via `ParameterArray.c` and `MidiParser.c`, including automation-safe per-voice setters, before SHIFT firmware integration.
+6. **Audio gate (P0):** Finish real native DrumVoice wavetable-ON/OFF PCM rendering and overlapping-hit/CPU tests before any UI feature promotion.
+
+**Guardrails:** Experimental branch only, no ARM compilation or flashable image without explicit approval, no claims of hardware readiness, commit and push each atomic task and update live checkpoint.
