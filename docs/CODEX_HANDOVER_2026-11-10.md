@@ -86,3 +86,7 @@ Verified source blobs and constraints in `docs/JB_B06_NATIVE_ABI_GATE.md`: nativ
 
 ## 2026-11-09 B07 — licence/architecture gate (research DONE)
 Selected independently authored Erica-native waveform extension, with default-OFF bypass, no upstream source/asset copying and no oscillator ABI transplant. Pinned upstream `LICENSE` blob `635ea7ee4e54922c03fad5795ba7c734048857b9` at `c896bfd0efe86a4037418bf9f46f1fcc39255958` prohibits commercial use; public GPL-only branch cannot silently import it. Full rationale, allowed research-only private-fork alternative, provenance gate and exact host-test plan: `docs/JB_B07_LICENCE_ARCHITECTURE_DECISION.md` (commit `8f6ea7de38a51006c037494cbdcd80b91a929938`). **No tests executed, no DSP code changed.** B06/A03 and hardware validation remain open; ARM hold absolute.
+
+
+### 2026-11-09 A03 mixed-block boundary fixture (NOT RUN)
+Added deterministic 64/0/64/4/16-sample segmentation to `tests/test_noclip_132.c` in commit `1ffba1a5bc47f9204e0b34d33e0a2747c605ae6c`. Asserts first sample equals previous output, sample 132 returns to unmodified input, zero-length call preserves state, remaining countdown and no correction after boundary. Existing `tests/run_host.sh` already compiles this file; no runner modification necessary. Local checkout unavailable (`Could not resolve host: github.com`); no GCC/Clang test run, CI PASS or hardware evidence. Next: run `CC=gcc sh tests/run_host.sh` and `CC=clang sh tests/run_host.sh` in GitHub-enabled checkout, then review sanitizer logs. ARM hold unchanged.
