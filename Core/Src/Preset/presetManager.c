@@ -882,7 +882,8 @@ void preset_loadDrumsetRam(uint8_t presetNr, uint8_t isMorph, uint8_t sendImmedi
 //----------------------------------------------------
 void preset_saveDrumsetRam(uint8_t presetNr, uint8_t isMorph)
 {
-	memcpy(jb_kits[presetNr],jb_parameters,JB_KIT_BYTES);
+	/* A morph-target save must not overwrite the native JIMBONES kit
+	 * extension belonging to that slot. Only a normal kit save owns it. */
 	if(isMorph)
 	{
 		for(uint16_t i=0;i<END_OF_SOUND_PARAMETERS;i++)
@@ -909,6 +910,7 @@ void preset_saveDrumsetRam(uint8_t presetNr, uint8_t isMorph)
 	}
 	else
 	{
+		memcpy(jb_kits[presetNr],jb_parameters,JB_KIT_BYTES);
 		//copy edit buffer to parameter array
 		memcpy(mainParameters[presetNr], activeParameters, sizeof(uint8_t) * END_OF_SOUND_PARAMETERS);
 	}

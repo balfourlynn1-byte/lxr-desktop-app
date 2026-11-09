@@ -334,7 +334,7 @@ const char outputNamesFx[][7]  =
 //-----------------------------------------------------------------
 const char filterTypes[][8]  =
 {
-	{8},		//number of entries
+	{9},		//number of entries
 	{"LP"}	,	//1 - 001
 	{"HP"}	,	//2 - 010
 	{"BP"}	,	//3 - 011
@@ -343,6 +343,7 @@ const char filterTypes[][8]  =
 	{"Pek"}	,	//6 - 110
 	{"LP2"}	,	//1 - 001
 	{"off"}	,	//7 - 111
+	{"Comb"}	,	//8 - per-voice comb, legacy OFF index unchanged
 	//{"All"}	,	//7 - 111
 };
 

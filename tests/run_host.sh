@@ -5,11 +5,19 @@ mkdir -p build/host
 sh tests/run_stepfx_send.sh
 sh tests/run_stepfx_send_mix.sh
 sh tests/run_stepfx_ui.sh
+python3 tests/test_h03_morph_kit_extension_guard.py
+python3 tests/test_h03_sd_extension_contract.py
+python3 tests/test_seq_step_led_source.py
+python3 tests/test_h03_native_midi_contract.py
+python3 tests/test_h03_native_morph_contract.py
+python3 tests/test_h03_morph_slot_contract.py
+python3 tests/test_h03_morph_ram_route.py
 sh tests/run_dub_delay_sync.sh
 python3 tests/test_dub_delay_source.py
 sh tests/run_jb22_metallic_off.sh
 python3 tests/test_jb22_integration.py
 sh tests/run_jb24_waveui.sh
+sh tests/run_jb12_comb.sh
 sh tests/run_jb26_skull.sh
 ${CC:-cc} -std=c11 -O2 -g -Wall -Wextra -Werror -fsanitize=address,undefined,float-cast-overflow \
  -Itests/host -ICore/Inc tests/test_jimbones.c \
@@ -28,3 +36,10 @@ ${CC:-cc} -std=c11 -O2 -g -Wall -Wextra -Werror -fsanitize=address,undefined,flo
  Core/Src/Soundengine/DSPAudio/Jimbones.c Core/Src/Soundengine/DSPAudio/wavetable.c \
  -lm -o build/host/test_texture_noise
 build/host/test_texture_noise
+
+# A03: isolated original 132-sample No Clip smoother regression (host only)
+${CC:-cc} -std=c11 -O2 -g -Wall -Wextra -Werror -fsanitize=address,undefined \
+ -ICore/Inc tests/test_noclip_132.c \
+ Core/Src/Soundengine/DSPAudio/RetriggerSmoother.c \
+ -o build/host/test_noclip_132
+build/host/test_noclip_132
