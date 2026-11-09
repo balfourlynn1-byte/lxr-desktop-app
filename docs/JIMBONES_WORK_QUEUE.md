@@ -34,6 +34,9 @@ Updated 2026-11-08. **User is testing v1.8.06 and finds it far from ready. v1.8.
 - **JB-29B** four-knob Step FX parameter UI: JB-07, after voice-target behavior.
 - **JB-27** four-periodic-wave native interpolation: experimental donor/research, not a substitute for upstream parity.
 
+## 2026-11-09 user-directed feature priority change — wavetable first
+**Highest-priority incomplete core feature: JB-05 / C01–C11 / F03 native wavetable scanning with LFO and velocity modulation.** Research B01–B05/B07 is substantially mapped, but no complete integrated, host-verified audible implementation exists. Prioritize the next *unblocked* smallest wavetable task (finish B06 source/serialization gate, then C01 isolated experiment and C02 exact legacy bypass fixture, followed by bounded interpolation and velocity). Keep one atomic task per run; do not skip prerequisite source/licence checks. A03 132-sample No Clip regression, six original voices, approved v1.8.06 skull, preset safety and full GCC/Clang remain mandatory parallel **release blockers**, not deprioritized safeguards. Comb has historical green host CI, Step FX remains incomplete. No Metallic FM, ARM build, image packaging or main merge. This is a priority decision, **not implementation or test evidence**.
+
 ## Immediate next three jobs (host-only)
 1. **JB-01:** locate exact original No Clip 3 ms implementation, preserve tests and behaviour.
 2. **JB-03 + JB-02:** inspect upstream `modNode_updateValue`, interpolation render and compare against Erica structures; document compatibility and licence decision.
