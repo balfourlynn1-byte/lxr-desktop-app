@@ -1,0 +1,22 @@
+name: JIMBONES native DrumVoice compile probe (host only)
+on:
+  push:
+    branches:
+      - agents/jb-wavetable-host-experiment
+    paths:
+      - '.github/workflows/jb-native-drumvoice-probe.yml'
+      - 'Core/Src/Soundengine/DSPAudio/DrumVoice.c'
+      - 'Core/Inc/Soundengine/DSPAudio/DrumVoice.h'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  drumvoice-host-syntax:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Probe actual DrumVoice.c native compilation (no ARM)
+        run: |
+          mkdir -p build/host
+          gcc --version | head -1
+          gcc -std=gnu11 -fsyntax-only -Wall -Wextra -ICore/Inc -ICore/Src -IDrivers/STM32F7xx_HAL_Driver/Inc -IDrivers/CMSIS/Device/ST/STM32F7xx/Include -IDrivers/CMSIS/Include Core/Src/Soundengine/DSPAudio/DrumVoice.c
