@@ -5,6 +5,7 @@ mkdir -p build/host
 sh tests/run_stepfx_send.sh
 sh tests/run_stepfx_send_mix.sh
 sh tests/run_stepfx_ui.sh
+python3 tests/test_seq_step_led_source.py
 sh tests/run_dub_delay_sync.sh
 python3 tests/test_dub_delay_source.py
 sh tests/run_jb22_metallic_off.sh
