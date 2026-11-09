@@ -22,6 +22,7 @@
 #include "Soundengine/DSPAudio/modulationNode.h"
 #include "Soundengine/TriggerOut.h"
 #include "Soundengine/DSPAudio/Jimbones.h"
+#include "Soundengine/DSPAudio/JimbonesNativeWaveBank.h"
 #include "Soundengine/MIDI/MidiVoiceControl.h"
 #include "IO/adcPots.h"
 
@@ -53,6 +54,14 @@ void jb_drumScanConfigure(const int16_t tables[4][256], uint8_t voice,
     jbScanLfoDepth[voice] = lfoDepth;
     jbScanEnabled[voice] = 1;
 }
+/* C10: explicit opt-in to the durable ROM bank. No implicit enable. */
+void jb_drumScanConfigureBuiltin(uint8_t voice, uint8_t enabled,
+                                 float base, float velocityDepth, float lfoDepth)
+{
+    jb_drumScanConfigure(jb_builtinWaveBank, voice, enabled,
+                         base, velocityDepth, lfoDepth);
+}
+
 void jb_drumScanSetLfoValue(uint8_t voice, float normalizedLfo)
 {
     if (voice < NUM_DRUM_VOICES) jbScanLfoValue[voice] = normalizedLfo;
