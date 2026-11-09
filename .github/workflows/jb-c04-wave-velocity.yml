@@ -11,6 +11,9 @@ on:
       - 'tests/test_c08_voice_local_scan_bank_source.py'
       - 'tests/test_c06_drum_scan_source.py'
       - 'tests/test_c09_wave_on_pcm.c'
+      - 'tests/test_c10_native_wave_bank.c'
+      - 'Core/Src/Soundengine/DSPAudio/JimbonesNativeWaveBank.c'
+      - 'Core/Inc/Soundengine/DSPAudio/JimbonesNativeWaveBank.h'
   workflow_dispatch:
 permissions:
   contents: read
@@ -44,3 +47,10 @@ jobs:
         run: |
           "$CC" -std=c11 -O2 -Wall -Wextra -Werror -fsanitize=undefined,float-cast-overflow -ICore/Inc tests/test_c09_wave_on_pcm.c -lm -o build/host/test_c09_wave_on_pcm
           build/host/test_c09_wave_on_pcm
+
+      - name: C10 native ROM waveform bank link and scan
+        env:
+          CC: ${{ matrix.compiler }}
+        run: |
+          "$CC" -std=c11 -O2 -Wall -Wextra -Werror -fsanitize=undefined,float-cast-overflow -ICore/Inc tests/test_c10_native_wave_bank.c Core/Src/Soundengine/DSPAudio/JimbonesNativeWaveBank.c -o build/host/test_c10_native_wave_bank
+          build/host/test_c10_native_wave_bank
