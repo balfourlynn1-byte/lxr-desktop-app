@@ -79,3 +79,7 @@ Verified source blobs and detailed mapping in `docs/JB_B04_OSCILLATOR_COMPATIBIL
 
 ## 2026-11-09 B05 — velocity destination mapping (source-only)
 B05 research completed; exact upstream/native blob IDs, reset behavior, existing JIMBONES velocity/blend controls and proposal are in `docs/JB_B05_VELOCITY_DESTINATION_MAP.md`. Wave position first, shape second, drive deferred; all additions OFF/zero by default with versioned optional persistence. **No implementation or host test execution.** Next B06 and A03 execution when available.
+
+
+## 2026-11-09 B06a — native ABI/memory source gate (PARTIAL)
+Verified source blobs and constraints in `docs/JB_B06_NATIVE_ABI_GATE.md`: native OscInfo fields/call signatures; 64-frame DMA; 44140 Hz; six modulation nodes in DTCM; fixed JIMBONES kit parameter bytes; Metallic disabled. These are *source-only* findings, not a measured RAM/ITCM budget. B06 still OPEN: upstream sample memory, kit/global serialization, MIDI clock and display API comparisons plus executable host tests are pending. Do not transplant upstream structs or append unversioned preset bytes. ARM hold unchanged.
