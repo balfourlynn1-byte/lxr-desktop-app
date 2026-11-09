@@ -16,6 +16,7 @@ on:
       - 'Core/Inc/Soundengine/DSPAudio/JimbonesNativeWaveBank.h'
       - 'Core/CMakeLists.txt'
       - 'tests/test_c11_native_build_registration.py'
+      - 'tests/test_c12_wave_off_source.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -59,3 +60,6 @@ jobs:
 
       - name: C11 desktop native build registration source guard
         run: python3 tests/test_c11_native_build_registration.py
+
+      - name: C12 default OFF legacy oscillator source guard
+        run: python3 tests/test_c12_wave_off_source.py
