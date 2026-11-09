@@ -98,3 +98,6 @@ Source trace DONE, execution NOT RUN. See `docs/JB_A04_SKULL_PRESERVATION_MAP.md
 
 ### 2026-11-09 B06b sample-dispatch gate
 Source audit `docs/JB_B06B_SAMPLE_DISPATCH_GATE.md` (commit `3cbb1fb2`) confirms native non-FM oscillator ID 0–5 switch, commented-out default sample playback, and `#if 0` sample helpers. The 32768-byte crash asset alone does not prove active sample support. Never graft upstream sample IDs onto native dispatch. Host tests NOT RUN. B06 upstream memory/serialization/MIDI/display still open; ARM held.
+
+### 2026-11-09 — B06c native MIDI and clock source gate
+Native `MidiParser.c` blob `04f3d03ffcee0b20f6d58e26d7a91f34e4b89bca`: note-on routes to `voiceControl_noteOn` then `stepfx_live` (1497–1555), note-off/zero velocity ignored (1858–1891), external MIDI clock gated by system filter + ext sync (1766–1789), six velocity modulation CCs (1171–1178), bounded JIMBONES NRPN banks 96–101 (39–52). Exact fixture plan and caveats: `docs/JB_B06C_MIDI_CLOCK_COMPATIBILITY.md`, evidence commit `59084b2f`. Source-only; tests NOT RUN. B06 still PARTIAL; upstream MIDI, serialization and display mapping pending. ARM HOLD unchanged.
