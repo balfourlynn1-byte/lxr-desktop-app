@@ -14,8 +14,8 @@ int main(void) {
         }
         assert(min<0 && max>0);
     }
-    assert(jb_wave_scan_sample(jb_builtinWaveBank,0,0.f)!=
-           jb_wave_scan_sample(jb_builtinWaveBank,0,1.f));
+    assert(jb_wave_scan_sample(jb_builtinWaveBank,0x40000000u,0.f)!=
+           jb_wave_scan_sample(jb_builtinWaveBank,0x40000000u,1.f));
     puts("PASS C10: immutable built-in wave bank linked and native scan reads it");
     return 0;
 }
