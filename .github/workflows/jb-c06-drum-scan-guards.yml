@@ -1,0 +1,22 @@
+name: JIMBONES C05-C06 source guards
+on:
+  push:
+    branches: [agents/jb-wavetable-host-experiment]
+    paths:
+      - 'Core/Src/Soundengine/DSPAudio/DrumVoice.c'
+      - 'Core/Src/Soundengine/DSPAudio/Oscillator.c'
+      - 'tests/test_c05_native_scan_source.py'
+      - 'tests/test_c06_drum_scan_source.py'
+      - '.github/workflows/jb-c06-drum-scan-guards.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-guards:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: C05 native oscillator entry point
+        run: python3 tests/test_c05_native_scan_source.py
+      - name: C06 opt-in drum routing and captured velocity
+        run: python3 tests/test_c06_drum_scan_source.py
