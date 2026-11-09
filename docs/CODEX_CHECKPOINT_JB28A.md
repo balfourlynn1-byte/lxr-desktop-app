@@ -119,3 +119,7 @@ Velocity destination research completed, see `docs/JB_B05_VELOCITY_DESTINATION_M
 
 ### A04 source trace — 2026-11-09
 Pinned approved skull and wake paths in `docs/JB_A04_SKULL_PRESERVATION_MAP.md` (commit `098ff972`); source-only DONE, host tests NOT RUN. ARM HOLD remains.
+
+
+### 2026-11-09 B06b checkpoint
+Completed native sample-dispatch source audit: oscillator IDs 0–5 active, default sample dispatch commented, sample helpers `#if 0`; 32768-byte crash asset is not proof of playable sample support. Evidence `docs/JB_B06B_SAMPLE_DISPATCH_GATE.md` commit `3cbb1fb2`. B06 PARTIAL; tests NOT RUN; ARM held. Next: upstream sample memory and serialization mapping or A03 host execution.
