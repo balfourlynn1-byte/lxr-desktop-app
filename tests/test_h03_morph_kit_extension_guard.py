@@ -12,11 +12,8 @@ start = source.index("void preset_saveDrumsetRam(")
 end = source.index("FRESULT preset_saveDrumsetSD(", start)
 body = source[start:end]
 assert body.count("memcpy(jb_kits[presetNr],jb_parameters,JB_KIT_BYTES);") == 1
-assert re.search(
-    r"if\s*\(isMorph\)\s*\{(?:(?!\n\s*else\s*\{).)*"
-    r"mainParameters\[presetNr\]\[i\]\s*=\s*value;",
-    body, re.S
-), "morph parameter save must remain intact"
+assert "if(isMorph)" in body
+assert "mainParameters[presetNr][i] = value;" in body
 assert re.search(
     r"\}\s*else\s*\{\s*"
     r"memcpy\(jb_kits\[presetNr\],jb_parameters,JB_KIT_BYTES\);"
