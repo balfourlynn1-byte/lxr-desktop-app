@@ -226,3 +226,15 @@ User approved the proposed UI direction. **Do not mistake approval of this roadm
 - Design safeguard: master bypass should not erase per-effect toggle states, so re-enabling restores prior configuration. No kit writes until explicit save, and no unintended effect on original sound when disabled.
 - First inspect actual performance-menu hardware architecture and existing global vs per-voice effect routing. Specify what 'all' covers before implementation; no new DSP-heavy global effect chain by default.
 - **Priority:** P2, after native wavetable-ON audio and P1 controls. Prototype and test on host/emulator, measure CPU, commit/push each atomic step and update live checkpoint. Strict ARM hold remains.
+
+### 2026-11-09 — Approved design direction: universal hold-to-modify performance controls
+User wants Torso Electronics S-4-style press-and-hold behavior and Digitakt TRACK-like held modifier **across all settings, not only FX**. This supersedes treating momentary FX ALL as an isolated feature.
+
+**Design specification (proposal, not implemented):**
+- Add a consistent **momentary / latch** interaction model across supported parameters and pages. A held physical modifier temporarily applies an alternate state; release restores the underlying state. Optional latch mode stays engaged until toggled again.
+- Apply to FX ALL and individual FX bypass/engage, morph target, wavetable A/B original-engine audition and scan position, filters, randomization, and selected/all-voice parameter edits. Respect voice exclusions, especially kick.
+- Support held modifier + encoder/parameter movement for selected/all-voice adjustment, **but do not commit persistent parameter changes unless explicitly confirmed**. Differentiate temporary audition from intentional editing.
+- Capture original values at press-down; release restores deterministically even if the user changes page/voice while holding. Define conflict resolution for concurrent modifiers, retriggers, kit changes, transport, and rapid press/release; no stuck state after page exit or kit load.
+- Keep ordinary short press and existing sequencer/Step FX buttons functional; avoid conflicts with existing hardware combinations. No specific button assignment until actual LXR-02 control mapping is inspected. Clear held/latch status indicator; avoid CPU-heavy display work.
+- Acceptance: host/emulator UI state-machine tests for press/hold/release, latch toggle, simultaneous hits, page switching, exclusions, save/reload, and audio bypass identity; verify no unintended kit writes and no new DSP spikes.
+- **Priority P2** after full native wavetable-ON PCM validation and P1 core controls. Atomically commit **and push** every coherent step; update `docs/CODEX_LIVE_CHECKPOINT.md` per mandatory timeout protocol. Strict ARM hold unchanged.
