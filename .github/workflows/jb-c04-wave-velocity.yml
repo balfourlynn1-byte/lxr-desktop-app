@@ -14,6 +14,8 @@ on:
       - 'tests/test_c10_native_wave_bank.c'
       - 'Core/Src/Soundengine/DSPAudio/JimbonesNativeWaveBank.c'
       - 'Core/Inc/Soundengine/DSPAudio/JimbonesNativeWaveBank.h'
+      - 'Core/CMakeLists.txt'
+      - 'tests/test_c11_native_build_registration.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -54,3 +56,6 @@ jobs:
         run: |
           "$CC" -std=c11 -O2 -Wall -Wextra -Werror -fsanitize=undefined,float-cast-overflow -ICore/Inc tests/test_c10_native_wave_bank.c Core/Src/Soundengine/DSPAudio/JimbonesNativeWaveBank.c -o build/host/test_c10_native_wave_bank
           build/host/test_c10_native_wave_bank
+
+      - name: C11 desktop native build registration source guard
+        run: python3 tests/test_c11_native_build_registration.py
