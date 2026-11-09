@@ -35,3 +35,7 @@
 
 ## First Codex instruction
 'Open the isolated wavetable branch and all four tracking docs. Work one atomic task at a time. First execute C05/C06 source guards and real native host compile; report exact command/output and commit. Do not build ARM or flash image. Preserve OFF-path identity and existing six voices. Update job tree/checkpoint/handover with evidence at every step.'
+
+### CRITICAL — Codex timeout-safe save protocol (2026-11-09)
+- **MANDATORY:** Read and follow `docs/CODEX_CHECKPOINT_AND_RECOVERY.md` before and throughout every Codex session. Make small atomic commits and **push to GitHub immediately**, ideally every 10–15 minutes; local commits alone are not safe. Update and push `docs/CODEX_LIVE_CHECKPOINT.md` with remote SHA, precise PASS/FAIL/NOT RUN, unfinished files, blockers and next command. Stop new work with 10 minutes left and save/push everything recoverable. On restart verify remote SHA and resume without overwriting prior work. WIP commits permitted only when clearly marked unverified. Never claim work backed up unless remote push confirmed.
+- C10 Actions run `42699661787` FAILED in both GCC/Clang at C10 ROM-bank test; test changed to compare waveforms at quarter-cycle phase commit `5d0e19f2fc7fdca3fceb4b174cb548c63b8fc5c8`. **Rerun not yet verified**. C09 passed run `42699351706`. Continue full native rendering after CI gate. ARM hold unchanged.
