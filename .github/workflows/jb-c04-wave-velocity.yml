@@ -26,3 +26,7 @@ jobs:
           mkdir -p build/host
           "$CC" -std=c11 -O2 -Wall -Wextra -Werror -fsanitize=undefined,float-cast-overflow -ICore/Inc tests/test_c04_wave_velocity.c -o build/host/test_c04_wave_velocity
           build/host/test_c04_wave_velocity
+      - name: C05 native oscillator source guard
+        run: python3 tests/test_c05_native_scan_source.py
+      - name: C06 guarded drum routing source guard
+        run: python3 tests/test_c06_drum_scan_source.py
