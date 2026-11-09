@@ -45,3 +45,11 @@ User approved the proposed UI direction. **Do not mistake approval of this roadm
 8. **Hold-to-audition A/B (P2):** temporary original oscillator audition while holding an assigned control; release returns to configured wavetable without modifying saved state. Choose a non-conflicting physical control after hardware button-map review.
 
 **Codex implementation requirements:** first inspect actual LXR-02 menu/button/encoder architecture and document feasible page mappings; prototype on host/emulator, validate UI state transitions and audio OFF/ON switching, check DSP headroom and persistence. Each atomic UI change must be committed and **pushed** with test evidence and live checkpoint. Do not implement UI ahead of native ON-path PCM acceptance.
+
+### 2026-11-09 — Approved addition: PERFORMANCE / FX ALL page
+- Add a second page within the Performance section labelled **FX ALL** (proposed UI; not yet implemented), for controlling effects across all eligible voices together.
+- Provide an explicit **ALL FX ON/OFF** master bypass and quick access to global effect amounts/assignments; keep per-voice exclusions, especially optional kick protection, visible and respected.
+- Distinguish the FX ALL page from the Step FX 1–16 toggle page and normal sequencer mode; preserve Step 1 sequencer LED and existing Step 1 bypass / Step 16 morph LFO proposals without ambiguous button mappings.
+- Design safeguard: master bypass should not erase per-effect toggle states, so re-enabling restores prior configuration. No kit writes until explicit save, and no unintended effect on original sound when disabled.
+- First inspect actual performance-menu hardware architecture and existing global vs per-voice effect routing. Specify what 'all' covers before implementation; no new DSP-heavy global effect chain by default.
+- **Priority:** P2, after native wavetable-ON audio and P1 controls. Prototype and test on host/emulator, measure CPU, commit/push each atomic step and update live checkpoint. Strict ARM hold remains.
