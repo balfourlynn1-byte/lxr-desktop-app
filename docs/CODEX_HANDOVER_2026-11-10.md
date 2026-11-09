@@ -108,3 +108,5 @@ GitHub run [42512010361](https://github.com/balfourlynn1-byte/lxr-desktop-app/ac
 
 ## 2026-11-09 D02 partial — Step 1 LED / dub mapping
 Source evidence `docs/JB_D02_STEP1_SOURCE_AUDIT.md` commit `532ddf29`: LED index zero maps to LED_STEP1; sequencer and Performance/CPU LED paths differ; five dub divisions and existing tests identified. Sequencer Step 1 defect remains unresolved; test execution NOT RUN, hardware NOT VERIFIED. Next inspect LED transport/priority and add executable sequencer LED fixture. ARM HOLD.
+
+2026-11-09 D02/L01 candidate fix: `Core/Src/buttonHandler.c` now mirrors both ON and OFF sequencer step LED state after toggle, including step index zero (`c9317850`). Added `tests/test_seq_step_led_source.py` (`a604f735`) and wired it into host runner (`5772dc84`). Source guard is NOT RUN; does not prove hardware Step 1 fault resolved. Need executable behavioral LED test, GCC/Clang CI and hardware check; keep D02/L01 OPEN and ARM HOLD.
