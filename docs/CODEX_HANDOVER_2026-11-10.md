@@ -184,3 +184,6 @@ GitHub Actions run [42674180307](https://github.com/balfourlynn1-byte/lxr-deskto
 
 ### 2026-11-09 — C08 automated guard wired to CI
 - Added `tests/test_c08_voice_local_scan_bank_source.py` to existing C04 GCC/Clang workflow and push path filters, commit `dc3fae1b9f59c4832d5be8fd51e32c32a8b1d329`. The check now executes on relevant changes, rather than sitting uninvoked. **CI run result not yet verified**; do not count source guard as audio or native compile. Next: inspect Actions outcome, then add actual durable waveform tables and native ON-path PCM test. No ARM compile or image.
+
+### 2026-11-09 — C08 CI failure diagnosed and source guard repaired
+- GitHub runs `42697630903` (C04 matrix) and `42697226224` (C05/C06) FAILED because old C06 source guard asserted the removed global `jbScanTables` pointer; C04 velocity and C05 guard steps PASSED, C08 was skipped. Updated C06 assertion to `jbScanTables[voiceNr]` commit `c3e3aea139921b27d088cd37b86c40d14fc95656`. **Fix not yet confirmed by rerun**. C07 source comparison run `42696281091` PASSED; still source-only, not PCM identity. Next: verify new CI and native ON audio. ARM hold remains.
