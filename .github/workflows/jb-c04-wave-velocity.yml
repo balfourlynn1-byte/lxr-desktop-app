@@ -10,6 +10,7 @@ on:
       - 'Core/Src/Soundengine/DSPAudio/DrumVoice.c'
       - 'tests/test_c08_voice_local_scan_bank_source.py'
       - 'tests/test_c06_drum_scan_source.py'
+      - 'tests/test_c09_wave_on_pcm.c'
   workflow_dispatch:
 permissions:
   contents: read
@@ -36,3 +37,10 @@ jobs:
 
       - name: C08 per-voice bank isolation source guard
         run: python3 tests/test_c08_voice_local_scan_bank_source.py
+
+      - name: C09 C-kernel wavetable ON PCM variation
+        env:
+          CC: ${{ matrix.compiler }}
+        run: |
+          "$CC" -std=c11 -O2 -Wall -Wextra -Werror -fsanitize=undefined,float-cast-overflow -ICore/Inc tests/test_c09_wave_on_pcm.c -lm -o build/host/test_c09_wave_on_pcm
+          build/host/test_c09_wave_on_pcm
