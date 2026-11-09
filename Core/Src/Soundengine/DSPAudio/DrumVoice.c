@@ -31,7 +31,7 @@ INDTCMZ DrumVoice voiceArray[NUM_DRUM_VOICES];
 /* C06: experimental, volatile-only routing. No kit/ABI changes.
  * Disabled until an explicit caller supplies tables and enables a voice.
  */
-static const int16_t (*jbScanTables)[256] = 0;
+static const int16_t (*jbScanTables[NUM_DRUM_VOICES])[256];
 static uint8_t jbScanEnabled[NUM_DRUM_VOICES];
 static uint8_t jbScanNoteVelocity[NUM_DRUM_VOICES];
 static float jbScanBase[NUM_DRUM_VOICES];
@@ -45,8 +45,9 @@ void jb_drumScanConfigure(const int16_t tables[4][256], uint8_t voice,
 {
     if (voice >= NUM_DRUM_VOICES) return;
     jbScanEnabled[voice] = 0;
+    jbScanTables[voice] = 0;
     if (!tables || !enabled) return;
-    jbScanTables = tables;
+    jbScanTables[voice] = tables;
     jbScanBase[voice] = base;
     jbScanVelocityDepth[voice] = velocityDepth;
     jbScanLfoDepth[voice] = lfoDepth;
@@ -296,8 +297,8 @@ IN_ITCM_RAM void calcDrumVoiceSyncBlock(const uint8_t voiceNr, int16_t* buf, con
 	if(voiceArray[voiceNr].mixOscs)
 	{
 		//calc main osc buffer - int16_t processing
-		if (jbScanEnabled[voiceNr] && jbScanTables)
-            jb_calcNativeWaveScanBlock(&voiceArray[voiceNr].osc, jbScanTables,
+		if (jbScanEnabled[voiceNr] && jbScanTables[voiceNr])
+            jb_calcNativeWaveScanBlock(&voiceArray[voiceNr].osc, jbScanTables[voiceNr],
                                       buf, size, (1.f-voiceArray[voiceNr].fmModAmount),
                                       jbScanBase[voiceNr], jbScanVelocityDepth[voiceNr],
                                       jbScanNoteVelocity[voiceNr], jbScanLfoDepth[voiceNr],
