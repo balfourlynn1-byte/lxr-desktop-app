@@ -1,0 +1,21 @@
+name: JIMBONES C07 factory OFF source comparison
+on:
+  push:
+    branches: [agents/jb-wavetable-host-experiment]
+    paths:
+      - 'tests/test_c07_factory_off_source_compare.py'
+      - '.github/workflows/jb-c07-factory-off-compare.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compare:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Fetch integration baseline
+        run: git fetch --no-tags --depth=1 origin refs/heads/agents/jb-28-full-integration-v186:refs/remotes/origin/agents/jb-28-full-integration-v186
+      - name: Compare original OFF-path call sites
+        run: python3 tests/test_c07_factory_off_source_compare.py
