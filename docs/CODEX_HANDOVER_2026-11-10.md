@@ -94,3 +94,7 @@ Added deterministic 64/0/64/4/16-sample segmentation to `tests/test_noclip_132.c
 
 ## A04 approved skull source preservation (2026-11-09)
 Source trace DONE, execution NOT RUN. See `docs/JB_A04_SKULL_PRESERVATION_MAP.md` (commit `098ff972`): approved JB-26 skull C blob `0f6ee956`, screensaver state machine `38395dc3`, LCD latch `6282d73b`; 170ms animation and nonblocking wake/repaint. Existing executable C/Python tests run via `sh tests/run_jb26_skull.sh`; also run with `CC=clang`. No verified image-to-source identity yet (A05), no hardware validation.
+
+
+### 2026-11-09 B06b sample-dispatch gate
+Source audit `docs/JB_B06B_SAMPLE_DISPATCH_GATE.md` (commit `3cbb1fb2`) confirms native non-FM oscillator ID 0–5 switch, commented-out default sample playback, and `#if 0` sample helpers. The 32768-byte crash asset alone does not prove active sample support. Never graft upstream sample IDs onto native dispatch. Host tests NOT RUN. B06 upstream memory/serialization/MIDI/display still open; ARM held.
