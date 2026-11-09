@@ -24,3 +24,9 @@ The editor uses a *shared parameter ID namespace* and routes edits as MIDI_CC / 
 
 ## Required semantics
 SHIFT + turn encoder adds same signed parameter delta to every included voice **without equalizing absolute values**. Example [20,45,60,35,75,90] +10 -> [30,55,70,45,85,100] for 0..100. Changes remain in working kit after SHIFT release; save only through normal kit save mechanism. Distinct from temporary hold-to-audition effects.
+
+## R02 additional confirmed dispatch trace (2026-11-09)
+- `Core/Src/frontPanelParser.c` `frontPanel_sendData` directly calls `frontParser_parseUartData` in non-AVR builds. The front-panel `frontPanel_ccHandler` updates `activeParameters[parNr]` for received parameter CC; it does **not** demonstrate independent six-voice storage.
+- `Core/Src/Soundengine/MIDI/CortexParser.c` declares `frontParser_activeTrack` as the active front-panel track. The `MIDI_CC` and `FRONT_CC_2` handlers forward to `midiParser_ccHandler(cortex_midiMsg,1,0,0.f)` and record automation with `seq_recordAutomation(frontParser_activeTrack,...)`. **Important:** sending six ordinary parameter CCs while one track is selected could update/record the same track repeatedly; avoid this shortcut.
+- Next: inspect the definition of `midiParser_ccHandler` and all call sites plus `frontParser_activeTrack` selection commands; identify how engine parameter storage selects a target voice, and whether an explicit voice-scoped setter exists. Verify `mainParameters` semantics and kit serialization before any edits.
+- The LXR owner's manual confirms voice-specific sound pages with different parameter sets and four encoders, supporting a per-voice semantic compatibility table rather than a naive all-parameter broadcast.
