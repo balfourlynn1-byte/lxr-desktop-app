@@ -124,4 +124,12 @@ void setPan(const uint8_t voiceNr, const uint8_t pan);
 /** set the oscillator start phase for all OSCs*/
 void drum_setPhase(const uint8_t phase, const uint8_t voiceNr);
 
+/* Experimental volatile-only wavetable routing; disabled until configured.
+ * Caller must keep the four wave tables alive for the entire render lifetime.
+ */
+void jb_drumScanConfigure(const int16_t tables[4][256], uint8_t voice,
+                          uint8_t enabled, float base, float velocityDepth,
+                          float lfoDepth);
+void jb_drumScanSetLfoValue(uint8_t voice, float normalizedLfo);
+
 #endif /* DRUMVOICE_H_ */
