@@ -358,3 +358,17 @@ changed_files: docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md; docs
 blocker: P1 native link/render not yet attempted
 next_command: gcc -std=c11 -Wall -Wextra -Werror tests/test_host_dsp_intrinsics.c -o /tmp/jb-host-dsp-intrinsics && /tmp/jb-host-dsp-intrinsics
 safety: NO ARM; NO IMG; NO MERGE; NO FLASH; STOP/DELETE CODESPACE AFTER TESTS
+
+## 2026-11-10 19:28 UTC | TASK P1 | PROGRESS / HOST OBJECT PASS, LINK NOT RUN
+branch: agents/jb-wavetable-host-experiment
+integration_sha: f797ec786fc57d008afeaabad964906f35a43177 (read only)
+source_sha: 86444a33caa5e49dd729cccb34dbdaad26a010e9 (last source fix); no source change in this step
+tested_sha: e50ef4d116ccaaf847b967cca337437971d519f2
+checkpoint_head_sha: PENDING
+commands: git pull --ff-only origin agents/jb-wavetable-host-experiment && git rev-parse HEAD (0, e50ef4d116ccaaf847b967cca337437971d519f2); gcc -std=c11 -Wall -Wextra -Werror tests/test_host_dsp_intrinsics.c -o /tmp/jb-host-dsp-intrinsics && /tmp/jb-host-dsp-intrinsics (0); gcc -std=gnu11 -c -O0 -Wall -Wextra -Werror=implicit-function-declaration -DSTM32F765xx -DUSE_HAL_DRIVER -DJB_HOST_PROBE -include stdint.h -include tests/host_dsp_intrinsics.h -ICore/Inc -ICore/Src -IDrivers/STM32F7xx_HAL_Driver/Inc -IDrivers/CMSIS/Device/ST/STM32F7xx/Include -IDrivers/CMSIS/Include Core/Src/Soundengine/DSPAudio/DrumVoice.c -o /tmp/jb-drumvoice.o (0); nm -u /tmp/jb-drumvoice.o | head -n 80 (0)
+environment: Linux x86_64 2-core Codespace, Ubuntu GCC 13.3.0, Clang 18.1.3
+result: Real DrumVoice.c host object compiled. Unresolved symbols include DecayEg/SnapEg/slopeEg2, SVF, oscillator/FM, one-pole, distortion/transient, modulation/LFO, retrigger smoother, built-in wave bank and native scan; peripheral boundaries include adc_getFaderVolume, jb_trigger and velocityModulators. Five CMSIS 32-bit pointer/register warnings occurred on x86_64. This is not a link, executable or PCM test. Codespace effective waffle was stopped via GitHub UI after testing; deletion awaits pushed checkpoint.
+changed_files: docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md; docs/JIMBONES_WORK_QUEUE.md; docs/JIMBONES_ATOMIC_TASKS.md; docs/CODEX_HANDOVER_2026-11-10.md
+blocker: P1 real-DSP link and deterministic render not yet built
+next_command: rg -n '^(void|int|float|uint32_t|uint8_t).* (DecayEg_calc|SVF_calcBlockZDF|calcNextOscSampleBlock)' Core/Src/Soundengine/DSPAudio
+safety: NO ARM; NO IMG; NO MERGE; NO FLASH; STOPPED CODESPACE, DELETE AFTER PUSH

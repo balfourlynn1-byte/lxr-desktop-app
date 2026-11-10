@@ -1,16 +1,16 @@
 # JIMBONES — CURRENT STATUS
 
-TASK: P0 native DrumVoice syntax — PASSED on Linux; P1 native link next
-STATUS: P0 PASS (syntax only; warnings recorded); P1 NOT RUN
+TASK: P1 — native DrumVoice link and deterministic render (after P0 syntax pass)
+STATUS: IN PROGRESS; GNU GCC host object PASS; executable/link/PCM NOT RUN
 BRANCH: agents/jb-wavetable-host-experiment
-CURRENT COMMIT: 8ca4d101ed249b12b5aecfba4781d840befdb052 (tested source tree; pre-checkpoint)
+CURRENT COMMIT: e50ef4d116ccaaf847b967cca337437971d519f2 (tested source tree; pre-checkpoint)
 LAST SOURCE COMMIT: 86444a33caa5e49dd729cccb34dbdaad26a010e9 (SVF_init prototype); host adaptation 7effff99ae9dd0d92fb6219a7c2025f001925970
-TESTED COMMIT: 8ca4d101ed249b12b5aecfba4781d840befdb052
+TESTED COMMIT: e50ef4d116ccaaf847b967cca337437971d519f2
 CHANGED FILES: docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md; docs/JIMBONES_WORK_QUEUE.md; docs/JIMBONES_ATOMIC_TASKS.md; docs/CODEX_HANDOVER_2026-11-10.md
-LAST TEST COMMAND: CC=clang bash tests/run_native_drumvoice_probe.sh
+LAST TEST COMMAND: gcc -std=gnu11 -c -O0 -Wall -Wextra -Werror=implicit-function-declaration -DSTM32F765xx -DUSE_HAL_DRIVER -DJB_HOST_PROBE -include stdint.h -include tests/host_dsp_intrinsics.h -ICore/Inc -ICore/Src -IDrivers/STM32F7xx_HAL_Driver/Inc -IDrivers/CMSIS/Device/ST/STM32F7xx/Include -IDrivers/CMSIS/Include Core/Src/Soundengine/DSPAudio/DrumVoice.c -o /tmp/jb-drumvoice.o
 TEST EXIT CODE: 0
-ACTUAL RESULT: Linux Codespace x86_64, Ubuntu GCC 13.3.0 and Clang 18.1.3. C06, C12, preflight, GCC real DrumVoice.c syntax and Clang real DrumVoice.c syntax all exited 0. GCC emitted five CMSIS pointer-width warnings from core_cm7.h; Clang emitted one existing phase-constant float-conversion warning from DrumVoice.c:78. No link, PCM, DSP or hardware test. No ARM compiler invoked.
-CURRENT BLOCKER: P1 native link not yet attempted. Codespace is a temporary 2-core resource; £0 budget shows Usage blocked and GitHub Free included Codespaces usage was untouched before creation. Stop and delete Codespace after tests and pushed checkpoints.
-EXACT NEXT ACTION: On the active Linux Codespace, run gcc -std=c11 -Wall -Wextra -Werror tests/test_host_dsp_intrinsics.c -o /tmp/jb-host-dsp-intrinsics && /tmp/jb-host-dsp-intrinsics; then inspect real DSP link dependencies for P1.
+ACTUAL RESULT: On Linux x86_64 GNU GCC 13.3, P0 C06/C12/preflight/GCC/Clang syntax all exit 0 at prior SHA 8ca4d101ed249b12b5aecfba4781d840befdb052. GNU intrinsic edge-case executable exits 0 after fast-forward to e50ef4d116ccaaf847b967cca337437971d519f2. Real DrumVoice.c host object compilation exits 0, then nm -u lists DSP/filter/envelope/oscillator symbols plus hardware boundaries adc_getFaderVolume, jb_trigger and velocityModulators. No host link or PCM yet. Five CMSIS x86 pointer-width warnings remain. Codespace effective waffle was stopped after testing; deletion pending this checkpoint push.
+CURRENT BLOCKER: P1 requires linking real DSP dependencies and isolating hardware boundaries without mock DSP. No executable or audio identity evidence yet.
+EXACT NEXT ACTION: On a future free Linux host, map nm -u /tmp/jb-drumvoice.o symbols to real DSP source files and compile/link those units into a deterministic host renderer.
 
-Integration reference f797ec786fc57d008afeaabad964906f35a43177 is read only. OFF-path audio identity remains NOT RUN. No ARM build, image, merge or flash authorised.
+Integration reference f797ec786fc57d008afeaabad964906f35a43177 read only. No ARM build, image, merge or flash authorised.

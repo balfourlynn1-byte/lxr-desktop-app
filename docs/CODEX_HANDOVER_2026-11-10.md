@@ -435,3 +435,6 @@ User wants Torso Electronics S-4-style press-and-hold behavior and Digitakt TRAC
 
 ### 2026-11-10 19:16 UTC — P0 genuine Linux syntax pass
 - Tested experimental SHA `8ca4d101ed249b12b5aecfba4781d840befdb052` on 2-core Ubuntu x86_64 Codespace: C06, C12, preflight, `CC=gcc bash tests/run_native_drumvoice_probe.sh` (GNU GCC 13.3.0) and `CC=clang bash tests/run_native_drumvoice_probe.sh` (Clang 18.1.3) all exit 0. This is real `DrumVoice.c` syntax compilation, not link or PCM. Five CMSIS pointer-width warnings under GCC and one legacy phase-constant warning under Clang recorded in `CODEX_LIVE_CHECKPOINT.md`. P1 link/render next; ARM hold remains.
+
+### 2026-11-10 19:28 UTC — P1 host object boundary
+- On Linux x86_64, GNU GCC 13.3 `-c` compiled real `DrumVoice.c` to `/tmp/jb-drumvoice.o` at tested SHA `e50ef4d116ccaaf847b967cca337437971d519f2` (exit 0; five CMSIS x86 pointer-width warnings). `nm -u` identified real DSP and hardware boundary symbols; GNU intrinsic edge cases exit 0. No executable, PCM or identity comparison yet. Codespace stopped after testing and will be deleted after this checkpoint is pushed. See latest `CODEX_LIVE_CHECKPOINT.md`; P1 remains IN PROGRESS, ARM hold intact.
