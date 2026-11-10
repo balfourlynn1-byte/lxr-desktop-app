@@ -370,12 +370,22 @@ IN_ITCM_RAM void calcNoiseBlock(OscInfo* osc, int16_t* buf, const uint8_t size ,
 //-----------------------------------------------------------
 int16_t calcNoise(OscInfo* osc)
 {
+	/* The target reads the overflow bit left by this addition. On a host,
+	 * unsigned wrap gives the same condition without ARM status registers. */
+#ifdef JB_HOST_PROBE
+	const uint32_t lastPhase = osc->phase;
+#endif
 	osc->phase += osc->phaseInc;
 
 	//check overflow flag, ( if osc->phase == osc->phaseInc a reset occured ==> retrigger, too
+#ifdef JB_HOST_PROBE
+	const uint8_t overflow = lastPhase > osc->phase;
+#else
 	APSR_Type apsr;
 	apsr.w = __get_APSR();
-	if(apsr.b.V ||  (osc->phase == osc->phaseInc))
+	const uint8_t overflow = apsr.b.V;
+#endif
+	if(overflow ||  (osc->phase == osc->phaseInc))
 	{
 		//overflow happened -> phaseWrapped
 
