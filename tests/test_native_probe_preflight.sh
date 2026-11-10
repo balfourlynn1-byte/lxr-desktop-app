@@ -54,4 +54,21 @@ if [[ "$output" != *"PASS: DrumVoice.c host syntax only"* ]]; then
   echo 'FAIL: host probe did not finish' >&2; exit 1
 fi
 echo 'PASS: fake host compiler received syntax-only, STM32F765xx, USE_HAL_DRIVER, stdint and DrumVoice source arguments'
+# Ensure a real compiler error cannot be misreported as a passing host probe.
+cat > "$tmp/fake-failing-host-cc" <<'FAILHOST'
+#!/usr/bin/env bash
+if [[ "${1:-}" == "-dumpmachine" ]]; then printf '%s\n' 'x86_64-linux-gnu'; exit 0; fi
+echo 'intentional syntax failure' >&2
+exit 42
+FAILHOST
+chmod +x "$tmp/fake-failing-host-cc"
+set +e
+output="$(cd "$tmp" && CC="$tmp/fake-failing-host-cc" bash tests/run_native_drumvoice_probe.sh 2>&1)"
+status=$?
+set -e
+if [[ "$status" != 42 || "$output" != *"intentional syntax failure"* || "$output" == *"PASS: DrumVoice.c host syntax only"* ]]; then
+  printf 'FAIL: compiler error propagation: exit=%s output=%s\n' "$status" "$output" >&2
+  exit 1
+fi
+echo 'PASS: compiler failure propagates (exit 42), no false host syntax PASS'
 echo 'NOTE: fixture/preflight only; actual DrumVoice native compilation and audio NOT RUN'
