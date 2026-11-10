@@ -8,6 +8,7 @@ on:
       - 'Core/Src/Soundengine/DSPAudio/DrumVoice.c'
       - 'Core/Inc/Soundengine/DSPAudio/DrumVoice.h'
       - 'tests/run_native_drumvoice_probe.sh'
+      - 'docs/CODEX_LIVE_CHECKPOINT.md'
   workflow_dispatch:
 permissions:
   contents: read
