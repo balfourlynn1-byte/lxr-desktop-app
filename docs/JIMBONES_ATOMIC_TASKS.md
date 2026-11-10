@@ -666,3 +666,8 @@ User wants Torso Electronics S-4-style press-and-hold behavior and Digitakt TRAC
 - Code checkpoint `e4f71087107581e0cdbd09dff8335132f9b1b1a5`: `led_setBlinkLed(ledNr,1)` now checks active slots and returns if that LED already owns one, preventing duplicate blink timers from fighting over the same output. `led_init` explicitly resets `led_blinkingLeds` to zero.
 - Combined candidate LED changes: `a70a463` release stale blink before step toggle; `f265fef` ignore inactive blink slots when stopping; `e4f7108` prevent duplicate active slots and reset blink mask on init. **Unverified source-level candidates**; no build, simulator, or hardware pass claimed.
 - Validation required: static compile of `ledHandler.c` with project headers, host regression for duplicate registration/stop/reset and Step 1/2/16, then hardware running/stopped and mode transitions. Audit `led_clearAllBlinkLeds` for inactive-slot resets and ensure no change to other LED modes. Continue 70/30 implementation/testing allocation.
+
+
+### Clear-all blink owner guard (2026-11-10)
+- Source commit `be2821865cd78e9264672b36fb45b8e526f849da`: `led_clearAllBlinkLeds()` now resets only LEDs whose blink slot is active. Inactive slots may retain stale LED numbers; resetting them could overwrite an unrelated LED's visible state. This aligns clear-all semantics with the active-slot guard in `led_setBlinkLed(...,0)`.
+- **Not compiled or runtime-tested**. Next focused test should cover duplicate start, stop, clear-all, and re-register, plus Step 1/2/16 armed indicators across mode transitions and playhead blink. No hardware flash until validated.
