@@ -55,6 +55,7 @@ void led_init()
 {
 	//init bitfield to zero
 	led_pulsingLeds = 0;	
+	led_blinkingLeds = 0;
 	memset((void*)led_originalLedState,0,NUM_OUTS/8);
 };
 //--------------------------------------------
@@ -576,6 +577,13 @@ void led_setBlinkLed(const uint8_t ledNr, const uint8_t onOff)
 	if(onOff)
 	{
 		//--- turn on blinking ---
+		// An LED must have only one blink owner; duplicate slots can
+		// overwrite each other's temporary output on each timer tick.
+		for(int i=0;i<NUM_OF_BLINKABLE_LEDS;i++)
+		{
+			if((led_blinkingLeds & (1u<<i)) && led_blinkLedNumber[i] == ledNr)
+				return;
+		}
 		//search for a free blink slot
 		for(int i=0;i<NUM_OF_BLINKABLE_LEDS;i++)
 		{
