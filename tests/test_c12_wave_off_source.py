@@ -8,7 +8,7 @@ assert re.search(r"static\s+uint8_t\s+jbScanEnabled\s*\[\s*NUM_DRUM_VOICES\s*\]\
 # Explicit enable requires a non-null table, and disable clears both state and pointer.
 configure=src.split("void jb_drumScanConfigure(",1)[1].split("void jb_drumScanConfigureBuiltin(",1)[0]
 # Reject out-of-range voice indices before any scan-state array access.
-assert re.search(r"if\\s*\\(voice\\s*>=\\s*NUM_DRUM_VOICES\\)\\s*return\\s*;",configure)
+assert re.search(r"if\s*\(voice\s*>=\s*NUM_DRUM_VOICES\)\s*return\s*;",configure)
 assert configure.index("if (voice >= NUM_DRUM_VOICES) return;") < configure.index("jbScanEnabled[voice] = 0;")
 assert re.search(r"jbScanEnabled\[voice\]\s*=\s*0\s*;",configure)
 assert re.search(r"jbScanTables\[voice\]\s*=\s*0\s*;",configure)
