@@ -12,6 +12,17 @@ if ! command -v "$CC" >/dev/null 2>&1; then
   echo "FAIL: host compiler '$CC' not found (set CC=gcc or CC=clang)" >&2
   exit 2
 fi
+# Refuse target cross-compilers even when CC is overridden: this probe is host-only.
+compiler_target="$("$CC" -dumpmachine 2>/dev/null)" || {
+  echo "FAIL: cannot identify compiler target for '$CC'" >&2
+  exit 2
+}
+case "$compiler_target" in
+  *arm*|*thumb*|*aarch64*|*none-eabi*)
+    echo "FAIL: target compiler '$CC' ($compiler_target) is prohibited in host-only probe" >&2
+    exit 2 ;;
+esac
+echo "HOST TARGET: $compiler_target"
 for header in \
   Drivers/CMSIS/Device/ST/STM32F7xx/Include/stm32f7xx.h \
   Drivers/CMSIS/Include/core_cm7.h; do
