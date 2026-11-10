@@ -383,3 +383,17 @@ changed_files: docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md
 blocker: Host renderer/link and original-audio comparison remain unbuilt
 next_command: rg -n '^(void|int|float|uint32_t|uint8_t).* (DecayEg_calc|SVF_calcBlockZDF|calcNextOscSampleBlock)' Core/Src/Soundengine/DSPAudio
 safety: NO ARM; NO IMG; NO MERGE; NO FLASH; CODESPACE DELETED
+
+## 2026-11-10 19:38 UTC | TASK P1 | RESUMED / STARTED
+branch: agents/jb-wavetable-host-experiment
+integration_sha: f797ec786fc57d008afeaabad964906f35a43177 (read only)
+source_sha: 86444a33caa5e49dd729cccb34dbdaad26a010e9 (last source fix)
+tested_sha: e50ef4d116ccaaf847b967cca337437971d519f2 (prior Linux object); none this session
+checkpoint_head_sha: PENDING
+commands: git fetch origin agents/jb-wavetable-host-experiment agents/jb-28-full-integration-v186 (0); git rev-parse HEAD origin/agents/jb-wavetable-host-experiment origin/agents/jb-28-full-integration-v186 (0)
+environment: Darwin x86_64; local Apple Clang; prior Linux GCC 13.3 object evidence retained
+result: Fetched latest experimental and integration refs; experimental local/remote both d1936808ee703ce0f81146f491748a629535885b, integration f797ec786fc57d008afeaabad964906f35a43177. Recovery and P1/P2 task entries read. Native link, PCM and identity NOT RUN this session.
+changed_files: docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md
+blocker: Real DSP dependency map and host link pending
+next_command: rg -n "DecayEg_calc|SVF_calcBlockZDF|calcNextOscSampleBlock" Core/Src/Soundengine/DSPAudio
+safety: NO ARM; NO IMG; NO MERGE; NO FLASH; £0 additional spending
