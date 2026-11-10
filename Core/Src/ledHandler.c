@@ -565,8 +565,10 @@ void led_clearAllBlinkLeds()
 {
 	for(int i=0;i<NUM_OF_BLINKABLE_LEDS;i++)
 	{
-		//reset led
-		led_reset(led_blinkLedNumber[i]);
+		// Only active blink slots own an LED. Inactive slots may
+		// retain an old LED number and must not reset its output.
+		if(led_blinkingLeds & (1u<<i))
+			led_reset(led_blinkLedNumber[i]);
 		//set slot to inactive
 		led_blinkingLeds &= (uint8_t)~(1<<i);
 	}
