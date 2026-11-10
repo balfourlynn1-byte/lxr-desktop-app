@@ -20,7 +20,8 @@ for header in \
     exit 2
   fi
 done
-echo "HOST PROBE: $CC"\necho "SOURCE: $src"
+echo "HOST PROBE: $CC"
+echo "SOURCE: $src"
 "$CC" -std=gnu11 -fsyntax-only -Wall -Wextra \
   -Werror=implicit-function-declaration -DSTM32F765xx -include stdint.h \
   -ICore/Inc -ICore/Src \
