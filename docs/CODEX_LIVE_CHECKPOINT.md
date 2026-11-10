@@ -263,3 +263,18 @@ User wants Torso Electronics S-4-style press-and-hold behavior and Digitakt TRAC
 
 ### 2026-11-10 — Two-file Codex recovery upgrade
 - **NEW current-state snapshot:** [`docs/CODEX_CURRENT_STATUS.md`](CODEX_CURRENT_STATUS.md), creation commit `b5ea762ad3f7c5c4c77a7722bcfe28d271bc8ff2`. Codex must **replace** this short file at STARTED, every meaningful step, BLOCKED/timeout; preserve `docs/CODEX_LIVE_CHECKPOINT.md` as append-only evidence history. Canonical guide §8 updated in commit `5cb42a30e0c3756adc02f11d3d428daf3eb01fc6`. Both must be pushed regularly; update four milestone trackers on task completion. Current task P0 native host compilation **NOT RUN**; no ARM permission.
+
+## 2026-11-10 18:39 UTC | TASK P0 | STARTED
+branch: agents/jb-wavetable-host-experiment
+integration_sha: f797ec786fc57d008afeaabad964906f35a43177 (read only)
+source_sha: NONE this session; starting HEAD 4f512e68ae60f4f9f769193ef73425047cf59bc4
+tested_sha: NONE
+checkpoint_head_sha: PENDING
+command: python3 tests/test_c06_drum_scan_source.py (next)
+environment: Darwin 24.6.0 x86_64; Apple Clang 17.0.0; Python 3.9.6; gcc alias is Apple Clang
+exit_code: NOT RUN
+result: Both branches fetched and exact starting SHAs recorded. No host test run yet.
+changed_files: docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md
+blocker: Genuine GNU GCC requires a Linux/GCC host.
+next_command: python3 tests/test_c06_drum_scan_source.py
+safety: NO ARM; NO IMG; NO MERGE; NO FLASH
