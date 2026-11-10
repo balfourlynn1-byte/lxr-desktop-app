@@ -3,12 +3,6 @@ on:
   push:
     branches:
       - agents/jb-wavetable-host-experiment
-    paths:
-      - '.github/workflows/jb-native-drumvoice-probe.yml'
-      - 'Core/Src/Soundengine/DSPAudio/DrumVoice.c'
-      - 'Core/Inc/Soundengine/DSPAudio/DrumVoice.h'
-      - 'tests/run_native_drumvoice_probe.sh'
-      - 'docs/CODEX_LIVE_CHECKPOINT.md'
   workflow_dispatch:
 permissions:
   contents: read
