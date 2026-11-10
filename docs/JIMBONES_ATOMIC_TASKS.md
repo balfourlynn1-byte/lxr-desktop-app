@@ -688,3 +688,8 @@ User wants Torso Electronics S-4-style press-and-hold behavior and Digitakt TRAC
 ### LED / Step FX source regression checkpoint (2026-11-10)
 - Added source assertions to existing `tests/test_stepfx_ui_source.py` at `153701a33d680c2ec9beea806a82d935ac23eaae`, checking LED blink mask initialisation, active-slot matching, guarded clear-all reset, and stale-blink release in sequencer step toggle. Existing Step FX UI routing assertions retained.
 - **Test not executed**: GitHub connector permits source edits, but this session's container cannot resolve github.com to fetch the complete repository; no claim of compilation or hardware verification. Run `sh tests/run_stepfx_ui.sh` in the repository checkout, then check LEDs physically, before promoting candidate fix. Source-text assertions cannot prove correct runtime timing.
+
+
+### CI host verification wiring (2026-11-10)
+- Created `.github/workflows/jimbones-jb-led-stepfx-host.yml` at `14802fdbdac59fd2bff726019ddea42cf8066062`, scoped to experimental branch pushes affecting LED, Step FX UI, test sources, or workflow, with optional manual dispatch. Runs `sh tests/run_stepfx_ui.sh` on Ubuntu (compiled host Step FX regression + source guards). No ARM compilation or hardware flash.
+- GitHub commit-associated workflow lookup immediately after creation returned **no workflow runs**, so **not yet verified as executed or passing**. Check Actions for run and job logs; fix any errors before declaring host validation. The local sandbox cannot resolve github.com to clone the repository. Existing Step 1 LED fix remains hardware-unverified.
