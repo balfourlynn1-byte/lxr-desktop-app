@@ -9,6 +9,7 @@ case "$target" in
     echo "FAIL: target compiler is prohibited: $target" >&2; exit 2 ;;
 esac
 out="${1:-/tmp/jb-drumvoice-render.pcm}"
+scenario="${2:-kick}"
 build="$(mktemp -d "${TMPDIR:-/tmp}/jb-native-render.XXXXXX")"
 flags=(-std=gnu11 -O0 -Werror=implicit-function-declaration
   -DSTM32F765xx -DUSE_HAL_DRIVER -DJB_HOST_PROBE
@@ -26,8 +27,8 @@ for unit in "${units[@]}"; do
 done
 "$CC" "${flags[@]}" -c tests/host_drumvoice_render.c -o "$build/renderer.o"
 "$CC" "${objects[@]}" "$build/renderer.o" -lm -o "$build/renderer"
-"$build/renderer" "$out"
-"$build/renderer" "$out.repeat"
+"$build/renderer" "$out" "$scenario"
+"$build/renderer" "$out.repeat" "$scenario"
 cmp "$out" "$out.repeat"
 test "$(wc -c < "$out")" -eq 8192
 shasum -a 256 "$out" "$out.repeat"

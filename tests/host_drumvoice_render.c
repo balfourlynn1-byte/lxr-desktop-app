@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 
 /* Hardware and UI boundaries. Unused modulation destinations remain null;
  * reaching a MIDI parameter write is a harness error. */
@@ -53,22 +54,50 @@ uint32_t HAL_RNG_GetRandomNumber(RNG_HandleTypeDef *handle)
 int main(int argc, char **argv)
 {
     enum { FRAMES = 4096, BLOCK = 16 };
-    if (argc != 2) { fprintf(stderr, "usage: %s output.pcm\n", argv[0]); return 2; }
+    if (argc < 2 || argc > 3) { fprintf(stderr, "usage: %s output.pcm [kick|tom1|tom2|fm|retrigger|long|overlap]\n", argv[0]); return 2; }
+    const char *scenario = argc == 3 ? argv[2] : "kick";
+    const int kick = !strcmp(scenario, "kick");
+    const int tom1 = !strcmp(scenario, "tom1");
+    const int tom2 = !strcmp(scenario, "tom2");
+    const int fm = !strcmp(scenario, "fm");
+    const int retrigger = !strcmp(scenario, "retrigger");
+    const int long_decay = !strcmp(scenario, "long");
+    const int overlap = !strcmp(scenario, "overlap");
+    if (!(kick || tom1 || tom2 || fm || retrigger || long_decay || overlap)) {
+        fprintf(stderr, "unknown scenario: %s\n", scenario); return 2;
+    }
     FILE *out = fopen(argv[1], "wb");
     if (!out) { perror(argv[1]); return 2; }
     initDrumVoice();
-    voiceArray[0].osc.waveform = SINE;
-    voiceArray[0].modOsc.waveform = SINE;
-    voiceArray[0].filterType = FILTER_OFF;
-    voiceArray[0].oscVolEg.attack = 0.05;
-    voiceArray[0].oscVolEg.decay = 0.004;
-    voiceArray[0].fmModAmount = 0.25f;
-    Drum_trigger(0, 100, 48);
+    for (unsigned voice = 0; voice < NUM_DRUM_VOICES; ++voice) {
+        voiceArray[voice].osc.waveform = voice == 0 ? SINE : (voice == 1 ? TRI : SAW);
+        voiceArray[voice].modOsc.waveform = SINE;
+        voiceArray[voice].filterType = FILTER_OFF;
+        voiceArray[voice].oscVolEg.attack = 0.05;
+        voiceArray[voice].oscVolEg.decay = long_decay || overlap ? 0.001 : 0.004;
+        voiceArray[voice].fmModAmount = 0.25f;
+    }
+    if (fm) voiceArray[0].mixOscs = 0;
+    unsigned selected = tom1 ? 1u : tom2 ? 2u : 0u;
+    Drum_trigger(selected, 100, selected ? 52 : 48);
     int peak = 0, clipped = 0, nonzero = 0;
     for (unsigned block = 0; block < FRAMES / BLOCK; ++block) {
         int16_t pcm[BLOCK] = {0};
-        calcDrumVoiceAsync(0);
-        calcDrumVoiceSyncBlock(0, pcm, BLOCK);
+        if (retrigger && (block == 32 || block == 64 || block == 96))
+            Drum_trigger(0, 115, 48);
+        if (overlap && block == 16) Drum_trigger(1, 105, 52);
+        if (overlap && block == 32) Drum_trigger(2, 120, 55);
+        if (overlap && block == 48) Drum_trigger(0, 110, 48);
+        for (unsigned voice = 0; voice < (overlap ? 3u : 1u); ++voice) {
+            int16_t part[BLOCK] = {0};
+            unsigned index = overlap ? voice : selected;
+            calcDrumVoiceAsync(index);
+            calcDrumVoiceSyncBlock(index, part, BLOCK);
+            for (unsigned i = 0; i < BLOCK; ++i) {
+                int sum = pcm[i] + part[i];
+                pcm[i] = sum > 32767 ? 32767 : sum < -32768 ? -32768 : sum;
+            }
+        }
         for (unsigned i = 0; i < BLOCK; ++i) {
             int sample = pcm[i];
             int absolute = sample < 0 ? -sample : sample;
@@ -79,6 +108,7 @@ int main(int argc, char **argv)
         if (fwrite(pcm, sizeof(pcm), 1, out) != 1) { perror("write"); fclose(out); return 2; }
     }
     if (fclose(out)) { perror("close"); return 2; }
-    printf("samples=%u peak=%d clipped=%d nonzero=%d\n", FRAMES, peak, clipped, nonzero);
+    printf("scenario=%s samples=%u peak=%d clipped=%d nonzero=%d\n",
+           scenario, FRAMES, peak, clipped, nonzero);
     return nonzero && peak && !clipped ? 0 : 1;
 }
