@@ -660,3 +660,9 @@ User wants Torso Electronics S-4-style press-and-hold behavior and Digitakt TRAC
 ### LED blink-slot guard (2026-11-10)
 - Commit `f265fef7ec579cacf9d8215b4985899292977e7f`: `led_setBlinkLed(..., 0)` now only calls `led_reset` on an **active** matching blink slot. Previously inactive slots with stale `led_blinkLedNumber` could cause redundant LED reset operations. Complements `a70a463` in `buttonHandler_setRemoveStep`.
 - Status: **source patch committed, compile and runtime tests NOT executed**. Check for duplicate active blink slots for one LED, stale blink owners across mode transitions, selected-step edit indication, and Step 1/2/16 armed state after timer ticks. This is not yet a hardware-verified bug fix.
+
+
+### LED blink ownership hardening (2026-11-10)
+- Code checkpoint `e4f71087107581e0cdbd09dff8335132f9b1b1a5`: `led_setBlinkLed(ledNr,1)` now checks active slots and returns if that LED already owns one, preventing duplicate blink timers from fighting over the same output. `led_init` explicitly resets `led_blinkingLeds` to zero.
+- Combined candidate LED changes: `a70a463` release stale blink before step toggle; `f265fef` ignore inactive blink slots when stopping; `e4f7108` prevent duplicate active slots and reset blink mask on init. **Unverified source-level candidates**; no build, simulator, or hardware pass claimed.
+- Validation required: static compile of `ledHandler.c` with project headers, host regression for duplicate registration/stop/reset and Step 1/2/16, then hardware running/stopped and mode transitions. Audit `led_clearAllBlinkLeds` for inactive-slot resets and ensure no change to other LED modes. Continue 70/30 implementation/testing allocation.
