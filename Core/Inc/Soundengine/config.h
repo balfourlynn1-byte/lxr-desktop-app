@@ -88,6 +88,12 @@
 
 //typedef  uint8_t bool;
 
+#if defined(JB_HOST_PROBE) && defined(__APPLE__)
+/* Mach-O has no STM32 linker sections; host probes retain ordinary storage. */
+#define INDTCM
+#define INDTCMZ
+#define IN_ITCM_RAM
+#else
 // Helper to declare variable in CCM memory, pre-loaded from flash at startup
 #define INDTCM __attribute__ ((section(".dtcm")))
 
@@ -95,5 +101,6 @@
 #define INDTCMZ __attribute__ ((section(".dtcmz")))
 
 #define IN_ITCM_RAM __attribute__((section(".itcm_text")))
+#endif
 
 #endif /* CONFIG_H_ */

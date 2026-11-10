@@ -116,11 +116,17 @@ void Error_Handler(void);
 /* USER CODE BEGIN Private defines */
 
 
+#if defined(JB_HOST_PROBE) && defined(__APPLE__)
+/* Mach-O has no STM32 linker sections; host probes retain ordinary storage. */
+#define INDTCM
+#define INDTCMZ
+#else
 // Helper to declare variable in CCM memory, pre-loaded from flash at startup
 #define INDTCM __attribute__ ((section(".dtcm")))
 
 // Helper to declare variable in CCM memory that is zeroed at startup
 #define INDTCMZ __attribute__ ((section(".dtcmz")))
+#endif
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

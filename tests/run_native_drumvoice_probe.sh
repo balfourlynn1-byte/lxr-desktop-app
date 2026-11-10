@@ -34,7 +34,8 @@ done
 echo "HOST PROBE: $CC"
 echo "SOURCE: $src"
 "$CC" -std=gnu11 -fsyntax-only -Wall -Wextra \
-  -Werror=implicit-function-declaration -DSTM32F765xx -DUSE_HAL_DRIVER -include stdint.h \
+  -Werror=implicit-function-declaration -DSTM32F765xx -DUSE_HAL_DRIVER -DJB_HOST_PROBE \
+  -include stdint.h -include tests/host_dsp_intrinsics.h \
   -ICore/Inc -ICore/Src \
   -IDrivers/STM32F7xx_HAL_Driver/Inc \
   -IDrivers/CMSIS/Device/ST/STM32F7xx/Include \
