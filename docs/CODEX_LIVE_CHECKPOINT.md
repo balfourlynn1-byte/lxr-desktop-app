@@ -292,3 +292,12 @@ changed_files: tests/test_c12_wave_off_source.py; docs/CODEX_CURRENT_STATUS.md; 
 blocker: Linux/GNU GCC runner unavailable in this session; do not treat Apple Clang alias as GNU GCC.
 next_command: CC=gcc bash tests/run_native_drumvoice_probe.sh (on Linux x86_64 with GNU GCC)
 safety: NO ARM; NO IMG; NO MERGE; NO FLASH
+
+## 2026-11-10 18:54 UTC | TASK P0 | FINAL RECOVERY CHECKPOINT
+branch: agents/jb-wavetable-host-experiment
+source_sha: firmware source unchanged; test fix 95722b2546d5fd7f0d34924a02700bba23693353
+tested_sha: 95722b2546d5fd7f0d34924a02700bba23693353
+checkpoint_head_sha: 3e9ad66793f8a116ccbb4a13f34a7c1202c6ab1c (prior checkpoint; this entry advances HEAD)
+result: C12 test fix and P0 evidence pushed. A truncated API upload of docs/JIMBONES_ATOMIC_TASKS.md was restored in commit 3e9ad66793f8a116ccbb4a13f34a7c1202c6ab1c; remote blob 4640b8d07cb8c367d9c743e834d0b6e2c7fc09b2 equals local. Worktree clean after fetch. P0 remains IN PROGRESS / Linux GNU GCC BLOCKED; no link or PCM evidence.
+next_command: CC=gcc bash tests/run_native_drumvoice_probe.sh (on Linux x86_64 with GNU GCC)
+safety: NO ARM; NO IMG; NO MERGE; NO FLASH
