@@ -372,3 +372,14 @@ changed_files: docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md; docs
 blocker: P1 real-DSP link and deterministic render not yet built
 next_command: rg -n '^(void|int|float|uint32_t|uint8_t).* (DecayEg_calc|SVF_calcBlockZDF|calcNextOscSampleBlock)' Core/Src/Soundengine/DSPAudio
 safety: NO ARM; NO IMG; NO MERGE; NO FLASH; STOPPED CODESPACE, DELETE AFTER PUSH
+
+## 2026-11-10 19:30 UTC | TASK P1 | CLEANUP / HANDOVER
+branch: agents/jb-wavetable-host-experiment
+source_sha: 86444a33caa5e49dd729cccb34dbdaad26a010e9 (last source change)
+tested_sha: e50ef4d116ccaaf847b967cca337437971d519f2 (Linux host object); 8ca4d101ed249b12b5aecfba4781d840befdb052 (P0 GCC/Clang syntax)
+checkpoint_head_sha: bfcc7659fca8ac2ab32ccb3a0999b373cf9d42a5 (prior checkpoint; this entry advances HEAD)
+result: P1 diagnostic checkpoint pushed and remotely verified. Codespace effective waffle was stopped, then permanently deleted after user confirmed final deletion; GitHub UI displayed deletion success and Codespaces count zero. No further Codespaces storage accrues for it. No paid billing controls changed. P0 Linux GCC/Clang syntax PASS; P1 object PASS; P1 link/render and P2 OFF-path PCM identity NOT RUN.
+changed_files: docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md
+blocker: Host renderer/link and original-audio comparison remain unbuilt
+next_command: rg -n '^(void|int|float|uint32_t|uint8_t).* (DecayEg_calc|SVF_calcBlockZDF|calcNextOscSampleBlock)' Core/Src/Soundengine/DSPAudio
+safety: NO ARM; NO IMG; NO MERGE; NO FLASH; CODESPACE DELETED
