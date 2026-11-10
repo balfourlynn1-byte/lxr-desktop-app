@@ -671,3 +671,9 @@ User wants Torso Electronics S-4-style press-and-hold behavior and Digitakt TRAC
 ### Clear-all blink owner guard (2026-11-10)
 - Source commit `be2821865cd78e9264672b36fb45b8e526f849da`: `led_clearAllBlinkLeds()` now resets only LEDs whose blink slot is active. Inactive slots may retain stale LED numbers; resetting them could overwrite an unrelated LED's visible state. This aligns clear-all semantics with the active-slot guard in `led_setBlinkLed(...,0)`.
 - **Not compiled or runtime-tested**. Next focused test should cover duplicate start, stop, clear-all, and re-register, plus Step 1/2/16 armed indicators across mode transitions and playhead blink. No hardware flash until validated.
+
+
+### Hourly automation alignment (2026-11-10)
+- Existing automation **JIMBONES Mac test readiness** (`6aee331cae10819180db6bd3a72ec885`) updated in place, preserving its hourly schedule and non-duplicate notification policy.
+- Hourly instructions now explicitly follow this job tree and target **70% implementation / 30% testing**, with safety-gate exceptions; focus on Step 1 LED blink ownership candidates, Step FX toggles, Shift+parameter relative edits and kit/BPM persistence. Metallic FM remains shelved; tom crunch is a conditional wavetable regression.
+- If access permits, commit small source/test checkpoints and log exact SHA/test status. Only notify about actionable new test packages or meaningful completed implementation. Never imply Mac host tests establish hardware safety or release an ARM image without approval. No extra paid services.
