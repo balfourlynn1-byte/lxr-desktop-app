@@ -26,4 +26,11 @@ assert "stepfx_send_set_enabled(dub)" in ui
 assert "if(index<5u)" in menu
 assert "jb_perfui_selected()<5u" in menu
 assert "if(seqButtonPressed==0u && !buttonHandler_getShift())" in button
-print("PASS JB-25: Step FX buttons 1-5 dub timing select, 6-16 trigger FX, LED mapping and note routing preserved")
+# Guard against regressions in LED blink-slot ownership that can obscure
+# an armed sequencer step. This is source inspection, NOT a hardware LED test.
+assert "led_blinkingLeds = 0;" in led
+assert "if((led_blinkingLeds & (1u<<i)) && led_blinkLedNumber[i] == ledNr)" in led
+assert "if(led_blinkingLeds & (1u<<i))" in led
+assert "led_reset(led_blinkLedNumber[i]);" in led
+assert "led_setBlinkLed(ledNr, 0);" in button
+print("PASS JB-25: Step FX routing and LED blink-owner source guards (hardware unverified)")
