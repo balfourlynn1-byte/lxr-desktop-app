@@ -7,6 +7,7 @@ on:
       - '.github/workflows/jb-native-drumvoice-probe.yml'
       - 'Core/Src/Soundengine/DSPAudio/DrumVoice.c'
       - 'Core/Inc/Soundengine/DSPAudio/DrumVoice.h'
+      - 'tests/run_native_drumvoice_probe.sh'
   workflow_dispatch:
 permissions:
   contents: read
@@ -17,6 +18,4 @@ jobs:
       - uses: actions/checkout@v4
       - name: Probe actual DrumVoice.c native compilation (no ARM)
         run: |
-          mkdir -p build/host
-          gcc --version | head -1
-          gcc -std=gnu11 -fsyntax-only -Wall -Wextra -Werror=implicit-function-declaration -DSTM32F765xx -include stdint.h -ICore/Inc -ICore/Src -IDrivers/STM32F7xx_HAL_Driver/Inc -IDrivers/CMSIS/Device/ST/STM32F7xx/Include -IDrivers/CMSIS/Include Core/Src/Soundengine/DSPAudio/DrumVoice.c
+          bash tests/run_native_drumvoice_probe.sh
