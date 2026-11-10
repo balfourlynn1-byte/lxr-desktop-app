@@ -301,3 +301,18 @@ checkpoint_head_sha: 3e9ad66793f8a116ccbb4a13f34a7c1202c6ab1c (prior checkpoint;
 result: C12 test fix and P0 evidence pushed. A truncated API upload of docs/JIMBONES_ATOMIC_TASKS.md was restored in commit 3e9ad66793f8a116ccbb4a13f34a7c1202c6ab1c; remote blob 4640b8d07cb8c367d9c743e834d0b6e2c7fc09b2 equals local. Worktree clean after fetch. P0 remains IN PROGRESS / Linux GNU GCC BLOCKED; no link or PCM evidence.
 next_command: CC=gcc bash tests/run_native_drumvoice_probe.sh (on Linux x86_64 with GNU GCC)
 safety: NO ARM; NO IMG; NO MERGE; NO FLASH
+
+## 2026-11-10 18:57 UTC | TASK P0 | RESUMED / STARTED
+branch: agents/jb-wavetable-host-experiment
+integration_sha: f797ec786fc57d008afeaabad964906f35a43177 (read only)
+source_sha: 95722b2546d5fd7f0d34924a02700bba23693353 (prior C12 test fix; firmware unchanged)
+tested_sha: NONE in this continuation
+checkpoint_head_sha: PENDING
+command: inspect Linux/container executors and existing host-only GitHub Actions status (next)
+environment: Darwin x86_64 worktree; Linux runner not yet verified
+exit_code: NOT RUN
+result: Fetched experimental HEAD 5a815e66f94f7f11a778f1710383a16c2b88c7dd and integration f797ec786fc57d008afeaabad964906f35a43177; recovery and task records read. No new development test run yet.
+changed_files: docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md
+blocker: Linux/GNU GCC execution path not yet established
+next_command: inspect local Linux/container executors and existing host-only GitHub Actions status
+safety: NO ARM; NO IMG; NO MERGE; NO FLASH
