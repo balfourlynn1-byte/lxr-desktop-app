@@ -655,3 +655,8 @@ User wants Torso Electronics S-4-style press-and-hold behavior and Digitakt TRAC
 ### Candidate Step 1/step-arm LED ownership fix — committed 2026-11-10
 - Source checkpoint `a70a463ae08e9d2a16c452f72c58e222d13ebe52`: `buttonHandler_setRemoveStep` now calls `led_setBlinkLed(ledNr, 0)` before toggling and mirroring the sequencer's armed state. This releases a stale selected-step blink that could later temporarily blank the LED. No changes to step data, audio, or wavetable.
 - **UNVERIFIED candidate**, not a confirmed fix. Required: compile/build; host LED regression; on-device Step 1 OFF→ON→OFF while running and stopped; compare Steps 2/16; verify selected-step blinking in edit mode, playhead and other blink modes. If selected-step indication regresses, revise before release. Do not promote to flashable build until validation.
+
+
+### LED blink-slot guard (2026-11-10)
+- Commit `f265fef7ec579cacf9d8215b4985899292977e7f`: `led_setBlinkLed(..., 0)` now only calls `led_reset` on an **active** matching blink slot. Previously inactive slots with stale `led_blinkLedNumber` could cause redundant LED reset operations. Complements `a70a463` in `buttonHandler_setRemoveStep`.
+- Status: **source patch committed, compile and runtime tests NOT executed**. Check for duplicate active blink slots for one LED, stale blink owners across mode transitions, selected-step edit indication, and Step 1/2/16 armed state after timer ticks. This is not yet a hardware-verified bug fix.
