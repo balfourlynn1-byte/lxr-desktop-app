@@ -108,3 +108,63 @@ User sign-off: <explicit message referring to exact frozen SHA>
 - Metallic FM remains intentionally shelved. Remaining A–G/H01–H07 queued, not assumed completed.
 
 **Deadline: 2026-11-10 18:30 Europe/London.** At deadline deliver evidence and blockers as-is, even if unfinished. Do not extend the schedule or invent completion.
+
+
+## 7. TIMEOUT-SAFE CODEX EXECUTION CONTRACT — mandatory from first minute
+
+**First job, not ARM:** Execute P0 real source guards and GCC/Clang host-only `DrumVoice.c` syntax compilation. If clean, start a *separate* P1/P2 host link and legacy OFF-path PCM baseline task. No ARM compile, firmware packaging or target workflow enable. User has **not** authorised a frozen candidate or test ARM build.
+
+**Time budget:** user expects handover around 2026-11-10 18:30 Europe/London. Do not postpone persistence until deadline. Work in small, recoverable steps.
+
+### On start, before editing
+
+1. `git fetch origin`; confirm writable branch `agents/jb-wavetable-host-experiment` and read-only integration SHA; `git status --short` must be understood.
+2. Read this guide, `docs/CODEX_EXECUTION_BRIEF_2026-11-10.md`, and the **latest 100 lines** of each of the four trackers; search historical entries only when needed. Confirm exact HEAD.
+3. Immediately append a short **STARTED** entry to `docs/CODEX_LIVE_CHECKPOINT.md` with UTC timestamp, task ID, starting SHA, exact intended command and expected stop condition; commit and push it. This proves Codex started even if it later times out. Source/test changes should follow in separate commits.
+
+### During work: never lose progress
+
+- **At every completed meaningful step**, or before any long-running command/context limit, commit and push source/test changes (if any). Keep changes atomic. No uncommitted-only results.
+- After every command, record **exact command, exit code, actual stdout/stderr summary, toolchain version, tested source SHA**, and `PASS`, `FAIL`, `BLOCKED` or `NOT RUN`. A source-pattern inspection is **SOURCE-INSPECTION PASS**, never native compilation PASS.
+- Immediately append **PROGRESS** or **BLOCKED** to `docs/CODEX_LIVE_CHECKPOINT.md` and push. For task completion, update **all four** tracker documents with the same concise task ID, source SHA, test evidence, next action, and pointer to this guide; push each update.
+- Keep an **incomplete/partial task marked IN PROGRESS or BLOCKED**. Do not silently close it. Never commit a failing implementation as ready; if an intermediate source commit is necessary, label it explicitly experimental and leave the task blocked.
+- **Time-box a single investigation:** if no test can run or first failure cannot be resolved in a bounded step, checkpoint diagnostic evidence and exact reproduction, then stop rather than add speculative guards.
+- GitHub contents API writes may each create a separate commit; the final documentation commit changes branch HEAD. Always distinguish `source_sha`, `tested_sha` and `checkpoint_head_sha`.
+
+### Mandatory checkpoint format (append one compact record each time)
+
+```text
+## YYYY-MM-DD HH:MM UTC | TASK <ID> | STARTED / PROGRESS / PASS / FAIL / BLOCKED
+branch: agents/jb-wavetable-host-experiment
+integration_sha: <40 hex, read only>
+source_sha: <40 hex of changed source commit, or NONE>
+tested_sha: <40 hex checked out for command, or NONE>
+checkpoint_head_sha: <40 hex, or PENDING until push response>
+command: <literal executable command; NONE if not run>
+environment: <OS, GCC/Clang/Python versions or unavailable>
+exit_code: <integer or NOT RUN>
+result: <exact evidence; distinguish source guard / syntax / link / PCM / DSP / hardware>
+changed_files: <paths or NONE>
+blocker: <first actionable defect or NONE>
+next_command: <one literal next command>
+safety: NO ARM; NO IMG; NO MERGE; NO FLASH
+```
+
+**Self-referential SHA rule:** a commit cannot contain its own resulting SHA. For each pushed checkpoint, record its returned SHA in the **next** checkpoint or tracker update; never fabricate a self-SHA. For a terminal handover, give the last pushed checkpoint SHA in the user-facing report and use the latest GitHub HEAD as authoritative.
+
+### Recovery after timeout / new Codex session
+
+```bash
+git fetch origin
+git switch agents/jb-wavetable-host-experiment
+git pull --ff-only origin agents/jb-wavetable-host-experiment
+git status --short
+git rev-parse HEAD
+tail -n 100 docs/CODEX_LIVE_CHECKPOINT.md
+```
+
+Read last checkpoint, inspect changed files and exact recorded `tested_sha`; rerun the **last failed or NOT RUN command** before advancing. Do not start a duplicate task or discard an uncommitted change without inspecting it. If worktree is dirty, preserve a diff/patch and reconcile before any reset.
+
+### Handover deliverable at 18:30 GMT
+
+Report (1) isolated HEAD and integration HEAD; (2) one task worked, source commit(s) and last checkpoint commit; (3) each test with command, exit code and evidence; (4) known FAIL/BLOCKED/NOT RUN; (5) **one next executable command**; (6) frozen-candidate approval status (currently NOT GRANTED); (7) rollback/known-good position. If unfinished, explicitly say so. Keep hourly schedule unchanged.
