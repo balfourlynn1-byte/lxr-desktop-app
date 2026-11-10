@@ -774,6 +774,10 @@ static void buttonHandler_selectActiveStep(uint8_t ledNr, uint8_t seqButtonPress
 }
 //--------------------------------------------------------
 static void buttonHandler_setRemoveStep(uint8_t ledNr, uint8_t seqButtonPressed) {
+	/* An old selected-step blink can continue writing temporary OFF states
+	 * after the sequencer LED is updated. Release that temporary owner
+	 * before mirroring the armed state (including physical Step 1). */
+	led_setBlinkLed(ledNr, 0);
 	//led_toggle(ledNr); //handled by cortex
 	led_setValue(0, ledNr);
 
