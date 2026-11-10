@@ -72,6 +72,10 @@ int main(int argc, char **argv)
     FILE *out = fopen(argv[1], "wb");
     if (!out) { perror(argv[1]); return 2; }
     initDrumVoice();
+#ifdef JB_EXPERIMENTAL_WAVE
+    for (unsigned voice = 0; voice < NUM_DRUM_VOICES; ++voice)
+        jb_drumScanConfigureBuiltin(voice, 0, 0.f, 0.f, 0.f);
+#endif
     Snare_init();
     Cymbal_init();
     HiHat_init();

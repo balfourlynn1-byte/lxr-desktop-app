@@ -22,6 +22,7 @@ units=(DrumVoice Snare CymbalVoice HiHat Oscillator Decay ResonantFilter snapEg 
   squareRootLut wavetable CombFilter)
 if [[ -f Core/Src/Soundengine/DSPAudio/JimbonesNativeWaveBank.c ]]; then
   units+=(JimbonesNativeWaveBank)
+  flags+=(-DJB_EXPERIMENTAL_WAVE)
 fi
 objects=()
 for unit in "${units[@]}"; do
