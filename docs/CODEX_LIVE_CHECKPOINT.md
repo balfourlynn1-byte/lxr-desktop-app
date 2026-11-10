@@ -426,3 +426,17 @@ changed_files: tests/host_drumvoice_render.c; tests/run_native_drumvoice_render.
 blocker: Equivalent reference renderer and sample-for-sample comparison pending
 next_command: git show f797ec786fc57d008afeaabad964906f35a43177:Core/Src/Soundengine/DSPAudio/DrumVoice.c
 safety: NO ARM; NO IMG; NO MERGE; NO FLASH; £0 additional spending
+
+## 2026-11-10 19:50 UTC | TASK P2 | PROGRESS / FIRST OFF-PATH PCM MATCH
+branch: agents/jb-wavetable-host-experiment
+integration_sha: f797ec786fc57d008afeaabad964906f35a43177 (read only)
+source_sha: 405303923f3a65551a8f961f3fbfac8fe75aee1c (P1 renderer; no new source in this step)
+tested_sha: experimental 405303923f3a65551a8f961f3fbfac8fe75aee1c; integration f797ec786fc57d008afeaabad964906f35a43177 plus temporary host-only adapters
+checkpoint_head_sha: PENDING
+commands: git worktree add --detach /tmp/jb-reference-f797 f797ec786fc57d008afeaabad964906f35a43177 (0); applied only host section/interrupt/phase-wrap adapters in detached reference worktree and copied identical host renderer files; bash tests/run_native_drumvoice_render.sh /tmp/jb-reference-f797.pcm (0); cmp /tmp/jb-p1-4053039.pcm /tmp/jb-reference-f797.pcm (0); Python array('h') sample comparison (0)
+environment: Darwin x86_64, Apple Clang 17.0.0; integration reference remained detached at pinned SHA, branch untouched
+result: Reference real DSP executable produced 4096 samples, peak 16786, clipped 0, nonzero 1841; repeat SHA256 ba916140bcf1acaf8e7d0338ea68fce36e94229c5a1afa9c334a5e5830ce74c7. Experimental and reference original main-drum OFF-path PCM: 0 mismatches, first difference none, max absolute difference 0. Reference emitted prior SVF_init prototype and SlopeEg2 conversion warnings. This is one main-drum case, not all six voices or full P2.
+changed_files: docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md
+blocker: FM branch, retrigger, overlap and snare/cymbal/hat identity cases untested
+next_command: Extend tests/host_drumvoice_render.c to take deterministic case selection and compare each case against pinned integration reference
+safety: NO ARM; NO IMG; NO MERGE; NO FLASH; £0 additional spending
