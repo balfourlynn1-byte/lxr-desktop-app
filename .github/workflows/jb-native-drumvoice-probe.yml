@@ -19,4 +19,4 @@ jobs:
         run: |
           mkdir -p build/host
           gcc --version | head -1
-          gcc -std=gnu11 -fsyntax-only -Wall -Wextra -ICore/Inc -ICore/Src -IDrivers/STM32F7xx_HAL_Driver/Inc -IDrivers/CMSIS/Device/ST/STM32F7xx/Include -IDrivers/CMSIS/Include Core/Src/Soundengine/DSPAudio/DrumVoice.c
+          gcc -std=gnu11 -fsyntax-only -Wall -Wextra -DSTM32F765xx -include stdint.h -ICore/Inc -ICore/Src -IDrivers/STM32F7xx_HAL_Driver/Inc -IDrivers/CMSIS/Device/ST/STM32F7xx/Include -IDrivers/CMSIS/Include Core/Src/Soundengine/DSPAudio/DrumVoice.c
