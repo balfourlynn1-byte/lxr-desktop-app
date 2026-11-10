@@ -6,6 +6,14 @@ if [[ ! -f Core/Src/Soundengine/DSPAudio/DrumVoice.c ]]; then
   echo 'FAIL: run from a complete JIMBONES checkout' >&2
   exit 2
 fi
+# Refuse to validate the wrong checkout: these experimental checks must stay isolated.
+expected_branch=agents/jb-wavetable-host-experiment
+actual_branch="$(git branch --show-current)"
+if [[ "$actual_branch" != "$expected_branch" ]]; then
+  echo "FAIL: expected branch '$expected_branch', found '${actual_branch:-DETACHED}'" >&2
+  echo "Switch explicitly: git switch $expected_branch" >&2
+  exit 2
+fi
 if ! command -v gcc >/dev/null 2>&1; then
   echo 'FAIL: install native GCC in this Linux environment' >&2
   exit 2
