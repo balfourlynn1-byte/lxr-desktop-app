@@ -440,3 +440,17 @@ changed_files: docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md
 blocker: FM branch, retrigger, overlap and snare/cymbal/hat identity cases untested
 next_command: Extend tests/host_drumvoice_render.c to take deterministic case selection and compare each case against pinned integration reference
 safety: NO ARM; NO IMG; NO MERGE; NO FLASH; £0 additional spending
+
+## 2026-11-10 19:53 UTC | TASK P2 | PROGRESS / SEVEN MAIN-DRUM SCENARIOS MATCH
+branch: agents/jb-wavetable-host-experiment
+integration_sha: f797ec786fc57d008afeaabad964906f35a43177 (read only)
+source_sha: ae745e6cb9d27821f112975b4355aa3e96bfb6ac
+tested_sha: experimental same source tree as ae745e6cb9d27821f112975b4355aa3e96bfb6ac (run before source commit); integration f797ec786fc57d008afeaabad964906f35a43177 plus temporary host-only adapters
+checkpoint_head_sha: PENDING
+commands: for scenario in kick tom1 tom2 fm retrigger long overlap; do bash tests/run_native_drumvoice_render.sh /tmp/jb-p2-$scenario.pcm $scenario; done (six exit 0; overlap exit 1); same commands in pinned integration detached worktree with /tmp/jb-ref-$scenario.pcm (same exit codes); cmp each experimental/reference PCM (all 0); Python array('h') full sample comparison (0)
+environment: Darwin x86_64, Apple Clang 17.0.0; no Codespace, no added spend
+result: 4096 samples per case. Mismatch counts all 0, max absolute difference all 0. Experimental peak/clipped: kick 16786/0, tom1 12378/0, tom2 13009/0, FM 18677/0, retrigger 23495/0, long 16786/0, overlap 32767/3. Reference PCM identical in all seven cases. Overlap renderer exited 1 because host sum saturated three samples; this was observed equally in reference and experiment and does not measure LXR-02 hardware clipping. Snare/cymbal/hat and full six-voice identity NOT RUN.
+changed_files: tests/host_drumvoice_render.c; tests/run_native_drumvoice_render.sh; docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md; docs/JIMBONES_WORK_QUEUE.md; docs/JIMBONES_ATOMIC_TASKS.md; docs/CODEX_HANDOVER_2026-11-10.md
+blocker: Genuine snare/cymbal/hat units not linked; full P2 remains IN PROGRESS
+next_command: Inspect nm -u from real Snare.c, CymbalVoice.c and HiHat.c host objects, then link genuine dependencies
+safety: NO ARM; NO IMG; NO MERGE; NO FLASH; £0 additional spending
