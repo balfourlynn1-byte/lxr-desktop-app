@@ -20,9 +20,7 @@ for header in \
     exit 2
   fi
 done
-compiler_version="$("$CC" --version)"
-echo "HOST PROBE: ${compiler_version%%
-echo "SOURCE: $src"
+echo "HOST PROBE: $CC"\necho "SOURCE: $src"
 "$CC" -std=gnu11 -fsyntax-only -Wall -Wextra \
   -Werror=implicit-function-declaration -DSTM32F765xx -include stdint.h \
   -ICore/Inc -ICore/Src \
