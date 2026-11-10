@@ -330,3 +330,17 @@ changed_files: Core/Inc/Soundengine/config.h; Core/Inc/main.h; tests/run_native_
 blocker: Authenticated GitHub UI says Actions disabled for entire fork; global re-enable would revive prohibited ARM workflows. No local Linux executor found; SSH auth failed. Existing host-only workflow did not run.
 next_command: rg -n 'SVF_init' Core/Inc/Soundengine/DSPAudio Core/Src/Soundengine/DSPAudio
 safety: NO ARM; NO IMG; NO MERGE; NO FLASH
+
+## 2026-11-10 19:07 UTC | TASK P0 | PROGRESS / LINUX RUNNER PENDING
+branch: agents/jb-wavetable-host-experiment
+integration_sha: f797ec786fc57d008afeaabad964906f35a43177 (read only)
+source_sha: 86444a33caa5e49dd729cccb34dbdaad26a010e9 (SVF_init declaration; host adaptation 7effff99ae9dd0d92fb6219a7c2025f001925970)
+tested_sha: 86444a33caa5e49dd729cccb34dbdaad26a010e9
+checkpoint_head_sha: PENDING
+commands: CC=clang bash tests/run_native_drumvoice_probe.sh (exit 0, syntax with no diagnostics); bash tests/test_native_probe_preflight.sh (exit 0); clang -std=c11 -Wall -Wextra -Werror tests/test_host_dsp_intrinsics.c -o /private/tmp/jb-host-dsp-intrinsics && /private/tmp/jb-host-dsp-intrinsics (exit 0)
+environment: Darwin x86_64, Apple Clang 17.0.0; GNU GCC unavailable
+result: Corrected existing SVF_init declaration to match definition and all call sites. Real DrumVoice.c translation unit syntax passes without warnings on Apple Clang. This is not Linux/GNU GCC or link/PCM evidence. Authenticated GitHub UI confirms Actions disabled for entire fork. Codespaces lists zero existing environments; prepared 2-core experimental-branch creation page states usage paid by user, so bounded spending/runtime approval requested before creation.
+changed_files: Core/Inc/Soundengine/DSPAudio/ResonantFilter.h; docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md
+blocker: Paid Codespace approval pending; global Actions re-enable prohibited because it also revives ARM workflows.
+next_command: uname -a (inside approved experimental-branch Codespace, if authorised)
+safety: NO ARM; NO IMG; NO MERGE; NO FLASH
