@@ -1,16 +1,16 @@
 # JIMBONES — CURRENT STATUS
 
-TASK: P1 — native DSP link and deterministic PCM renderer
-STATUS: IN PROGRESS; Mac host oscillator object PASS; full link and PCM NOT RUN
+TASK: P2 — original OFF-path PCM identity (after P1 one-voice renderer PASS)
+STATUS: P1 PASS on Darwin x86_64 Apple Clang 17 at tested SHA 405303923f3a65551a8f961f3fbfac8fe75aee1c; P2 IN PROGRESS / reference renderer NOT RUN
 BRANCH: agents/jb-wavetable-host-experiment
-CURRENT COMMIT: 048aeac222995e4c3d222d5a0dad1344a1c4dec3 (source commit)
-LAST SOURCE COMMIT: 048aeac222995e4c3d222d5a0dad1344a1c4dec3
-TESTED COMMIT: 8df98ee73a6dfec16edc9d268754aaec7039d33c plus Oscillator.c working change (then pushed); prior Linux object e50ef4d116ccaaf847b967cca337437971d519f2
-CHANGED FILES: Core/Src/Soundengine/DSPAudio/Oscillator.c; docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md
-LAST TEST COMMAND: clang -std=gnu11 -c -O0 -Wall -Wextra -Werror=implicit-function-declaration -DSTM32F765xx -DUSE_HAL_DRIVER -DJB_HOST_PROBE -include stdint.h -include tests/host_dsp_intrinsics.h -ICore/Inc -ICore/Src -IDrivers/STM32F7xx_HAL_Driver/Inc -IDrivers/CMSIS/Device/ST/STM32F7xx/Include -IDrivers/CMSIS/Include Core/Src/Soundengine/DSPAudio/Oscillator.c -o /tmp/jb-Oscillator.o
-TEST EXIT CODE: 0 (Apple Clang host object); full link/PCM NOT RUN
-ACTUAL RESULT: Real DrumVoice.c Mac object and nm -u succeeded. Oscillator.c first failed because calcNoise reads ARM APSR via MRS assembly. Host-only unsigned phase-wrap check now compiles with Apple Clang 17, exit 0; nine legacy unused-parameter warnings. ARM path retains APSR behavior. Source commit pushed and remote tree verified. No executable or audio yet.
-CURRENT BLOCKER: Remaining DSP units and host boundaries need compilation and link.
-EXACT NEXT ACTION: Compile remaining real DSP dependency objects under JB_HOST_PROBE; stop at first compiler failure.
+CURRENT COMMIT: 405303923f3a65551a8f961f3fbfac8fe75aee1c (pre-milestone checkpoint)
+LAST SOURCE COMMIT: 405303923f3a65551a8f961f3fbfac8fe75aee1c (renderer); host lock 9c00f3d8f31473f0957d2b515ae789f27f4eaceb; oscillator host wrap 048aeac222995e4c3d222d5a0dad1344a1c4dec3
+TESTED COMMIT: 405303923f3a65551a8f961f3fbfac8fe75aee1c
+CHANGED FILES: tests/host_drumvoice_render.c; tests/run_native_drumvoice_render.sh; Core/Src/Soundengine/DSPAudio/Jimbones.c; Core/Src/Soundengine/DSPAudio/Oscillator.c; docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md; docs/JIMBONES_WORK_QUEUE.md; docs/JIMBONES_ATOMIC_TASKS.md; docs/CODEX_HANDOVER_2026-11-10.md
+LAST TEST COMMAND: bash tests/run_native_drumvoice_render.sh /tmp/jb-p1-4053039.pcm
+TEST EXIT CODE: 0
+ACTUAL RESULT: Apple Clang 17 on Darwin x86_64 compiled and linked real DrumVoice.c plus 21 DSP dependency units into a native executable. It rendered one original main drum voice twice: 4096 signed 16-bit samples, peak 16786, clipped 0, nonzero 1841; both PCM files 8192 bytes and byte-identical, SHA256 ba916140bcf1acaf8e7d0338ea68fce36e94229c5a1afa9c334a5e5830ce74c7. Existing SlopeEg2 literal-conversion warning remains. One-voice P1 accepted; all-six voice audio and reference comparison NOT RUN.
+CURRENT BLOCKER: Pinned integration branch has not yet been rendered with equivalent harness, so P2 identity has no result.
+EXACT NEXT ACTION: Inspect integration SHA f797ec786fc57d008afeaabad964906f35a43177 DrumVoice.c and dependencies for equivalent host renderer, then run same PCM case with identical flags and compare every sample.
 
-Integration reference f797ec786fc57d008afeaabad964906f35a43177 read only. No ARM build, image, merge or flash authorised. Codespaces spending cap £0.
+No ARM build, image, merge or flash authorised. Codespaces spending cap £0; no Codespace created this session.

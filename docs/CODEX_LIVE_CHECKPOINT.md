@@ -411,3 +411,18 @@ changed_files: Core/Src/Soundengine/DSPAudio/Oscillator.c; docs/CODEX_CURRENT_ST
 blocker: Remaining DSP objects and hardware-only boundaries unlinked
 next_command: Compile Decay.c under JB_HOST_PROBE with full probe flags
 safety: NO ARM; NO IMG; NO MERGE; NO FLASH; £0 additional spending
+
+## 2026-11-10 19:48 UTC | TASK P1 PASS / P2 STARTED
+branch: agents/jb-wavetable-host-experiment
+integration_sha: f797ec786fc57d008afeaabad964906f35a43177 (read only)
+source_sha: 405303923f3a65551a8f961f3fbfac8fe75aee1c (renderer); 9c00f3d8f31473f0957d2b515ae789f27f4eaceb (host-only lock); 048aeac222995e4c3d222d5a0dad1344a1c4dec3 (host-only APSR wrap)
+tested_sha: 405303923f3a65551a8f961f3fbfac8fe75aee1c
+checkpoint_head_sha: PENDING
+command: bash tests/run_native_drumvoice_render.sh /tmp/jb-p1-4053039.pcm
+environment: Darwin x86_64, Apple Clang 17.0.0; GNU GCC/Linux rerun NOT RUN this session
+exit_code: 0
+result: Real DrumVoice.c and 21 real DSP dependency units compiled and linked. One original main drum voice rendered twice, each 4096 signed 16-bit samples (8192 bytes), peak 16786, clipped 0, nonzero 1841. cmp exit 0; both SHA256 ba916140bcf1acaf8e7d0338ea68fce36e94229c5a1afa9c334a5e5830ce74c7. Host boundaries are deterministic fader/RNG/tempo and null MIDI parameter destinations; reaching a live MIDI parameter write aborts. One pre-existing SlopeEg2 conversion warning. P1 one-voice acceptance PASS. P2 integration PCM and all-six voices NOT RUN.
+changed_files: tests/host_drumvoice_render.c; tests/run_native_drumvoice_render.sh; Core/Src/Soundengine/DSPAudio/Jimbones.c; Core/Src/Soundengine/DSPAudio/Oscillator.c; docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md; docs/JIMBONES_WORK_QUEUE.md; docs/JIMBONES_ATOMIC_TASKS.md; docs/CODEX_HANDOVER_2026-11-10.md
+blocker: Equivalent reference renderer and sample-for-sample comparison pending
+next_command: git show f797ec786fc57d008afeaabad964906f35a43177:Core/Src/Soundengine/DSPAudio/DrumVoice.c
+safety: NO ARM; NO IMG; NO MERGE; NO FLASH; £0 additional spending
