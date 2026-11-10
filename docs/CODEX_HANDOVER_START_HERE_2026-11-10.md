@@ -168,3 +168,9 @@ Read last checkpoint, inspect changed files and exact recorded `tested_sha`; rer
 ### Handover deliverable at 18:30 GMT
 
 Report (1) isolated HEAD and integration HEAD; (2) one task worked, source commit(s) and last checkpoint commit; (3) each test with command, exit code and evidence; (4) known FAIL/BLOCKED/NOT RUN; (5) **one next executable command**; (6) frozen-candidate approval status (currently NOT GRANTED); (7) rollback/known-good position. If unfinished, explicitly say so. Keep hourly schedule unchanged.
+
+## 8. TWO-FILE RECOVERY SYSTEM (supersedes §7's single-file startup location)
+
+**FAST CURRENT STATE:** `docs/CODEX_CURRENT_STATUS.md` — short, **replace in place**, always contains latest task/status, current/last known SHAs, exact last command/result/blocker, one next command, approval status. **HISTORY:** `docs/CODEX_LIVE_CHECKPOINT.md` — append-only detailed evidence. Job tree/atomic tasks/handover remain milestone-level records.
+
+**Codex startup order:** (1) read this guide, (2) read `CODEX_CURRENT_STATUS.md`, (3) read tail of `CODEX_LIVE_CHECKPOINT.md`, (4) inspect branch and diff. Before source edits, push a `STARTED` snapshot in CURRENT_STATUS **and** a STARTED history event. After each meaningful test/change, update and push both. On failure/timeout, update snapshot with BLOCKED/IN PROGRESS and exact next command. At task completion update all four trackers. Do not let a long historical log become the only place to recover state. The self-SHA caveat in §7 still applies.
