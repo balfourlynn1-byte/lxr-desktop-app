@@ -397,3 +397,17 @@ changed_files: docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md
 blocker: Real DSP dependency map and host link pending
 next_command: rg -n "DecayEg_calc|SVF_calcBlockZDF|calcNextOscSampleBlock" Core/Src/Soundengine/DSPAudio
 safety: NO ARM; NO IMG; NO MERGE; NO FLASH; £0 additional spending
+
+## 2026-11-10 19:41 UTC | TASK P1 | PROGRESS / HOST OSCILLATOR OBJECT PASS
+branch: agents/jb-wavetable-host-experiment
+integration_sha: f797ec786fc57d008afeaabad964906f35a43177 (read only)
+source_sha: 048aeac222995e4c3d222d5a0dad1344a1c4dec3
+tested_sha: 8df98ee73a6dfec16edc9d268754aaec7039d33c plus Oscillator.c working change (then pushed as source_sha)
+checkpoint_head_sha: PENDING
+commands: clang -std=gnu11 -c -O0 -Wall -Wextra -Werror=implicit-function-declaration -DSTM32F765xx -DUSE_HAL_DRIVER -DJB_HOST_PROBE -include stdint.h -include tests/host_dsp_intrinsics.h -ICore/Inc -ICore/Src -IDrivers/STM32F7xx_HAL_Driver/Inc -IDrivers/CMSIS/Device/ST/STM32F7xx/Include -IDrivers/CMSIS/Include Core/Src/Soundengine/DSPAudio/DrumVoice.c -o /tmp/jb-drumvoice-mac.o (0); nm -u /tmp/jb-drumvoice-mac.o (0); same clang flags on Oscillator.c -o /tmp/jb-Oscillator.o (first failed on ARM MRS apsr; after host-only correction exit 0)
+environment: Darwin x86_64, Apple Clang 17.0.0
+result: Real oscillator host object now compiles. ARM status-register read remains on target; JB_HOST_PROBE uses unsigned phase wrap for equivalent overflow condition. Nine pre-existing unused-parameter warnings in sample oscillator functions. Source commit pushed and remote verified. No link, executable, PCM or P2 comparison yet.
+changed_files: Core/Src/Soundengine/DSPAudio/Oscillator.c; docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md
+blocker: Remaining DSP objects and hardware-only boundaries unlinked
+next_command: Compile Decay.c under JB_HOST_PROBE with full probe flags
+safety: NO ARM; NO IMG; NO MERGE; NO FLASH; £0 additional spending
