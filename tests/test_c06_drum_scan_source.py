@@ -27,5 +27,10 @@ for name, value in (
     ("jbScanLfoDepth", "0.f"),
     ("jbScanLfoValue", "0.f"),
 ):
-    assert f"{name}[i] = {value};" in init, name
+    reset = f"{name}[i] = {value};"
+    assert init.count(reset) == 1, f"{name}: expected exactly one reset in initDrumVoice"
+    # All resets must occur inside the per-voice loop and before any
+    # pre-existing voice setup. An assignment elsewhere is not sufficient.
+    assert init.index("for(i=0;i<NUM_DRUM_VOICES;i++)") < init.index(reset), name
+    assert init.index(reset) < init.index("initOnePole(&voiceArray[i].FaderVolumeFilter)"), name
 print("C06 source guard PASS: default OFF, captured velocity, native/fm fallback and smoother retained")
