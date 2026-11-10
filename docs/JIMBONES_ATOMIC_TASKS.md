@@ -627,3 +627,11 @@ User wants Torso Electronics S-4-style press-and-hold behavior and Digitakt TRAC
 - Added `tests/run_p3_pcm_baseline.sh` (commit `a05162c`): runs 12 native scenarios through existing deterministic renderer, enforces expected baseline exits (overlap=1, other cases=0), invokes `tests/analyze_pcm.py`, and writes per-scenario JSON/log/PCM plus `summary.csv` in a temporary evidence directory.
 - Run: `bash tests/run_p3_pcm_baseline.sh` from the experimental branch, or supply a destination directory. Requires host Clang, Python 3 and existing DSP source. Not yet run against the checked-out GitHub commit; no P3 pass claimed.
 - Important: this remains a host *simplified mono mix*, not production stereo routing, hardware CPU, or proven source of audible crunch. Next expand to pre-clamp 32-bit sum and multi-voice long-tail load, then correlate with hardware DSP/RAIL/LATE.
+
+
+### Development allocation policy — agreed 2026-11-10
+- **70% implementation / 30% testing and verification** for upcoming Codex sessions. Treat as a target allocation, not an excuse to bypass safety gates.
+- Implementation focus: produce actual source-level fixes and priority features, starting with the overlapping-tom crunch and DSP/headroom behaviour, followed by Step 1 sequencer LED, Step FX toggle controls, relative Shift+parameter all-voice editing, and kit/BPM persistence. Keep changes small and independently reviewable.
+- Testing focus: deterministic native PCM OFF-path comparisons, stress/overlap/long-tail tests, regression and performance checks, SD/cold-start recovery, then explicit hardware validation. Never claim a firmware fix based solely on host tests.
+- Save work incrementally: commit each coherent task/checkpoint to the experimental branch before timeouts; record exact SHA, what changed, what passed, and what remains. Resume from the latest verified commit. No production merge, ARM flashable image or risky hardware release without explicit approval and safety checks. Preserve original six voices and OFF-path sound identity. Maintain £0 additional spend unless user approves otherwise.
+- Rebalance temporarily toward testing if a change threatens bootability, data integrity, CPU headroom or original sound; explain the reason and restore the 70/30 target afterward.
