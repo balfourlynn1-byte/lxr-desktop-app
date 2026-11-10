@@ -1,0 +1,28 @@
+name: JIMBONES LED and Step FX Host Checks
+on:
+  push:
+    branches:
+      - agents/jb-wavetable-host-experiment
+    paths:
+      - 'Core/Src/ledHandler.c'
+      - 'Core/Src/buttonHandler.c'
+      - 'Core/Src/menu/JimbonesPerfUI.c'
+      - 'tests/test_stepfx_ui_source.py'
+      - 'tests/test_perfui.c'
+      - 'tests/run_stepfx_ui.sh'
+      - '.github/workflows/jimbones-jb-led-stepfx-host.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  led-stepfx-host:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Record source revision
+        run: git rev-parse HEAD
+      - name: Compile and run Step FX host and LED source checks
+        run: sh tests/run_stepfx_ui.sh
+      - name: State verification scope
+        run: echo "HOST TESTS ONLY - no ARM build or hardware LED/audio verification"
