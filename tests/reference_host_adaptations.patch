@@ -1,0 +1,92 @@
+diff --git a/Core/Inc/Soundengine/config.h b/Core/Inc/Soundengine/config.h
+index b5f4975..3ce15d5 100644
+--- a/Core/Inc/Soundengine/config.h
++++ b/Core/Inc/Soundengine/config.h
+@@ -88,6 +88,12 @@
+ 
+ //typedef  uint8_t bool;
+ 
++#if defined(JB_HOST_PROBE) && defined(__APPLE__)
++/* Mach-O has no STM32 linker sections; host probes retain ordinary storage. */
++#define INDTCM
++#define INDTCMZ
++#define IN_ITCM_RAM
++#else
+ // Helper to declare variable in CCM memory, pre-loaded from flash at startup
+ #define INDTCM __attribute__ ((section(".dtcm")))
+ 
+@@ -95,5 +101,6 @@
+ #define INDTCMZ __attribute__ ((section(".dtcmz")))
+ 
+ #define IN_ITCM_RAM __attribute__((section(".itcm_text")))
++#endif
+ 
+ #endif /* CONFIG_H_ */
+diff --git a/Core/Inc/main.h b/Core/Inc/main.h
+index 3905979..7aa8f31 100644
+--- a/Core/Inc/main.h
++++ b/Core/Inc/main.h
+@@ -116,11 +116,17 @@ void Error_Handler(void);
+ /* USER CODE BEGIN Private defines */
+ 
+ 
++#if defined(JB_HOST_PROBE) && defined(__APPLE__)
++/* Mach-O has no STM32 linker sections; host probes retain ordinary storage. */
++#define INDTCM
++#define INDTCMZ
++#else
+ // Helper to declare variable in CCM memory, pre-loaded from flash at startup
+ #define INDTCM __attribute__ ((section(".dtcm")))
+ 
+ // Helper to declare variable in CCM memory that is zeroed at startup
+ #define INDTCMZ __attribute__ ((section(".dtcmz")))
++#endif
+ /* USER CODE END Private defines */
+ 
+ #ifdef __cplusplus
+diff --git a/Core/Src/Soundengine/DSPAudio/Jimbones.c b/Core/Src/Soundengine/DSPAudio/Jimbones.c
+index 149807f..2f2e2ea 100644
+--- a/Core/Src/Soundengine/DSPAudio/Jimbones.c
++++ b/Core/Src/Soundengine/DSPAudio/Jimbones.c
+@@ -47,8 +47,15 @@ static float jb_waveScan(float x) {
+  if(x>6.f) x=12.f-x;
+  return x>3.f?6.f-x:x;
+ }
++#ifdef JB_HOST_PROBE
++/* The single-threaded host renderer has no interrupt writer. Keep target
++ * critical sections intact while allowing this real DSP unit to link. */
++static uint32_t lock(void) { return 0; }
++static void unlock(uint32_t mask) { (void)mask; }
++#else
+ static uint32_t lock(void) { uint32_t mask=__get_PRIMASK(); __disable_irq(); return mask; }
+ static void unlock(uint32_t mask) { __DMB(); __set_PRIMASK(mask); }
++#endif
+ static float noise(Layer *s) {
+  uint32_t x=s->rng; x^=x<<13; x^=x>>17; x^=x<<5; s->rng=x;
+  return (float)(x>>8)*(1.f/8388608.f)-1.f;
+diff --git a/Core/Src/Soundengine/DSPAudio/Oscillator.c b/Core/Src/Soundengine/DSPAudio/Oscillator.c
+index 009226e..af445a6 100644
+--- a/Core/Src/Soundengine/DSPAudio/Oscillator.c
++++ b/Core/Src/Soundengine/DSPAudio/Oscillator.c
+@@ -342,12 +342,20 @@ IN_ITCM_RAM void calcNoiseBlock(OscInfo* osc, int16_t* buf, const uint8_t size ,
+ //-----------------------------------------------------------
+ int16_t calcNoise(OscInfo* osc)
+ {
++#ifdef JB_HOST_PROBE
++	const uint32_t lastPhase = osc->phase;
++#endif
+ 	osc->phase += osc->phaseInc;
+ 
+ 	//check overflow flag, ( if osc->phase == osc->phaseInc a reset occured ==> retrigger, too
++#ifdef JB_HOST_PROBE
++	const uint8_t overflow = lastPhase > osc->phase;
++#else
+ 	APSR_Type apsr;
+ 	apsr.w = __get_APSR();
+-	if(apsr.b.V ||  (osc->phase == osc->phaseInc))
++	const uint8_t overflow = apsr.b.V;
++#endif
++	if(overflow ||  (osc->phase == osc->phaseInc))
+ 	{
+ 		//overflow happened -> phaseWrapped
+ 

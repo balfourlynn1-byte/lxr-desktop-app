@@ -19,9 +19,6 @@
 /* Hardware and UI boundaries. Unused modulation destinations remain null;
  * reaching a MIDI parameter write is a harness error. */
 RNG_HandleTypeDef hrng;
-SnareVoice snareVoice;
-CymbalVoice cymbalVoice;
-HiHatVoice hatVoice;
 Parameter parameterArray[END_OF_SOUND_PARAMETERS];
 uint8_t activeParameters[NUM_PARAMS];
 float adc_getFaderVolume(uint8_t voice) { (void)voice; return 1.f; }
@@ -54,7 +51,7 @@ uint32_t HAL_RNG_GetRandomNumber(RNG_HandleTypeDef *handle)
 int main(int argc, char **argv)
 {
     enum { FRAMES = 4096, BLOCK = 16 };
-    if (argc < 2 || argc > 3) { fprintf(stderr, "usage: %s output.pcm [kick|tom1|tom2|fm|retrigger|long|overlap]\n", argv[0]); return 2; }
+    if (argc < 2 || argc > 3) { fprintf(stderr, "usage: %s output.pcm [kick|tom1|tom2|fm|retrigger|long|overlap|snare|clap|cymbal|hihat|openhat]\n", argv[0]); return 2; }
     const char *scenario = argc == 3 ? argv[2] : "kick";
     const int kick = !strcmp(scenario, "kick");
     const int tom1 = !strcmp(scenario, "tom1");
@@ -63,12 +60,21 @@ int main(int argc, char **argv)
     const int retrigger = !strcmp(scenario, "retrigger");
     const int long_decay = !strcmp(scenario, "long");
     const int overlap = !strcmp(scenario, "overlap");
-    if (!(kick || tom1 || tom2 || fm || retrigger || long_decay || overlap)) {
+    const int snare = !strcmp(scenario, "snare");
+    const int clap = !strcmp(scenario, "clap");
+    const int cymbal = !strcmp(scenario, "cymbal");
+    const int hihat = !strcmp(scenario, "hihat");
+    const int openhat = !strcmp(scenario, "openhat");
+    if (!(kick || tom1 || tom2 || fm || retrigger || long_decay || overlap ||
+          snare || clap || cymbal || hihat || openhat)) {
         fprintf(stderr, "unknown scenario: %s\n", scenario); return 2;
     }
     FILE *out = fopen(argv[1], "wb");
     if (!out) { perror(argv[1]); return 2; }
     initDrumVoice();
+    Snare_init();
+    Cymbal_init();
+    HiHat_init();
     for (unsigned voice = 0; voice < NUM_DRUM_VOICES; ++voice) {
         voiceArray[voice].osc.waveform = voice == 0 ? SINE : (voice == 1 ? TRI : SAW);
         voiceArray[voice].modOsc.waveform = SINE;
@@ -79,7 +85,25 @@ int main(int argc, char **argv)
     }
     if (fm) voiceArray[0].mixOscs = 0;
     unsigned selected = tom1 ? 1u : tom2 ? 2u : 0u;
-    Drum_trigger(selected, 100, selected ? 52 : 48);
+    snareVoice.filterType = FILTER_OFF;
+    snareVoice.mix = 0.5f;
+    snareVoice.oscVolEg.attack = 0.05;
+    snareVoice.oscVolEg.decay = 0.004;
+    cymbalVoice.filterType = FILTER_OFF;
+    cymbalVoice.oscVolEg.attack = 0.05;
+    cymbalVoice.oscVolEg.decay = 0.004;
+    hatVoice.filterType = FILTER_OFF;
+    hatVoice.oscVolEg.attack = 0.05;
+    hatVoice.oscVolEg.decay = 0.004;
+    if (clap) {
+        /* Existing 808 clap transient is bank index 7, waveform selector 9. */
+        transient_setWaveform(&snareVoice.transGen, 9);
+        snareVoice.transGen.volume = 0.4f;
+    }
+    if (snare || clap) Snare_trigger(100, 48);
+    else if (cymbal) Cymbal_trigger(100, 52);
+    else if (hihat || openhat) HiHat_trigger(100, openhat, 52);
+    else Drum_trigger(selected, 100, selected ? 52 : 48);
     int peak = 0, clipped = 0, nonzero = 0;
     for (unsigned block = 0; block < FRAMES / BLOCK; ++block) {
         int16_t pcm[BLOCK] = {0};
@@ -88,7 +112,16 @@ int main(int argc, char **argv)
         if (overlap && block == 16) Drum_trigger(1, 105, 52);
         if (overlap && block == 32) Drum_trigger(2, 120, 55);
         if (overlap && block == 48) Drum_trigger(0, 110, 48);
-        for (unsigned voice = 0; voice < (overlap ? 3u : 1u); ++voice) {
+        if (snare || clap) {
+            Snare_calcAsync();
+            Snare_calcSyncBlock(pcm, BLOCK);
+        } else if (cymbal) {
+            Cymbal_calcAsync();
+            Cymbal_calcSyncBlock(pcm, BLOCK);
+        } else if (hihat || openhat) {
+            HiHat_calcAsync();
+            HiHat_calcSyncBlock(pcm, BLOCK);
+        } else for (unsigned voice = 0; voice < (overlap ? 3u : 1u); ++voice) {
             int16_t part[BLOCK] = {0};
             unsigned index = overlap ? voice : selected;
             calcDrumVoiceAsync(index);
