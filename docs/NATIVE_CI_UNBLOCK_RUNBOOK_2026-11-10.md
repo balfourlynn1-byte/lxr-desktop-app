@@ -41,3 +41,14 @@ git push origin HEAD:agents/jb-wavetable-host-experiment
 - STOP on missing STM32/CMSIS headers, compiler errors, workflow failure or unexpected changes. No synthetic fixture can substitute for the actual translation unit.
 - After compilation, separately establish native link, OFF-path PCM bit identity, 3–4 hit/No Clip regressions, SD save/recovery and UI/BPM behavior.
 - Preserve all six voices, kits, 3 ms No Clip, approved skull; Metallic FM shelved.
+
+## Verified failed-job compiler diagnostics (retrieved 2026-11-10 08:23 UTC)
+Actual GitHub Actions job log: https://github.com/balfourlynn1-byte/lxr-desktop-app/actions/runs/42720355331 (job `129512433903`, SHA `6d3ae26f86b868c88bc6d9794a6431e5ed272f47`).
+
+**Important distinction:** This older workflow invoked `gcc -std=gnu11 -fsyntax-only -Wall -Wextra -I...` **without** the later script's `-include stdint.h` or `-DSTM32F765xx`. Thus it is invalid to attribute all old diagnostics to the current probe. The GitHub runner successfully checked out the source; GCC exited 1.
+
+- **Observed FAIL**: `unknown type name uint32_t / uint8_t / int16_t` in `globals.h`, `Oscillator.h`, `1PoleLp.h`, `distortion.h`. The later script's `-include stdint.h` may address these; **not verified**.
+- **Observed FAIL**: `DWT` undeclared and `__STATIC_INLINE` missing in `Core/Inc/delay.h`; `RNG_HandleTypeDef` unknown in `random.h`. These are hardware/CMSIS/HAL dependencies, not evidence of a broken drum algorithm. Native host shim or correctly ordered target headers may be needed; do not edit firmware behavior to silence them.
+- **Observed WARNINGS**: `__QADD16`, `__QSUB16`, `osc_setBaseNote`, `calcNextOscSampleBlock`, `jb_calcNativeWaveScanBlock`, `calcNextOscSampleFmBlock`, `calcDistBlockFiltered` implicit declarations. Some are cascading from header failures; retest before changing prototypes.
+- **Next exact action**: run **current** `CC=gcc bash tests/run_native_drumvoice_probe.sh` in a real GitHub checkout, capture its complete output, and fix the **first remaining root error** only. Do not assume the older failure reproduces with the updated script.
+- **Test status**: old job GCC syntax **FAIL** (verified from actual log); current-script GCC syntax **NOT RUN**; current-script Clang syntax **NOT RUN**; native link/PCM/DSP **NOT RUN**. This is diagnostic triage only, not a newly passing test.
