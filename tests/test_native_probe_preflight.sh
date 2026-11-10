@@ -35,4 +35,23 @@ if [[ "$status" != 2 || "$output" != *"not found"* ]]; then
   exit 1
 fi
 echo 'PASS: missing host compiler rejected (exit 2)'
-echo 'NOTE: preflight only; DrumVoice native compilation and audio NOT RUN'
+# Host-only fake compiler records the actual syntax command without compiling firmware.
+mkdir -p "$tmp/Drivers/CMSIS/Device/ST/STM32F7xx/Include" "$tmp/Drivers/CMSIS/Include"
+touch "$tmp/Drivers/CMSIS/Device/ST/STM32F7xx/Include/stm32f7xx.h" "$tmp/Drivers/CMSIS/Include/core_cm7.h"
+cat > "$tmp/fake-host-cc" <<'HOST'
+#!/usr/bin/env bash
+if [[ "${1:-}" == "-dumpmachine" ]]; then printf '%s\n' 'x86_64-linux-gnu'; exit 0; fi
+printf '%s\n' "$@" > "$(dirname "$0")/captured-args"
+HOST
+chmod +x "$tmp/fake-host-cc"
+output="$(cd "$tmp" && CC="$tmp/fake-host-cc" bash tests/run_native_drumvoice_probe.sh 2>&1)"
+for flag in '-fsyntax-only' '-DSTM32F765xx' '-DUSE_HAL_DRIVER' '-include' 'stdint.h' 'Core/Src/Soundengine/DSPAudio/DrumVoice.c'; do
+  if ! grep -Fxq -- "$flag" "$tmp/captured-args"; then
+    printf 'FAIL: required host compile argument missing: %s\n' "$flag" >&2; exit 1
+  fi
+done
+if [[ "$output" != *"PASS: DrumVoice.c host syntax only"* ]]; then
+  echo 'FAIL: host probe did not finish' >&2; exit 1
+fi
+echo 'PASS: fake host compiler received syntax-only, STM32F765xx, USE_HAL_DRIVER, stdint and DrumVoice source arguments'
+echo 'NOTE: fixture/preflight only; actual DrumVoice native compilation and audio NOT RUN'
