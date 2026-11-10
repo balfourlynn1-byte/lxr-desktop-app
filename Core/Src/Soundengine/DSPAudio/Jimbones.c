@@ -47,8 +47,15 @@ static float jb_waveScan(float x) {
  if(x>6.f) x=12.f-x;
  return x>3.f?6.f-x:x;
 }
+#ifdef JB_HOST_PROBE
+/* The single-threaded host renderer has no interrupt writer. Keep target
+ * critical sections intact while allowing this real DSP unit to link. */
+static uint32_t lock(void) { return 0; }
+static void unlock(uint32_t mask) { (void)mask; }
+#else
 static uint32_t lock(void) { uint32_t mask=__get_PRIMASK(); __disable_irq(); return mask; }
 static void unlock(uint32_t mask) { __DMB(); __set_PRIMASK(mask); }
+#endif
 static float noise(Layer *s) {
  uint32_t x=s->rng; x^=x<<13; x^=x>>17; x^=x<<5; s->rng=x;
  return (float)(x>>8)*(1.f/8388608.f)-1.f;
