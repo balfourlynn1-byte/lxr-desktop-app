@@ -278,3 +278,17 @@ changed_files: docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md
 blocker: Genuine GNU GCC requires a Linux/GCC host.
 next_command: python3 tests/test_c06_drum_scan_source.py
 safety: NO ARM; NO IMG; NO MERGE; NO FLASH
+
+## 2026-11-10 18:52 UTC | TASK P0 | PROGRESS / BLOCKED
+branch: agents/jb-wavetable-host-experiment
+integration_sha: f797ec786fc57d008afeaabad964906f35a43177 (read only)
+source_sha: firmware source unchanged; C12 test-fix commit 95722b2546d5fd7f0d34924a02700bba23693353
+tested_sha: 95722b2546d5fd7f0d34924a02700bba23693353
+checkpoint_head_sha: PENDING
+commands: python3 tests/test_c06_drum_scan_source.py (exit 0 PASS); python3 tests/test_c12_wave_off_source.py (initial exit 1 FAIL on reset assertion, corrected and exit 0 PASS); bash tests/test_native_probe_preflight.sh (exit 0 PASS); CC=gcc bash tests/run_native_drumvoice_probe.sh (exit 1 FAIL); CC=clang bash tests/run_native_drumvoice_probe.sh (exit 1 FAIL)
+environment: Darwin 24.6.0 x86_64; Apple Clang 17.0.0 for both gcc and clang names; Python 3.9.6
+result: Fixed C12 source guard to allow required init disable while forbidding init enable. Native syntax fails first at ELF .dtcmz section attribute on Mach-O; ARM __QADD16/__QSUB16 also undeclared. No GNU GCC/Linux result, link, PCM, DSP, SD or hardware test. Last observed native Actions run 42720355331 failed on older source; no current run observed.
+changed_files: tests/test_c12_wave_off_source.py; docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md; docs/JIMBONES_WORK_QUEUE.md; docs/JIMBONES_ATOMIC_TASKS.md; docs/CODEX_HANDOVER_2026-11-10.md
+blocker: Linux/GNU GCC runner unavailable in this session; do not treat Apple Clang alias as GNU GCC.
+next_command: CC=gcc bash tests/run_native_drumvoice_probe.sh (on Linux x86_64 with GNU GCC)
+safety: NO ARM; NO IMG; NO MERGE; NO FLASH
