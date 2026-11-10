@@ -90,6 +90,15 @@ void initDrumVoice()
 	int i;
 	for(i=0;i<NUM_DRUM_VOICES;i++)
 	{
+		/* A kit/engine reinitialization must not retain experimental scan state.
+		 * Explicit opt-in is required again after initialization. */
+		jbScanEnabled[i] = 0;
+		jbScanTables[i] = 0;
+		jbScanNoteVelocity[i] = 0;
+		jbScanBase[i] = 0.f;
+		jbScanVelocityDepth[i] = 0.f;
+		jbScanLfoDepth[i] = 0.f;
+		jbScanLfoValue[i] = 0.f;
 
 		initOnePole(&voiceArray[i].FaderVolumeFilter);
 		setOnePoleCoef(&voiceArray[i].FaderVolumeFilter,0.01);
