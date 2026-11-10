@@ -316,3 +316,17 @@ changed_files: docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md
 blocker: Linux/GNU GCC execution path not yet established
 next_command: inspect local Linux/container executors and existing host-only GitHub Actions status
 safety: NO ARM; NO IMG; NO MERGE; NO FLASH
+
+## 2026-11-10 19:02 UTC | TASK P0 | PROGRESS
+branch: agents/jb-wavetable-host-experiment
+integration_sha: f797ec786fc57d008afeaabad964906f35a43177 (read only)
+source_sha: 7effff99ae9dd0d92fb6219a7c2025f001925970 (host adaptation; production DSP unchanged)
+tested_sha: 7effff99ae9dd0d92fb6219a7c2025f001925970
+checkpoint_head_sha: PENDING
+commands: python3 tests/test_c06_drum_scan_source.py (0 PASS); python3 tests/test_c12_wave_off_source.py (0 PASS); bash tests/test_native_probe_preflight.sh (0 PASS); clang -std=c11 -Wall -Wextra -Werror tests/test_host_dsp_intrinsics.c -o /private/tmp/jb-host-dsp-intrinsics && /private/tmp/jb-host-dsp-intrinsics (0 PASS); CC=clang bash tests/run_native_drumvoice_probe.sh (0 PASS, syntax only)
+environment: Darwin 24.6.0 x86_64, Apple Clang 17.0.0; no GNU GCC
+result: Host-only packed QADD16/QSUB16 replacements pass saturation edge cases; JB_HOST_PROBE removes STM32 ELF sections only on Apple host, and ARM guard rejects host header. Actual DrumVoice.c translation unit syntax completes with one pre-existing SVF_init non-prototype warning. Linux/GNU GCC, link, PCM and DSP performance remain NOT RUN.
+changed_files: Core/Inc/Soundengine/config.h; Core/Inc/main.h; tests/run_native_drumvoice_probe.sh; tests/host_dsp_intrinsics.h; tests/test_host_dsp_intrinsics.c
+blocker: Authenticated GitHub UI says Actions disabled for entire fork; global re-enable would revive prohibited ARM workflows. No local Linux executor found; SSH auth failed. Existing host-only workflow did not run.
+next_command: rg -n 'SVF_init' Core/Inc/Soundengine/DSPAudio Core/Src/Soundengine/DSPAudio
+safety: NO ARM; NO IMG; NO MERGE; NO FLASH

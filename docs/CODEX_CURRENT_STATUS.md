@@ -1,16 +1,16 @@
 # JIMBONES — CURRENT STATUS
 
 TASK: P0 — native DrumVoice host compilation
-STATUS: RESUMED / STARTED
+STATUS: IN PROGRESS; Apple Clang syntax PASS, Linux/GNU GCC NOT RUN
 BRANCH: agents/jb-wavetable-host-experiment
-CURRENT COMMIT: 5a815e66f94f7f11a778f1710383a16c2b88c7dd (pre-resume checkpoint)
-LAST SOURCE COMMIT: 95722b2546d5fd7f0d34924a02700bba23693353 (C12 test fix; firmware source unchanged)
-TESTED COMMIT: NONE in this continuation
-CHANGED FILES: docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md
-LAST TEST COMMAND: NOT RUN in this continuation
-TEST EXIT CODE: NOT RUN
-ACTUAL RESULT: Experimental and read-only integration tips fetched. Experimental HEAD 5a815e66f94f7f11a778f1710383a16c2b88c7dd; integration f797ec786fc57d008afeaabad964906f35a43177. Recovery files and task records inspected. Prior C06/C12/preflight passes and macOS compiler failures retained as history, not rerun.
-CURRENT BLOCKER: Genuine Linux/GNU GCC execution path not yet established.
-EXACT NEXT ACTION: Inspect local Linux/container executors and existing host-only GitHub Actions workflow execution status.
+CURRENT COMMIT: 7effff99ae9dd0d92fb6219a7c2025f001925970 (pre-checkpoint)
+LAST SOURCE COMMIT: 7effff99ae9dd0d92fb6219a7c2025f001925970 (host-only adaptation; firmware DSP unchanged)
+TESTED COMMIT: 7effff99ae9dd0d92fb6219a7c2025f001925970
+CHANGED FILES: Core/Inc/Soundengine/config.h; Core/Inc/main.h; tests/run_native_drumvoice_probe.sh; tests/host_dsp_intrinsics.h; tests/test_host_dsp_intrinsics.c; docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md; docs/JIMBONES_WORK_QUEUE.md; docs/JIMBONES_ATOMIC_TASKS.md; docs/CODEX_HANDOVER_2026-11-10.md
+LAST TEST COMMAND: CC=clang bash tests/run_native_drumvoice_probe.sh
+TEST EXIT CODE: 0
+ACTUAL RESULT: On Darwin x86_64, Apple Clang 17 syntax-compiles the real DrumVoice.c translation unit using host-only packed saturation intrinsics and Mach-O section handling. C06/C12/preflight and intrinsic edge-case executable exit 0. Clang emits one existing SVF_init non-prototype warning. No link or PCM test. The host header rejects ARM via #error. This is not Linux/GNU GCC evidence.
+CURRENT BLOCKER: GitHub Actions is disabled for the entire fork (confirmed in authenticated GitHub UI); re-enabling globally would revive prohibited ARM workflows. No local Docker, Podman, Colima, Lima, QEMU, Multipass or GNU GCC executable was found; SSH auth to GitHub failed. Linux/GNU GCC syntax remains NOT RUN.
+EXACT NEXT ACTION: Inspect SVF_init declaration/definition and make a narrow prototype correction only if the interface is demonstrably wrong; then rerun CC=clang bash tests/run_native_drumvoice_probe.sh.
 
-No ARM compilation, image, merge or flash authorised. P0 syntax, link and PCM identity remain unverified on Linux.
+Integration SHA f797ec786fc57d008afeaabad964906f35a43177 read only. No ARM compilation, image, merge or flash authorised. P1 link and P2 PCM identity remain NOT RUN.
