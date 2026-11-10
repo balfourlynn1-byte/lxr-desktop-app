@@ -35,6 +35,23 @@ if [[ "$status" != 2 || "$output" != *"not found"* ]]; then
   exit 1
 fi
 echo 'PASS: missing host compiler rejected (exit 2)'
+# Missing CMSIS dependency must fail before the host compiler is invoked.
+cat > "$tmp/fake-header-check-cc" <<'HEADERCHECK'
+#!/usr/bin/env bash
+if [[ "${1:-}" == "-dumpmachine" ]]; then printf '%s\n' 'x86_64-linux-gnu'; exit 0; fi
+echo 'ERROR: compiler ran despite missing CMSIS headers' >&2
+exit 99
+HEADERCHECK
+chmod +x "$tmp/fake-header-check-cc"
+set +e
+output="$(cd "$tmp" && CC="$tmp/fake-header-check-cc" bash tests/run_native_drumvoice_probe.sh 2>&1)"
+status=$?
+set -e
+if [[ "$status" != 2 || "$output" != *"missing host-probe dependency"* || "$output" == *"compiler ran despite"* ]]; then
+  printf 'FAIL: missing CMSIS header rejection: exit=%s output=%s\n' "$status" "$output" >&2
+  exit 1
+fi
+echo 'PASS: missing CMSIS header stops before compilation (exit 2)'
 # Host-only fake compiler records the actual syntax command without compiling firmware.
 mkdir -p "$tmp/Drivers/CMSIS/Device/ST/STM32F7xx/Include" "$tmp/Drivers/CMSIS/Include"
 touch "$tmp/Drivers/CMSIS/Device/ST/STM32F7xx/Include/stm32f7xx.h" "$tmp/Drivers/CMSIS/Include/core_cm7.h"
