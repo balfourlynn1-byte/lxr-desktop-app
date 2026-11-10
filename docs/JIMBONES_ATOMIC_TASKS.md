@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 30178)
-Total output lines: 591
-
 # JIMBONES autonomous atomic task tree — 2026-11-08
 
 **Purpose:** one small verifiable task per run. Always read this file and `docs/JIMBONES_WORK_QUEUE.md` first. Work in the existing feature branch or a dedicated isolated branch; never merge to main. User is testing v1.8.06 and says it is not nearly ready; bouncing skull is approved and must be preserved. Proposed v1.8.08 is a development target, not a release promise.
@@ -342,7 +339,11 @@ L03 partial (2026-11-09): source audit identified two 120 BPM initial defaults i
 
 ### CRITICAL — Codex timeout-safe save protocol (2026-11-09)
 - **MANDATORY:** Read and follow `docs/CODEX_CHECKPOINT_AND_RECOVERY.md` before and throughout every Codex session. Make small atomic commits and **push to GitHub immediately**, ideally every 10–15 minutes; local commits alone are not safe. Update and push `docs/CODEX_LIVE_CHECKPOINT.md` with remote SHA, precise PASS/FAIL/NOT RUN, unfinished files, blockers and next command. Stop new work with 10 minutes left and save/push everything recoverable. On restart verify remote SHA and resume without overwriting prior work. WIP commits permitted only when clearly marked unverified. Never claim work backed up unless remote push confirmed.
-- C10 Actions run `42699661787` FAILED in both GCC/Clang at C10 ROM-bank test; test changed to compare waveforms at quarter-cycle…178 tokens truncated…emain unverified. Continue to prioritize actual native host harness, wavetable ON rendering, OFF identity. Strict ARM hold. Mandatory Codex checkpoint and push protocol remains in force (`docs/CODEX_CHECKPOINT_AND_RECOVERY.md`).
+- C10 Actions run `42699661787` FAILED in both GCC/Clang at C10 ROM-bank test; test changed to compare waveforms at quarter-cycle phase commit `5d0e19f2fc7fdca3fceb4b174cb548c63b8fc5c8`. **Rerun not yet verified**. C09 passed run `42699351706`. Continue full native rendering after CI gate. ARM hold unchanged.
+
+### 2026-11-09 — C11 desktop build registration
+- Added `Src/Soundengine/DSPAudio/JimbonesNativeWaveBank.c` to the actual desktop `Core/CMakeLists.txt` app source list, commit `04e5089a2f9b8496228be2decc814384672b5356`. Added source guard `tests/test_c11_native_build_registration.py` and wired into GCC/Clang CI commit `3ee234c3c0d4e8a331ed14bceabad0733d1bbdca`.
+- **NOT full native compile yet:** C11 guard checks CMake source registration and API text; the complete DrumVoice/Oscillator compilation, linking, PCM and CPU remain unverified. Continue to prioritize actual native host harness, wavetable ON rendering, OFF identity. Strict ARM hold. Mandatory Codex checkpoint and push protocol remains in force (`docs/CODEX_CHECKPOINT_AND_RECOVERY.md`).
 
 ### 2026-11-09 21:24 UTC — C12 default-OFF source guard (one atomic task)
 - Integration branch `agents/jb-28-full-integration-v186` observed HEAD `f797ec786fc57d008afeaabad964906f35a43177`; isolated branch before this task `a0a027a4517c09dc2ce9aced99349dd90eaeaf89`. No merge.
