@@ -432,3 +432,6 @@ User wants Torso Electronics S-4-style press-and-hold behavior and Digitakt TRAC
 
 ### 2026-11-10 19:02 UTC — P0 portable host syntax milestone
 - Host adaptation source commit `7effff99ae9dd0d92fb6219a7c2025f001925970`: real `DrumVoice.c` syntax probe exits 0 with Apple Clang 17 on Darwin after host-only packed DSP semantics and Mach-O section handling; C06/C12/preflight and intrinsic edge cases exit 0. One existing `SVF_init` prototype warning remains. Linux/GNU GCC, link and PCM are NOT RUN. Actions are disabled for the entire fork; global re-enable would revive ARM workflows and was not done. See latest `CODEX_LIVE_CHECKPOINT.md` for commands and `CODEX_CURRENT_STATUS.md` for recovery. Next: inspect `SVF_init` interface; preserve ARM hold.
+
+### 2026-11-10 19:16 UTC — P0 genuine Linux syntax pass
+- Tested experimental SHA `8ca4d101ed249b12b5aecfba4781d840befdb052` on 2-core Ubuntu x86_64 Codespace: C06, C12, preflight, `CC=gcc bash tests/run_native_drumvoice_probe.sh` (GNU GCC 13.3.0) and `CC=clang bash tests/run_native_drumvoice_probe.sh` (Clang 18.1.3) all exit 0. This is real `DrumVoice.c` syntax compilation, not link or PCM. Five CMSIS pointer-width warnings under GCC and one legacy phase-constant warning under Clang recorded in `CODEX_LIVE_CHECKPOINT.md`. P1 link/render next; ARM hold remains.

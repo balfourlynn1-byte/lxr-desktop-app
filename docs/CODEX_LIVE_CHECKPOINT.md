@@ -344,3 +344,17 @@ changed_files: Core/Inc/Soundengine/DSPAudio/ResonantFilter.h; docs/CODEX_CURREN
 blocker: Paid Codespace approval pending; global Actions re-enable prohibited because it also revives ARM workflows.
 next_command: uname -a (inside approved experimental-branch Codespace, if authorised)
 safety: NO ARM; NO IMG; NO MERGE; NO FLASH
+
+## 2026-11-10 19:16 UTC | TASK P0 | PASS (LINUX SYNTAX ONLY)
+branch: agents/jb-wavetable-host-experiment
+integration_sha: f797ec786fc57d008afeaabad964906f35a43177 (read only)
+source_sha: 86444a33caa5e49dd729cccb34dbdaad26a010e9 (last firmware-interface fix); 7effff99ae9dd0d92fb6219a7c2025f001925970 (host adaptation)
+tested_sha: 8ca4d101ed249b12b5aecfba4781d840befdb052
+checkpoint_head_sha: PENDING
+commands: pwd && uname -a && gcc --version | head -1 && clang --version | head -1 && git rev-parse HEAD && git status --short && git branch --show-current (exit 0); python3 tests/test_c06_drum_scan_source.py (0); python3 tests/test_c12_wave_off_source.py (0); bash tests/test_native_probe_preflight.sh (0); CC=gcc bash tests/run_native_drumvoice_probe.sh (0); CC=clang bash tests/run_native_drumvoice_probe.sh (0)
+environment: Linux codespaces-243532 6.8.0-1064-azure x86_64; gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0; Ubuntu clang 18.1.3 (1ubuntu1); 2-core Codespace effective waffle
+result: Real DrumVoice.c translation unit syntax compiled with native GNU GCC and Clang. GCC warned five times in CMSIS core_cm7.h about 32-bit register/pointer casts on x86_64. Clang warned once at DrumVoice.c:78 about 0xffffffff conversion to float. All commands exited 0. No executable/link, PCM identity, DSP performance, ARM build or hardware validation. GitHub billing showed Free account, $0 Codespaces usage before creation and $0 Codespaces budget with Usage blocked; no billing settings changed.
+changed_files: docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md; docs/JIMBONES_WORK_QUEUE.md; docs/JIMBONES_ATOMIC_TASKS.md; docs/CODEX_HANDOVER_2026-11-10.md
+blocker: P1 native link/render not yet attempted
+next_command: gcc -std=c11 -Wall -Wextra -Werror tests/test_host_dsp_intrinsics.c -o /tmp/jb-host-dsp-intrinsics && /tmp/jb-host-dsp-intrinsics
+safety: NO ARM; NO IMG; NO MERGE; NO FLASH; STOP/DELETE CODESPACE AFTER TESTS
