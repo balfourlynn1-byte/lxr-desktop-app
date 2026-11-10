@@ -600,7 +600,7 @@ void led_setBlinkLed(const uint8_t ledNr, const uint8_t onOff)
 		//search the slot with matching ledNr
 		for(int i=0;i<NUM_OF_BLINKABLE_LEDS;i++)
 		{
-			if(led_blinkLedNumber[i] == ledNr)
+			if((led_blinkingLeds & (1u<<i)) && led_blinkLedNumber[i] == ledNr)
 			{
 				//we found the matching slot
 				//set slot to inactive
