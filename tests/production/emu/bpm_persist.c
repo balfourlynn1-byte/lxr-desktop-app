@@ -418,10 +418,26 @@ int main(int argc, char **argv)
                     menu_loadedPresetNr[CURRENT_PROJECT] == 0) ? 0 : 4;
         if (!strcmp(argv[1], "verify_corrupt_resave")) {
             int bpm = lxr_get_param(PAR_BPM);
-            return (menu_loadedPresetNr[CURRENT_PROJECT] == 0 &&
-                    ((bpm == 137 && lxr_get_param(PAR_MIDI_CHAN_GLOBAL) == 2) ||
-                     (bpm == 160 && lxr_get_param(PAR_MIDI_CHAN_GLOBAL) == 6)) &&
-                    seq_getBpm() == bpm) ? 0 : 4;
+            if (menu_loadedPresetNr[CURRENT_PROJECT] != 0 ||
+                seq_getBpm() != bpm) return 4;
+            if (bpm == 137 && lxr_get_param(PAR_MIDI_CHAN_GLOBAL) == 2) {
+                /* A failed promotion must not silently consume the only
+                 * valid pre-resave generation. Verify backup is still present
+                 * and readable, not merely that boot happened to load it. */
+                FIL backup;
+                UINT got = 0;
+                uint8_t bytes[NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS + sizeof(uint32_t)];
+                if (f_open(&backup, "/proj00/glo.bak", FA_READ) != FR_OK) return 4;
+                UINT length = f_size(&backup);
+                FRESULT read_result = FR_DISK_ERR;
+                if (length == sizeof bytes)
+                    read_result = f_read(&backup, bytes, length, &got);
+                FRESULT close_result = f_close(&backup);
+                if (read_result != FR_OK || got != length ||
+                    close_result != FR_OK) return 4;
+                return 0;
+            }
+            return (bpm == 160 && lxr_get_param(PAR_MIDI_CHAN_GLOBAL) == 6) ? 0 : 4;
         }
         if (!strcmp(argv[1], "verify_context"))
             return (lxr_get_param(PAR_BPM) == 145 && seq_getBpm() == 145 &&
