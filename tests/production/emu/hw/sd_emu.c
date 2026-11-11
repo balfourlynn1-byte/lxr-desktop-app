@@ -27,6 +27,26 @@ static uint32_t num_chunks;
 static uint32_t num_sectors;
 static int card_present = 1;
 static uint32_t write_calls, sync_calls, fail_write_call, fail_sync_call;
+static uint32_t rename_calls, fail_rename_call;
+static uint8_t fail_rename_after;
+
+void emu_projectRenameFault(uint32_t call, uint8_t after)
+{
+	rename_calls = 0;
+	fail_rename_call = call;
+	fail_rename_after = after;
+}
+
+uint8_t emu_projectRenameFailBefore(void)
+{
+	++rename_calls;
+	return fail_rename_call == rename_calls && !fail_rename_after;
+}
+
+uint8_t emu_projectRenameFailAfter(void)
+{
+	return fail_rename_call == rename_calls && fail_rename_after;
+}
 
 void emu_sd_fault(uint32_t write_call, uint32_t sync_call)
 {

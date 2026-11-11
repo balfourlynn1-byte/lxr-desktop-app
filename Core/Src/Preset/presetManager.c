@@ -2839,6 +2839,21 @@ static uint8_t preset_projectDirectoryValid(const char *folder)
 	       info.fsize >= NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS;
 }
 
+static FRESULT preset_projectRename(const char *source, const char *destination)
+{
+#if LXR_EMU
+	/* Host-only fault injection. The target always calls the real FatFs rename. */
+	extern uint8_t emu_projectRenameFailBefore(void);
+	extern uint8_t emu_projectRenameFailAfter(void);
+	if (emu_projectRenameFailBefore()) return FR_DISK_ERR;
+#endif
+	FRESULT res = f_rename(source, destination);
+#if LXR_EMU
+	if (res == FR_OK && emu_projectRenameFailAfter()) return FR_DISK_ERR;
+#endif
+	return res;
+}
+
 /* A reset can land between moving the old project aside and promoting the
  * staged directory. Restore the old directory before the normal loader. */
 static FRESULT preset_recoverProjectFolder(uint8_t presetNr)
@@ -2869,7 +2884,7 @@ static FRESULT preset_recoverProjectFolder(uint8_t presetNr)
 		cleanup = f_unlink(target);
 		if (cleanup != FR_OK) return cleanup;
 	}
-	return f_rename(backup, target);
+	return preset_projectRename(backup, target);
 }
 
 FRESULT preset_saveProject(uint8_t presetNr)
@@ -2901,10 +2916,10 @@ FRESULT preset_saveProject(uint8_t presetNr)
 			res = f_unlink(backup);
 			if (res != FR_OK) return res;
 		} else if (backupRes != FR_NO_FILE) return backupRes;
-		res = f_rename(target, backup);
+		res = preset_projectRename(target, backup);
 		if (res != FR_OK) return res;
 	} else if (res != FR_NO_FILE) return res;
-	res = f_rename(stage, target);
+	res = preset_projectRename(stage, target);
 	if (res != FR_OK) preset_recoverProjectFolder(presetNr);
 	return res;
 }

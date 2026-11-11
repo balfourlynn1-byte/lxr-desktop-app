@@ -25,6 +25,16 @@ for n in 1 2 3 4; do
     "$BPM_PERSIST_EXE" verify_project "$card"
 done
 
+# Fail immediately before and immediately after both commit renames. The
+# after cases model a completed filesystem call whose success was lost.
+for n in 1 2; do
+    for after in 0 1; do
+        card="$1-rename-$n-$after.sdchunks"
+        JB_FAIL_RENAME="$n" JB_FAIL_AFTER="$after" "$BPM_PERSIST_EXE" project_rename_fault "$card"
+        "$BPM_PERSIST_EXE" verify_project "$card"
+    done
+done
+
 # A genuinely full FAT32 volume must keep the old generation. Once space is
 # released, a new save must succeed and survive another cold start.
 card="$1-full.sdchunks"

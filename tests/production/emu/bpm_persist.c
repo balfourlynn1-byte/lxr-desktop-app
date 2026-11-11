@@ -179,6 +179,24 @@ int main(int argc, char **argv)
         if (result == FR_OK) return 5;
         return save_card(argv[2]);
     }
+    if (!strcmp(argv[1], "project_rename_fault")) {
+        if (lxr_boot(123) != 0) return 2;
+        lxr_set_param(PAR_BPM, 137);
+        set_project_generation(0);
+        if (preset_saveProject(0) != FR_OK) return 3;
+        lxr_set_param(PAR_BPM, 145);
+        set_project_generation(1);
+        const char *ordinal = getenv("JB_FAIL_RENAME");
+        const char *after = getenv("JB_FAIL_AFTER");
+        if (!ordinal) return 2;
+        emu_projectRenameFault((uint32_t)atoi(ordinal), after && atoi(after));
+        FRESULT result = preset_saveProject(0);
+        emu_projectRenameFault(0, 0);
+        printf("project rename fault call=%s after=%s FatFs=%d\n",
+               ordinal, after ? after : "0", result);
+        if (result == FR_OK) return 5;
+        return save_card(argv[2]);
+    }
     if (!strcmp(argv[1], "project_full")) {
         if (lxr_boot(123) != 0) return 2;
         lxr_set_param(PAR_BPM, 137);
