@@ -272,6 +272,10 @@ int main(int argc, char **argv)
         lxr_set_param(PAR_BPM, 137);
         set_project_generation(0);
         if (preset_saveProject(0) != FR_OK || f_unlink("/proj00/tx.ok") != FR_OK) return 3;
+        FIL globals;
+        if (f_open(&globals, "/proj00/glo.cfg", FA_OPEN_EXISTING | FA_WRITE) != FR_OK ||
+            f_lseek(&globals, NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS) != FR_OK ||
+            f_truncate(&globals) != FR_OK || f_close(&globals) != FR_OK) return 3;
         FILINFO info;
         if (f_stat("/bak00", &info) == FR_OK &&
             f_rename("/bak00", "/old00") != FR_OK) return 3;
@@ -290,7 +294,7 @@ int main(int argc, char **argv)
     }
     if (!strcmp(argv[1], "save") || !strcmp(argv[1], "save_explicit") ||
         !strcmp(argv[1], "save_fault") || !strcmp(argv[1], "save_corrupt") ||
-        !strcmp(argv[1], "save_full")) {
+        !strcmp(argv[1], "save_corrupt_same") || !strcmp(argv[1], "save_full")) {
         if (lxr_boot(123) != 0) return 2;
         lxr_idle_blocks(1600);
         lxr_set_param(PAR_BPM, 137);
@@ -298,7 +302,8 @@ int main(int argc, char **argv)
         printf("before restart: parameter=%d runtime=%u\n", lxr_get_param(PAR_BPM), seq_getBpm());
         if (lxr_get_param(PAR_BPM) != 137 || seq_getBpm() != 137) return 3;
         if (!strcmp(argv[1], "save_explicit") || !strcmp(argv[1], "save_fault") ||
-            !strcmp(argv[1], "save_corrupt") || !strcmp(argv[1], "save_full")) {
+            !strcmp(argv[1], "save_corrupt") || !strcmp(argv[1], "save_corrupt_same") ||
+            !strcmp(argv[1], "save_full")) {
             if (strcmp(argv[1], "save_explicit")) lxr_set_param(PAR_MIDI_CHAN_GLOBAL, 2);
             if (preset_saveGlobals() != FR_OK) return 3;
             if (!strcmp(argv[1], "save_full")) {
@@ -318,6 +323,21 @@ int main(int argc, char **argv)
                 snprintf(path, sizeof path, "%s/glo.cfg", currentFolder);
                 FIL file;
                 if (f_open(&file, path, FA_CREATE_ALWAYS | FA_WRITE) != FR_OK ||
+                    f_close(&file) != FR_OK) return 3;
+                return save_card(argv[2]);
+            }
+            if (!strcmp(argv[1], "save_corrupt_same")) {
+                lxr_set_param(PAR_BPM, 145);
+                lxr_set_param(PAR_MIDI_CHAN_GLOBAL, 5);
+                if (preset_saveGlobals() != FR_OK) return 3;
+                char path[sizeof(currentFolder) + sizeof("/glo.cfg")];
+                snprintf(path, sizeof path, "%s/glo.cfg", currentFolder);
+                FIL file;
+                UINT written = 0;
+                uint8_t damaged_bpm = 120;
+                if (f_open(&file, path, FA_OPEN_EXISTING | FA_WRITE) != FR_OK ||
+                    f_lseek(&file, PAR_BPM - PAR_BEGINNING_OF_GLOBALS) != FR_OK ||
+                    f_write(&file, &damaged_bpm, 1, &written) != FR_OK || written != 1 ||
                     f_close(&file) != FR_OK) return 3;
                 return save_card(argv[2]);
             }

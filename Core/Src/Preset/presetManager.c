@@ -974,12 +974,53 @@ static void preset_writeGlobalData()
 }
 
 //----------------------------------------------------
+/* The first bytes remain the legacy globals format. New saves append a CRC32
+ * so a same-length damaged primary can be rejected in favour of glo.bak. */
+static uint32_t preset_globalsCrc(const uint8_t *data, UINT length)
+{
+	uint32_t crc = 0xffffffffUL;
+	for (UINT i = 0; i < length; ++i) {
+		crc ^= data[i];
+		for (uint8_t bit = 0; bit < 8; ++bit)
+			crc = (crc >> 1) ^ (crc & 1 ? 0xedb88320UL : 0);
+	}
+	return ~crc;
+}
+
+static uint8_t preset_globalsSizeValid(uint32_t size)
+{
+	const uint32_t legacy = NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS;
+	return size == legacy || size == legacy + sizeof(uint32_t);
+}
+
+static uint8_t preset_globalsFileValid(const char *path)
+{
+	FIL file;
+	if (f_open(&file, path, FA_READ) != FR_OK) return 0;
+	UINT size = f_size(&file), read = 0;
+	uint8_t data[NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS + sizeof(uint32_t)];
+	uint8_t valid = preset_globalsSizeValid(size) &&
+	                f_read(&file, data, size, &read) == FR_OK && read == size;
+	if (f_close(&file) != FR_OK) valid = 0;
+	if (valid && size > NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS) {
+		uint32_t stored;
+		memcpy(&stored, data + NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS, sizeof stored);
+		valid = stored == preset_globalsCrc(data, NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS);
+	}
+	return valid;
+}
+
 FRESULT preset_saveGlobals()
 {
 #if USE_SD_CARD
 	FRESULT res;
 	FRESULT closeRes;
 	UINT written = 0;
+	uint8_t globals[NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS + sizeof(uint32_t)];
+	memcpy(globals, &activeParameters[PAR_BEGINNING_OF_GLOBALS],
+	       NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS);
+	uint32_t crc = preset_globalsCrc(globals, NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS);
+	memcpy(globals + NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS, &crc, sizeof crc);
 	FILINFO info;
 	char path[sizeof(currentFolder) + sizeof("/glo.cfg")];
 	char staged[sizeof(currentFolder) + sizeof("/glo.new")];
@@ -998,9 +1039,8 @@ FRESULT preset_saveGlobals()
 	snprintf(backup, sizeof backup, "%s/glo.bak", currentFolder);
 	res = f_open((FIL*)&SDFile,staged,FA_CREATE_ALWAYS | FA_WRITE);
 	if(res != FR_OK) return res;
-	res = f_write((FIL*)&SDFile, &activeParameters[PAR_BEGINNING_OF_GLOBALS],
-	              NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS, &written);
-	if (res == FR_OK && written != NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS)
+	res = f_write((FIL*)&SDFile, globals, sizeof globals, &written);
+	if (res == FR_OK && written != sizeof globals)
 		res = FR_DISK_ERR;
 	if (res == FR_OK) res = f_sync((FIL*)&SDFile);
 	closeRes = f_close((FIL*)&SDFile);
@@ -1040,10 +1080,17 @@ static uint8_t preset_readGlobalData()
 		return 0;
 	return 1;
 #else
-	const uint8_t numGlobals = NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS;
-	uint8_t globals[NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS];
-	if (f_read((FIL*)&SDFile, globals, numGlobals, &bytesRead) != FR_OK ||
-	    bytesRead != numGlobals) return 0;
+	const UINT numGlobals = NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS;
+	uint8_t globals[NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS + sizeof(uint32_t)];
+	UINT length = f_size((FIL*)&SDFile);
+	if (!preset_globalsSizeValid(length) ||
+	    f_read((FIL*)&SDFile, globals, length, &bytesRead) != FR_OK ||
+	    bytesRead != length) return 0;
+	if (length > numGlobals) {
+		uint32_t stored;
+		memcpy(&stored, globals + numGlobals, sizeof stored);
+		if (stored != preset_globalsCrc(globals, numGlobals)) return 0;
+	}
 	memcpy(&activeParameters[PAR_BEGINNING_OF_GLOBALS], globals, numGlobals);
 	return 1;
 
@@ -2700,7 +2747,7 @@ static FRESULT preset_projectFingerprint(const char *folder, uint32_t result[5])
 	FRESULT primaryResult = f_stat(primary, &primaryInfo);
 	if (primaryResult != FR_OK && primaryResult != FR_NO_FILE) return primaryResult;
 	uint8_t hasPrimary = primaryResult == FR_OK &&
-	                     primaryInfo.fsize == NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS;
+	                     preset_globalsSizeValid(primaryInfo.fsize);
 	FRESULT res = f_opendir(&dir, folder);
 	if (res != FR_OK) return res;
 	for (;;) {
@@ -2732,7 +2779,7 @@ static FRESULT preset_projectFingerprint(const char *folder, uint32_t result[5])
 			metadata = 1;
 		} else if (preset_nameEndsWith(info.fname, "glo.cfg") ||
 		           (!hasPrimary && preset_nameEndsWith(info.fname, "glo.bak"))) {
-			if (globals || info.fsize != NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS) {
+			if (globals || !preset_globalsSizeValid(info.fsize)) {
 				res = FR_DISK_ERR; break;
 			}
 			globals = 1;
@@ -2784,10 +2831,14 @@ static FRESULT preset_projectFingerprint(const char *folder, uint32_t result[5])
 		closeRes = f_close(&file);
 		if (res == FR_OK) res = closeRes;
 		if (res != FR_OK) return res;
-		hash = (hash ^ sizes[entry]) * 16777619UL;
+		uint8_t isGlobals = preset_nameEndsWith(names[entry], "glo.cfg") ||
+		                    preset_nameEndsWith(names[entry], "glo.bak");
+		uint32_t logicalSize = isGlobals ?
+		    NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS : sizes[entry];
+		hash = (hash ^ logicalSize) * 16777619UL;
 		sum += hash;
 		xorHash ^= hash;
-		total += sizes[entry];
+		total += logicalSize;
 	}
 	result[0] = PROJECT_MARKER_MAGIC;
 	result[1] = count;
@@ -2828,19 +2879,21 @@ static uint8_t preset_projectDirectoryValid(const char *folder)
 		FRESULT res = f_read(&marker, expected, sizeof expected, &read);
 		FRESULT closeRes = f_close(&marker);
 		if (res != FR_OK || closeRes != FR_OK || read != sizeof expected) return 0;
-		return preset_projectFingerprint(folder, actual) == FR_OK &&
-		       memcmp(expected, actual, sizeof expected) == 0;
+		if (preset_projectFingerprint(folder, actual) != FR_OK ||
+		    memcmp(expected, actual, sizeof expected) != 0) return 0;
+		snprintf(path, sizeof path, "%s/glo.cfg", folder);
+		if (preset_globalsFileValid(path)) return 1;
+		snprintf(path, sizeof path, "%s/glo.bak", folder);
+		return preset_globalsFileValid(path);
 	}
 	if (markerResult != FR_NO_FILE) return 0;
 	/* Legacy projects have no marker. Keep their original file formats readable. */
 	snprintf(path, sizeof path, "%s/prj.nfo", folder);
 	if (f_stat(path, &info) != FR_OK || info.fsize < 8) return 0;
 	snprintf(path, sizeof path, "%s/glo.cfg", folder);
-	if (f_stat(path, &info) == FR_OK &&
-	    info.fsize >= NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS) return 1;
+	if (preset_globalsFileValid(path)) return 1;
 	snprintf(path, sizeof path, "%s/glo.bak", folder);
-	return f_stat(path, &info) == FR_OK &&
-	       info.fsize >= NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS;
+	return preset_globalsFileValid(path);
 }
 
 static FRESULT preset_projectRename(const char *source, const char *destination)
