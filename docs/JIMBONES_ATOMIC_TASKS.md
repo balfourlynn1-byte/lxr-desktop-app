@@ -705,3 +705,6 @@ User wants Torso Electronics S-4-style press-and-hold behavior and Digitakt TRAC
 
 ### 2026-11-11 04:25 UTC — Clear automation LCD row overflow
 - Pushed `d08b2c934484475df2041314dba35448557c55a1`: shortened two clear-automation labels so the string and terminator fit `editDisplayBuffer[0][7..16]`. Host Clang menu syntax check with `-Werror=fortify-source` exit 0 without diagnostics; `sh tests/run_stepfx_ui.sh` exit 0 at source SHA. Physical UI NOT RUN. Next R05 Shift menu-to-DSP host integration. No ARM/image/merge/flash; £0 spending.
+
+### 2026-11-11 04:35 UTC — R05 Shift production-menu host test
+- Source/test `b6c67cb97a725c14e39ea5cedaea67a039b59314` compiles real `menu.c` and exercises its Shift helper with controlled button/automation inputs and captured front-panel CCs. `sh tests/run_shift_relative_menu_host.sh` exit 0 at pushed SHA: all six selections in both cutoff and resonance groups, signed deltas, saturation, unrelated parameters and no extra CCs while recording/armed. A full encoder-function host link attempt exited 1 on unrelated menu dependencies; full button-to-DSP and hardware NOT RUN. Next: existing production emulator and latest-HEAD PCM comparison. No ARM/image/merge/flash; £0 spending.

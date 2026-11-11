@@ -492,6 +492,7 @@ changed_files: tests/test_led_handler_host.c; docs/CODEX_CURRENT_STATUS.md; docs
 next_command: Add focused Shift+encoder menu-to-DSP host integration test with six distinct filter values and recording guard
 safety: NO ARM; NO IMG; NO MERGE; NO FLASH; £0 additional spending
 
+
 ## 2026-11-11 04:25 UTC | TASK UI SAFETY | LCD AUTOMATION LABEL OVERFLOW FIXED
 branch: agents/jb-wavetable-host-experiment
 source_sha: d08b2c934484475df2041314dba35448557c55a1 (pushed, remote verified)
@@ -500,4 +501,14 @@ commands: clang -std=gnu11 -fsyntax-only -Werror=implicit-function-declaration -
 result: Clear-automation labels at editDisplayBuffer[0][7] previously copied 11 bytes into a 10-byte remainder of the 17-byte LCD row. Shortened both labels by one character, preserving their meaning and fitting the row. No DSP change. Earlier Shift and LED source/test commits remain pushed. Physical UI and full ARM/CI NOT RUN.
 changed_files: Core/Src/menu/menu.c; docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md; docs/JIMBONES_ATOMIC_TASKS.md; docs/JIMBONES_WORK_QUEUE.md
 next_command: Add focused Shift+encoder menu-to-DSP host integration test with six distinct filter values and recording guard
+safety: NO ARM; NO IMG; NO MERGE; NO FLASH; £0 additional spending
+
+## 2026-11-11 04:35 UTC | TASK R05 | PRODUCTION MENU/CC HOST INTEGRATION PASS
+branch: agents/jb-wavetable-host-experiment
+source_sha: b6c67cb97a725c14e39ea5cedaea67a039b59314 (pushed and verified)
+tested_sha: b6c67cb97a725c14e39ea5cedaea67a039b59314
+commands: sh tests/run_shift_relative_menu_host.sh (0 at pushed SHA); sh tests/run_stepfx_ui.sh (0 before commit); full menu_encoderChangeParameter host link attempt (1, unrelated menu symbols including Euklid, modulation targets and preset functions)
+result: Real menu.c Shift helper executed under host with controlled button/recording inputs and captured CC output. Six selected voices in both filter groups, signed deltas, saturation, unrelated parameters and recording/armed guards PASS. No extra CC output in recording/armed states. This is menu-to-CC evidence, not physical button or full MIDI-to-DSP runtime evidence. No ARM, CI or PCM rerun yet.
+changed_files: Core/Src/menu/menu.c; tests/test_shift_relative_menu_host.c; tests/run_shift_relative_menu_host.sh; docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md; docs/JIMBONES_ATOMIC_TASKS.md; docs/JIMBONES_WORK_QUEUE.md
+next_command: Inspect production emulator viability; then run tests/run_off_path_pcm_compare.sh with timeout/progress
 safety: NO ARM; NO IMG; NO MERGE; NO FLASH; £0 additional spending
