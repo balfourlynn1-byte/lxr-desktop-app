@@ -85,7 +85,12 @@ int main(void)
     host_armed = 0;
     assert(!menu_tryShiftEditVoiceFilters(PAR_FILTER_FREQ_2, 0));
     assert(!menu_tryShiftEditVoiceFilters(PAR_VOL1, 5));
-    assert(sent_count == 0 && activeParameters[PAR_FILTER_FREQ_1] == 10);
+    assert(sent_count == 0);
+    /* Every voice must remain untouched when Shift is released, automation
+     * is armed/recording, the encoder delta is zero, or the target is unrelated. */
+    const uint8_t unchanged[6] = {10, 40, 70, 100, 126, 0};
+    for (unsigned i = 0; i < 6; ++i)
+        assert(activeParameters[PAR_FILTER_FREQ_1 + i] == unchanged[i]);
     puts("PASS: production menu Shift mapping, six CCs, saturation and recording guard");
     return 0;
 }
