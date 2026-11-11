@@ -127,6 +127,19 @@ if(EXISTS ${FW}/Core/Src/Soundengine/DSPAudio/Jimbones.c)
  list(APPEND FW_SOURCES ${FW}/Core/Src/Soundengine/DSPAudio/Jimbones.c ${FW}/Core/Src/Preset/JimbonesPreset.c)
  add_compile_definitions(TEST_METAL=1)
 endif()
+# Optional JIMBONES modules used by the current firmware translation units.
+foreach(extra IN ITEMS
+    Core/Src/Soundengine/DSPAudio/JimbonesNativeWaveBank.c
+    Core/Src/Soundengine/DSPAudio/CombFilter.c
+    Core/Src/Soundengine/StepFxSend.c
+    Core/Src/Soundengine/StepFxSendMix.c
+    Core/Src/Soundengine/DubDelaySync.c
+    Core/Src/menu/JimbonesWaveUI.c
+    Core/Src/menu/JimbonesSkull.c)
+ if(EXISTS ${FW}/${extra})
+  list(APPEND FW_SOURCES ${FW}/${extra})
+ endif()
+endforeach()
 execute_process(COMMAND python3 ${EMU}/prepare.py ${FW} ${CMAKE_CURRENT_BINARY_DIR} COMMAND_ERROR_IS_FATAL ANY)
 list(REMOVE_ITEM FW_SOURCES ${FW}/Core/Src/Soundengine/DSPAudio/modulationNode.c)
 list(APPEND FW_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/modulationNode.c ${CMAKE_CURRENT_BINARY_DIR}/diskio.c)
