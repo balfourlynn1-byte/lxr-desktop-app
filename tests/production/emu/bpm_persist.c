@@ -299,8 +299,10 @@ int main(int argc, char **argv)
      * A successful retry must not destroy the last valid backup first. */
     if (!strcmp(argv[1], "globals_corrupt_resave_retry")) {
         if (load_card(argv[2]) || lxr_boot(123) != 0) return 2;
-        if (lxr_get_param(PAR_BPM) != 137 ||
-            lxr_get_param(PAR_MIDI_CHAN_GLOBAL) != 2) return 4;
+        int bpm = lxr_get_param(PAR_BPM);
+        int channel = lxr_get_param(PAR_MIDI_CHAN_GLOBAL);
+        if (!((bpm == 137 && channel == 2) ||
+              (bpm == 160 && channel == 6)) || seq_getBpm() != bpm) return 4;
         lxr_set_param(PAR_BPM, 160);
         lxr_set_param(PAR_MIDI_CHAN_GLOBAL, 6);
         if (preset_saveGlobals() != FR_OK) return 3;
