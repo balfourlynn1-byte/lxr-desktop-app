@@ -3096,9 +3096,18 @@ FRESULT preset_loadProject(uint8_t presetNr, uint8_t clearTmp)
 	sprintf(currentFolder, "/proj%02d", presetNr);
 	res = preset_recoverProjectFolder(presetNr);
 	if (res != FR_OK) return res;
-	if (!preset_projectDirectoryValid(currentFolder)) return FR_DISK_ERR;
 
 	res = f_stat(currentFolder, &fno);
+	/* A missing project is handled by the existing create path below.
+	 * Only reject an existing, incomplete or corrupt generation. */
+	if (res == FR_OK && !preset_projectDirectoryValid(currentFolder)) {
+		lcd_process_display_interrupt = 1;
+		preset_initTmpFolder();
+#if USE_INTERRUPT_ONLY_DURING_SAVE_PROJ
+		HAL_TIM_Base_Stop_IT(&htim2);
+#endif
+		return FR_DISK_ERR;
+	}
 	if(res == FR_NO_FILE)
 	{
 		res = f_mkdir(currentFolder);
