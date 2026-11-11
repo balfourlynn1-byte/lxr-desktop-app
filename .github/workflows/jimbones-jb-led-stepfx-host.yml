@@ -1,4 +1,4 @@
-name: JIMBONES LED and Step FX Host Checks
+name: JIMBONES LED Step FX and Shift Host Checks
 on:
   push:
     branches:
@@ -10,6 +10,10 @@ on:
       - 'tests/test_stepfx_ui_source.py'
       - 'tests/test_perfui.c'
       - 'tests/run_stepfx_ui.sh'
+      - 'Core/Src/menu/menu.c'
+      - 'Core/Inc/menu/JimbonesRelativeEdit.h'
+      - 'tests/test_shift_relative_menu_host.c'
+      - 'tests/run_shift_relative_menu_host.sh'
       - '.github/workflows/jimbones-jb-led-stepfx-host.yml'
   workflow_dispatch:
 permissions:
@@ -24,5 +28,7 @@ jobs:
         run: git rev-parse HEAD
       - name: Compile and run Step FX host and LED source checks
         run: sh tests/run_stepfx_ui.sh
+      - name: Compile and run production-menu Shift integration test
+        run: sh tests/run_shift_relative_menu_host.sh
       - name: State verification scope
-        run: echo "HOST TESTS ONLY - no ARM build or hardware LED/audio verification"
+        run: echo "HOST TESTS ONLY - no full DSP audio delivery, ARM build or hardware LED/audio verification"
