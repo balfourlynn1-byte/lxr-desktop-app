@@ -2359,7 +2359,7 @@ FRESULT preset_createProject(uint8_t presetNr)
 // save all settings (global, pattern, kit)
 // or save performance settings (pattern, kit)
 
-FRESULT preset_saveProject(uint8_t presetNr)
+static FRESULT preset_writeProjectFolder(uint8_t presetNr, const char *folder)
 {
 	FRESULT res;
 	FILINFO fno;
@@ -2391,8 +2391,8 @@ FRESULT preset_saveProject(uint8_t presetNr)
 		return res;
 	}
 */
-	//change project folder
-	sprintf(currentFolder, "/proj%02d", presetNr);
+	// Build the replacement outside the active project directory.
+	strcpy(currentFolder, folder);
 
 	res = f_stat(currentFolder, &fno);
 	if(res == FR_NO_FILE)
@@ -2471,7 +2471,9 @@ FRESULT preset_saveProject(uint8_t presetNr)
 	unsigned int bytesWritten;
 	//write preset name to file
 	res = f_write((FIL*)&SDFile,(void*)savefileNames[presetNr][PROJECT_NAMES],8,&bytesWritten);
-	if(res != FR_OK) {
+	if(res != FR_OK || bytesWritten != 8) {
+		if(res == FR_OK) res = FR_DISK_ERR;
+		f_close((FIL*)&SDFile);
 		lcd_process_display_interrupt = 1;
 		preset_initTmpFolder();
 #if USE_INTERRUPT_ONLY_DURING_SAVE_PROJ
@@ -2483,11 +2485,13 @@ FRESULT preset_saveProject(uint8_t presetNr)
 		return res;
 	}
 	//close the file
-	f_close((FIL*)&SDFile);
+	res = f_close((FIL*)&SDFile);
+	if(res != FR_OK) { preset_initTmpFolder(); return res; }
 
 //	soundengine_process();
 	//save globals
-	preset_saveGlobals();
+	res = preset_saveGlobals();
+	if(res != FR_OK) { preset_initTmpFolder(); return res; }
 	//save all drumkits, patterns and songs
 	for(uint8_t i=0;i<NUM_KIT_SLOTS;i++)
 	{
@@ -2622,6 +2626,51 @@ FRESULT preset_saveProject(uint8_t presetNr)
 }
 
 //----------------------------------------------------
+/* A reset can land between moving the old project aside and promoting the
+ * staged directory. Restore the old directory before the normal loader. */
+static FRESULT preset_recoverProjectFolder(uint8_t presetNr)
+{
+	char target[13], backup[13];
+	FILINFO info;
+	snprintf(target, sizeof target, "/proj%02u", presetNr);
+	snprintf(backup, sizeof backup, "/bak%02u", presetNr);
+	FRESULT res = f_stat(target, &info);
+	if (res != FR_NO_FILE) return res;
+	res = f_stat(backup, &info);
+	if (res == FR_NO_FILE) return FR_OK;
+	if (res != FR_OK) return res;
+	return f_rename(backup, target);
+}
+
+FRESULT preset_saveProject(uint8_t presetNr)
+{
+	char target[13], stage[13], backup[13];
+	FILINFO info;
+	snprintf(target, sizeof target, "/proj%02u", presetNr);
+	snprintf(stage, sizeof stage, "/stg%02u", presetNr);
+	snprintf(backup, sizeof backup, "/bak%02u", presetNr);
+	FRESULT res = preset_recoverProjectFolder(presetNr);
+	if (res != FR_OK) return res;
+	res = preset_writeProjectFolder(presetNr, stage);
+	strcpy(currentFolder, target);
+	if (res != FR_OK) return res;
+
+	res = f_stat(target, &info);
+	if (res == FR_OK) {
+		FRESULT backupRes = f_stat(backup, &info);
+		if (backupRes == FR_OK) {
+			res = empty_directory(backup);
+			if (res != FR_OK) return res;
+		} else if (backupRes != FR_NO_FILE) return backupRes;
+		res = f_rename(target, backup);
+		if (res != FR_OK) return res;
+	} else if (res != FR_NO_FILE) return res;
+	res = f_rename(stage, target);
+	if (res != FR_OK) preset_recoverProjectFolder(presetNr);
+	return res;
+}
+
+//----------------------------------------------------
 FRESULT preset_loadSongSD(uint8_t songNr)
 {
 	FRESULT res;
@@ -2704,6 +2753,11 @@ void preset_loadProjectNames(uint8_t projectNr)
 
 	//change project folder
 	sprintf(currentFolder, "/proj%02d", projectNr);
+	res = preset_recoverProjectFolder(projectNr);
+	if (res != FR_OK) {
+		sprintf((void*)savefileNames[projectNr][PROJECT_NAMES], "Empty");
+		return;
+	}
 
 	res = f_stat(currentFolder, &fno);
 	if(res == FR_NO_FILE)
@@ -2778,6 +2832,8 @@ FRESULT preset_loadProject(uint8_t presetNr, uint8_t clearTmp)
 
 	//change project folder
 	sprintf(currentFolder, "/proj%02d", presetNr);
+	res = preset_recoverProjectFolder(presetNr);
+	if (res != FR_OK) return res;
 
 	res = f_stat(currentFolder, &fno);
 	if(res == FR_NO_FILE)

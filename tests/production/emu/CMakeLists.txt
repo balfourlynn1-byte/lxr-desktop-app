@@ -223,3 +223,6 @@ add_test(NAME bpm_fault_matrix COMMAND ${CMAKE_COMMAND} -E env
 add_test(NAME bpm_contexts COMMAND ${CMAKE_COMMAND} -E env
     BPM_PERSIST_EXE=$<TARGET_FILE:bpm_persist>
     sh ${EMU}/run_bpm_contexts.sh ${CMAKE_CURRENT_BINARY_DIR}/bpm-contexts.sdchunks)
+add_test(NAME project_save_faults COMMAND ${CMAKE_COMMAND} -E env
+    BPM_PERSIST_EXE=$<TARGET_FILE:bpm_persist>
+    sh ${EMU}/run_project_save_repro.sh ${CMAKE_CURRENT_BINARY_DIR}/project-fault)
