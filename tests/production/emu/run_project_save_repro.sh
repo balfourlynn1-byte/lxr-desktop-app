@@ -43,6 +43,10 @@ card="$1-full.sdchunks"
 "$BPM_PERSIST_EXE" project_retry "$card"
 "$BPM_PERSIST_EXE" verify_project "$card"
 
+card="$1-removed.sdchunks"
+"$BPM_PERSIST_EXE" project_removed "$card"
+"$BPM_PERSIST_EXE" verify_project "$card"
+
 # A failed replacement must not poison the next save after restart.
 card="$1-retry.sdchunks"
 JB_FAIL_WRITE="$last_write" "$BPM_PERSIST_EXE" project_fault "$card"

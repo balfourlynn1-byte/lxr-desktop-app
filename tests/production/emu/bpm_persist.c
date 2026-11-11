@@ -209,6 +209,20 @@ int main(int argc, char **argv)
         if (result == FR_OK) return 5;
         return save_card(argv[2]);
     }
+    if (!strcmp(argv[1], "project_removed")) {
+        if (lxr_boot(123) != 0) return 2;
+        lxr_set_param(PAR_BPM, 137);
+        set_project_generation(0);
+        if (preset_saveProject(0) != FR_OK) return 3;
+        lxr_set_param(PAR_BPM, 145);
+        set_project_generation(1);
+        emu_sd_set_present(0);
+        FRESULT result = preset_saveProject(0);
+        emu_sd_set_present(1);
+        printf("removed-card project save FatFs=%d\n", result);
+        if (result == FR_OK) return 5;
+        return save_card(argv[2]);
+    }
     if (!strcmp(argv[1], "project_retry")) {
         if (load_card(argv[2]) || lxr_boot(123) != 0) return 2;
         FILINFO info;
