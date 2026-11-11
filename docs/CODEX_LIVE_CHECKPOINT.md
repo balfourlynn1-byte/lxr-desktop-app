@@ -512,3 +512,13 @@ result: Real menu.c Shift helper executed under host with controlled button/reco
 changed_files: Core/Src/menu/menu.c; tests/test_shift_relative_menu_host.c; tests/run_shift_relative_menu_host.sh; docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md; docs/JIMBONES_ATOMIC_TASKS.md; docs/JIMBONES_WORK_QUEUE.md
 next_command: Inspect production emulator viability; then run tests/run_off_path_pcm_compare.sh with timeout/progress
 safety: NO ARM; NO IMG; NO MERGE; NO FLASH; £0 additional spending
+
+## 2026-11-11 04:38 UTC | TASK P2 | PRE-RUN CHECKPOINT
+branch: agents/jb-wavetable-host-experiment
+source_sha: b6c67cb97a725c14e39ea5cedaea67a039b59314 (latest firmware source)
+script_sha: 7d6ce7d1983b5ae6f1badcdfbfb3e6c94f58d484 (pushed and verified)
+command: bash -n tests/run_off_path_pcm_compare.sh (0); full comparison NOT RUN yet
+result: Comparison script now reports start and completion for each of 12 cases and limits each experimental/reference renderer to 120 seconds. Pinned reference remains f797ec786fc57d008afeaabad964906f35a43177. Prior 12-case comparison at b95fe57 was PASS; current-HEAD PCM evidence pending.
+changed_files: tests/run_off_path_pcm_compare.sh; docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md
+next_command: bash tests/run_off_path_pcm_compare.sh
+safety: NO ARM; NO IMG; NO MERGE; NO FLASH; £0 additional spending
