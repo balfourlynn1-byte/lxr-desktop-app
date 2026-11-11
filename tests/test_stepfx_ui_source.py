@@ -34,3 +34,15 @@ assert "if(led_blinkingLeds & (1u<<i))" in led
 assert "led_reset(led_blinkLedNumber[i]);" in led
 assert "led_setBlinkLed(ledNr, 0);" in button
 print("PASS JB-25: Step FX routing and LED blink-owner source guards (hardware unverified)")
+
+# Shift filter group integration guard: production menu must route both six-voice
+# groups through the signed helper, and must not fan out while recording.
+relative = read("Core/Src/menu/menu.c")
+for group in ("PAR_FILTER_FREQ_", "PAR_RESO_"):
+    for voice in range(1, 7):
+        assert group + str(voice) in relative
+assert "jb_relativeEditClamp127(oldValue, inc)" in relative
+assert "frontPanel_sendData(MIDI_CC, (uint8_t)param, newValue)" in relative
+assert "seq_isAutomationStepArmed() || seq_isRecordingMode()" in relative
+assert "if (menu_tryShiftEditVoiceFilters(paramNr, inc)) return;" in relative
+print("PASS: Shift filter/resonance six-voice routing and automation isolation source guards (not full DSP integration)")
