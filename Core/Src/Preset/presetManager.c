@@ -1050,13 +1050,21 @@ FRESULT preset_saveGlobals()
 	/* Never remove the only valid copy after a prior interrupted commit. */
 	res = f_stat(path, &info);
 	if (res == FR_OK) {
-		FRESULT backupRes = f_stat(backup, &info);
-		if (backupRes == FR_OK) {
-			res = f_unlink(backup);
+		if (!preset_globalsFileValid(path)) {
+			/* The primary failed its CRC. Keep the valid backup across a
+			 * failed promotion instead of replacing it with corrupt data. */
+			if (!preset_globalsFileValid(backup)) return FR_DISK_ERR;
+			res = f_unlink(path);
 			if (res != FR_OK) return res;
-		} else if (backupRes != FR_NO_FILE) return backupRes;
-		res = f_rename(path, backup);
-		if (res != FR_OK) return res;
+		} else {
+			FRESULT backupRes = f_stat(backup, &info);
+			if (backupRes == FR_OK) {
+				res = f_unlink(backup);
+				if (res != FR_OK) return res;
+			} else if (backupRes != FR_NO_FILE) return backupRes;
+			res = f_rename(path, backup);
+			if (res != FR_OK) return res;
+		}
 	} else if (res != FR_NO_FILE) return res;
 	return f_rename(staged, path);
 #else

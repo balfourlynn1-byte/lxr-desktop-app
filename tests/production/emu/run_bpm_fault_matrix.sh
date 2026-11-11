@@ -24,6 +24,12 @@ echo "all-bytes same-length primary corruption recovery"
 card="$1-corrupt-all.sdchunks"
 "$BPM_PERSIST_EXE" globals_same_length_corrupt "$card"
 "$BPM_PERSIST_EXE" verify_old "$card"
+echo "corrupt primary followed by interrupted resave"
+for n in 7 8 9 10; do
+    card="$1-corrupt-resave-$n.sdchunks"
+    JB_FAIL_WRITE="$n" "$BPM_PERSIST_EXE" globals_corrupt_resave_fault "$card"
+    "$BPM_PERSIST_EXE" verify_corrupt_resave "$card"
+done
 echo "full-card recovery"
 card="$1-full.sdchunks"
 "$BPM_PERSIST_EXE" save_full "$card"

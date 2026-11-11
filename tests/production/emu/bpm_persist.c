@@ -267,6 +267,34 @@ int main(int argc, char **argv)
         if (result != FR_OK || closed != FR_OK || count != sizeof poison) return 3;
         return save_card(argv[2]);
     }
+    if (!strcmp(argv[1], "globals_corrupt_resave_fault")) {
+        if (lxr_boot(123) != 0) return 2;
+        lxr_set_param(PAR_BPM, 137);
+        lxr_set_param(PAR_MIDI_CHAN_GLOBAL, 2);
+        if (preset_saveGlobals() != FR_OK) return 3;
+        lxr_set_param(PAR_BPM, 145);
+        lxr_set_param(PAR_MIDI_CHAN_GLOBAL, 5);
+        if (preset_saveGlobals() != FR_OK) return 3;
+        FIL file;
+        UINT count = 0;
+        uint8_t poison = 120;
+        if (f_open(&file, "/proj00/glo.cfg", FA_WRITE | FA_OPEN_EXISTING) != FR_OK ||
+            f_lseek(&file, PAR_BPM - PAR_BEGINNING_OF_GLOBALS) != FR_OK ||
+            f_write(&file, &poison, 1, &count) != FR_OK || count != 1 ||
+            f_close(&file) != FR_OK || !preset_loadGlobals()) return 3;
+        lxr_set_param(PAR_BPM, 160);
+        lxr_set_param(PAR_MIDI_CHAN_GLOBAL, 6);
+        const char *write_at = getenv("JB_FAIL_WRITE");
+        if (!write_at) return 2;
+        emu_sd_fault((uint32_t)atoi(write_at), 0);
+        FRESULT result = preset_saveGlobals();
+        uint32_t writes = emu_sd_write_count();
+        emu_sd_fault(0, 0);
+        printf("corrupt-primary resave fault=%s FatFs=%d writes=%u\n",
+               write_at, result, writes);
+        if (result == FR_OK) return 5;
+        return save_card(argv[2]);
+    }
     if (!strcmp(argv[1], "legacy_project")) {
         if (lxr_boot(123) != 0) return 2;
         lxr_set_param(PAR_BPM, 137);
@@ -371,7 +399,8 @@ int main(int argc, char **argv)
     if (!strcmp(argv[1], "verify") || !strcmp(argv[1], "verify_fault") ||
         !strcmp(argv[1], "verify_old") || !strcmp(argv[1], "verify_context") ||
         !strcmp(argv[1], "verify_sync") || !strcmp(argv[1], "verify_project") ||
-        !strcmp(argv[1], "verify_legacy") || !strcmp(argv[1], "verify_repeat")) {
+        !strcmp(argv[1], "verify_legacy") || !strcmp(argv[1], "verify_repeat") ||
+        !strcmp(argv[1], "verify_corrupt_resave")) {
         if (load_card(argv[2]) || lxr_boot(123) != 0) return 2;
         printf("after restart: parameter=%d runtime=%u global_channel=%d project=%u\n",
                lxr_get_param(PAR_BPM), seq_getBpm(),
@@ -387,6 +416,13 @@ int main(int argc, char **argv)
             return (lxr_get_param(PAR_BPM) == 137 && seq_getBpm() == 137 &&
                     lxr_get_param(PAR_MIDI_CHAN_GLOBAL) == 2 &&
                     menu_loadedPresetNr[CURRENT_PROJECT] == 0) ? 0 : 4;
+        if (!strcmp(argv[1], "verify_corrupt_resave")) {
+            int bpm = lxr_get_param(PAR_BPM);
+            return (menu_loadedPresetNr[CURRENT_PROJECT] == 0 &&
+                    ((bpm == 137 && lxr_get_param(PAR_MIDI_CHAN_GLOBAL) == 2) ||
+                     (bpm == 160 && lxr_get_param(PAR_MIDI_CHAN_GLOBAL) == 6)) &&
+                    seq_getBpm() == bpm) ? 0 : 4;
+        }
         if (!strcmp(argv[1], "verify_context"))
             return (lxr_get_param(PAR_BPM) == 145 && seq_getBpm() == 145 &&
                     menu_loadedPresetNr[CURRENT_PROJECT] == 1) ? 0 : 4;
