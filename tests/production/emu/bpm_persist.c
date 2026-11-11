@@ -434,7 +434,10 @@ int main(int argc, char **argv)
                     read_result = f_read(&backup, bytes, length, &got);
                 FRESULT close_result = f_close(&backup);
                 if (read_result != FR_OK || got != length ||
-                    close_result != FR_OK) return 4;
+                    close_result != FR_OK ||
+                    bytes[PAR_BPM - PAR_BEGINNING_OF_GLOBALS] != 137 ||
+                    bytes[PAR_MIDI_CHAN_GLOBAL - PAR_BEGINNING_OF_GLOBALS] != 2)
+                    return 4;
                 return 0;
             }
             return (bpm == 160 && lxr_get_param(PAR_MIDI_CHAN_GLOBAL) == 6) ? 0 : 4;
