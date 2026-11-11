@@ -2430,7 +2430,11 @@ static FRESULT preset_writeProjectFolder(uint8_t presetNr, const char *folder)
 		res = f_mkdir(currentFolder);
 		if(res == FR_OK)
 		{
-			f_chdir(currentFolder);
+			res = f_chdir(currentFolder);
+			if (res != FR_OK) {
+				preset_initTmpFolder();
+				return res;
+			}
 		}
 		else
 		{
