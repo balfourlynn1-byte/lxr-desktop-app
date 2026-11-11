@@ -747,3 +747,6 @@ User wants Torso Electronics S-4-style press-and-hold behavior and Digitakt TRAC
 
 ### L03 partial — 2026-11-11 project-owned tempo semantics
 - Real preset-manager emulator test saves project 0 at 137 BPM and project 1 at 145, recalls both live sequencer tempos, confirms kit load leaves project tempo unchanged, unsaved 160 BPM reverts after cold restart, and saved external-trigger mode 0 restores external sync mode 1. CTest 5/5 PASS; no legacy kit format change. Performance BPM and legacy preset fixtures remain OPEN. Full project-save failure path remains candidate blocker; see latest live checkpoint.
+
+### L02 critical FAIL — 2026-11-11 full project save data loss
+- Diagnostic `tests/production/emu/run_project_save_repro.sh` intentionally exits 4: after a saved 137 BPM project, fault on write 2 of resave removes `/proj00/prj.nfo`; cold restart cannot load the project. Faults 2-10 lost project info, 8-10 also reset BPM to 120. Source cause is destructive `empty_directory(currentFolder)` before new files exist and ignored globals-save result in `preset_saveProject`. Previous globals-only tests remain PASS but do not cover full-project save. L02 and ARM candidate BLOCKED until staged directory replacement/backup/cold-start recovery passes. See latest checkpoint.

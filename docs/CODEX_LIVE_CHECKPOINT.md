@@ -595,3 +595,12 @@ commands: cmake -S tests/production/emu -B /tmp/jb-host-emu -DFW=<repo> (0); cma
 result: Native firmware presetManager saves project 0 at 137 BPM and project 1 at 145; loading each restores both active parameter and sequencer runtime. Kit RAM load leaves project tempo 145. Unsaved edit 160 reverts to saved project 1 tempo 145 after cold boot. Separate saved PAR_BPM=0 restores external trigger sync mode 1 after cold boot (runtime numeric BPM remains initial 120 until clock). Existing kit format unchanged; project-level BPM is least disruptive. Source audit found preset_saveProject empties the existing project folder before replacement and ignores preset_saveGlobals error. Full project-save failure remains a critical release blocker; performance BPM not yet tested. No ARM/image/hardware run.
 next_command: Reproduce failure during preset_saveProject on a previously saved project; verify whether old kits, patterns, globals and project selection survive. Do not promote ARM image until resolved.
 safety: NO PAID SERVICE; NO MERGE; NO FLASH
+
+## 2026-11-11 10:45 UTC | TASK L02 | FULL PROJECT SAVE DATA-LOSS REPRODUCED — FAIL
+branch: agents/jb-wavetable-host-experiment
+firmware_source_sha: d00087716c95c8818e56d7f12babf7937134802d
+last_pushed_sha_before_repro: cf3a527f653c7cd5ac32ea1c20ff6049b6c9e68b
+command: BPM_PERSIST_EXE=/tmp/jb-host-emu/bpm_persist sh tests/production/emu/run_project_save_repro.sh /tmp/jb-project-save-repro.sdchunks (exit 4, intentional red regression)
+result: Save project 0 at 137 BPM, inject persistent low-level write failure on call 2 of resave. preset_saveProject reports FatFs error 1, but cold restart has /proj00/prj.nfo missing (FatFs 4) and preset_loadProject returns 4. Manual fault ordinals 2-10 all lost project info; 8-10 also reverted BPM to 120. Cause: preset_saveProject empties existing project folder before writing, and does not propagate preset_saveGlobals error. Earlier project-globals fault matrix PASS does not protect full-project saves. Candidate BLOCKED. No ARM build/image/flash.
+next_command: Stage all project files in a separate folder, preserve prior project as backup until complete replacement, recover on cold boot, then run the red reproducer and broaden its fault matrix.
+safety: £0 additional spending; experimental branch only; no merge/flash

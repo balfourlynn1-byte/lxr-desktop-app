@@ -70,6 +70,20 @@ int main(int argc, char **argv)
         if (preset_saveGlobals() != FR_OK) return 3;
         return save_card(argv[2]);
     }
+    if (!strcmp(argv[1], "project_fault")) {
+        if (lxr_boot(123) != 0) return 2;
+        lxr_set_param(PAR_BPM, 137);
+        if (preset_saveProject(0) != FR_OK) return 3;
+        lxr_set_param(PAR_BPM, 145);
+        const char *at = getenv("JB_FAIL_WRITE");
+        if (!at) return 2;
+        emu_sd_fault((uint32_t)atoi(at), 0);
+        FRESULT result = preset_saveProject(0);
+        emu_sd_fault(0, 0);
+        printf("project save fault write=%s FatFs=%d\n", at, result);
+        if (result == FR_OK) return 5;
+        return save_card(argv[2]);
+    }
     if (!strcmp(argv[1], "save") || !strcmp(argv[1], "save_explicit") ||
         !strcmp(argv[1], "save_fault") || !strcmp(argv[1], "save_corrupt") ||
         !strcmp(argv[1], "save_full")) {
@@ -144,7 +158,7 @@ int main(int argc, char **argv)
     }
     if (!strcmp(argv[1], "verify") || !strcmp(argv[1], "verify_fault") ||
         !strcmp(argv[1], "verify_old") || !strcmp(argv[1], "verify_context") ||
-        !strcmp(argv[1], "verify_sync")) {
+        !strcmp(argv[1], "verify_sync") || !strcmp(argv[1], "verify_project")) {
         if (load_card(argv[2]) || lxr_boot(123) != 0) return 2;
         printf("after restart: parameter=%d runtime=%u global_channel=%d project=%u\n",
                lxr_get_param(PAR_BPM), seq_getBpm(),
@@ -166,6 +180,14 @@ int main(int argc, char **argv)
         if (!strcmp(argv[1], "verify_sync")) {
             printf("external sync mode=%u\n", seq_getExtSync());
             return (lxr_get_param(PAR_BPM) == 0 && seq_getExtSync() == 1) ? 0 : 4;
+        }
+        if (!strcmp(argv[1], "verify_project")) {
+            FILINFO info;
+            FRESULT project_file = f_stat("/proj00/prj.nfo", &info);
+            FRESULT loaded = preset_loadProject(0, 0);
+            printf("project file=%d project load=%d\n", project_file, loaded);
+            return (project_file == FR_OK && loaded == FR_OK &&
+                    (lxr_get_param(PAR_BPM) == 137 || lxr_get_param(PAR_BPM) == 145)) ? 0 : 4;
         }
         return (lxr_get_param(PAR_BPM) == 137 && seq_getBpm() == 137) ? 0 : 4;
     }

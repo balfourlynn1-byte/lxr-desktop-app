@@ -551,3 +551,6 @@ Zero-byte primary and genuine full FAT32 card cold-start recovery pass in native
 
 ### 2026-11-11 L03 project tempo milestone
 Project-owned 137/145 BPM recall, kit-load stability, unsaved-edit rollback and saved external trigger mode pass in native emulator (CTest 5/5). Preserve legacy kit format. Next reproduce and fix full `preset_saveProject` failure: it currently deletes the old project folder before writing and ignores globals-save error. ARM candidate blocked pending this data-integrity gate.
+
+### 2026-11-11 release blocker — full project save
+Red native emulator reproducer: injected write 2 during resave removes saved project's `prj.nfo`; cold restart cannot load it. Write faults 8-10 also reset BPM to 120. ARM candidate blocked. Next stage whole project directory and retain last valid backup through final rename; verify fault matrix before any candidate build. See latest checkpoint.
