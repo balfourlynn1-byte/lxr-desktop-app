@@ -454,3 +454,17 @@ changed_files: tests/host_drumvoice_render.c; tests/run_native_drumvoice_render.
 blocker: Genuine snare/cymbal/hat units not linked; full P2 remains IN PROGRESS
 next_command: Inspect nm -u from real Snare.c, CymbalVoice.c and HiHat.c host objects, then link genuine dependencies
 safety: NO ARM; NO IMG; NO MERGE; NO FLASH; £0 additional spending
+
+## 2026-11-11 04:11 UTC | TASK L01 / STEP FX | HOST PASS, HARDWARE NOT RUN
+branch: agents/jb-wavetable-host-experiment
+integration_sha: f797ec786fc57d008afeaabad964906f35a43177 (read only)
+source_sha: 9a659df7e0c4da424160075809bb40de85aa2681
+tested_sha: 9a659df7e0c4da424160075809bb40de85aa2681
+checkpoint_head_sha: PENDING
+commands: ps -axo pid,ppid,etime,stat,command | rg 'run_off_path_pcm_compare|run_native_drumvoice_render|host_drumvoice_render|clang.*jb-native-render' (0, only grep process); sh tests/run_stepfx_ui.sh (0); clang -std=gnu11 -O0 -Wall -Wextra -Werror=implicit-function-declaration -fsanitize=undefined -DSTM32F765xx -DUSE_HAL_DRIVER -DJB_HOST_PROBE -include stdint.h -ICore/Inc -ICore/Src -IDrivers/STM32F7xx_HAL_Driver/Inc -IDrivers/CMSIS/Device/ST/STM32F7xx/Include -IDrivers/CMSIS/Include tests/test_led_handler_host.c Core/Src/ledHandler.c -o /tmp/jb-led-handler-host && /tmp/jb-led-handler-host (first exit 134; after fix exit 0)
+environment: Darwin x86_64, Apple Clang 17, local host; £0 extra spending
+result: Prior PCM comparison was not stalled: earlier exact b95fe57 run completed all 12 cases with zero mismatches and exit 0; process now absent. First real LED runtime test found led_init left blink phase/prescaler stale. Host-only GPIO boundary added; blink counters reset. On pushed source 9a659df, Step FX host toggle, kick protection, real LED handler Step 1/2/16 blink/chase/mode/reinit, and source guard all PASS. This does not execute buttonHandler.c or verify physical LEDs. Workflow .github/workflows/jimbones-jb-led-stepfx-host.yml inspected; GitHub Actions branch run listing has no run for it, so CI NOT RUN. No ARM/hardware test.
+changed_files: Core/Src/ledHandler.c; tests/test_led_handler_host.c; tests/run_stepfx_ui.sh; docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md; docs/JIMBONES_ATOMIC_TASKS.md; docs/JIMBONES_WORK_QUEUE.md
+blocker: Physical Step 1/2/16 running/stopped validation pending; button-handler integration requires hardware or a broader host harness
+next_command: rg -n 'PAR_FILTER_FREQ_[1-6]|menu_encoderChangeParameter' Core/Inc/Parameters.h Core/Src/menu/menu.c Core/Src/Soundengine/MIDI/ParameterArray.c
+safety: NO ARM; NO IMG; NO MERGE; NO FLASH; £0 additional spending
