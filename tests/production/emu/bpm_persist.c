@@ -295,6 +295,17 @@ int main(int argc, char **argv)
         if (result == FR_OK) return 5;
         return save_card(argv[2]);
     }
+    /* After a corrupt primary and failed resave, retry without injection.
+     * A successful retry must not destroy the last valid backup first. */
+    if (!strcmp(argv[1], "globals_corrupt_resave_retry")) {
+        if (load_card(argv[2]) || lxr_boot(123) != 0) return 2;
+        if (lxr_get_param(PAR_BPM) != 137 ||
+            lxr_get_param(PAR_MIDI_CHAN_GLOBAL) != 2) return 4;
+        lxr_set_param(PAR_BPM, 160);
+        lxr_set_param(PAR_MIDI_CHAN_GLOBAL, 6);
+        if (preset_saveGlobals() != FR_OK) return 3;
+        return save_card(argv[2]);
+    }
     if (!strcmp(argv[1], "legacy_project")) {
         if (lxr_boot(123) != 0) return 2;
         lxr_set_param(PAR_BPM, 137);
