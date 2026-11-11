@@ -2527,6 +2527,11 @@ void seq_setRecordingMode(uint8_t active)
 	seq_recordActive = active;
 }
 
+uint8_t seq_isRecordingMode(void)
+{
+	return seq_recordActive;
+}
+
 void seq_setErasingMode(uint8_t active)
 {
 	seq_eraseActive = active;

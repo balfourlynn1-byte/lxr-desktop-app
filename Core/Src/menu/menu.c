@@ -16,6 +16,7 @@
 #include "Soundengine/AudioDiagnostics.h"
 #include "Soundengine/DSPAudio/Jimbones.h"
 #include "menu/JimbonesWaveUI.h"
+#include "menu/JimbonesRelativeEdit.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -62,6 +63,7 @@ static void setNoteName(uint8_t num, char *buf);
 
 static void menu_moveToMenuItem(int8_t inc);
 static void menu_encoderChangeParameter(int8_t inc);
+static uint8_t menu_shiftEditVoiceFilters(uint16_t selectedParam, int8_t inc);
 
 #define ARROW_SIGN '>'
 #define ARROW_UP 0b11000101
@@ -3024,6 +3026,34 @@ void menu_parseEncoder(int8_t inc, uint8_t button)
 // called when edit mode is active
 // encoder controls parameter value
 // given a delta, will apply that to the current parameter
+static uint8_t menu_shiftEditVoiceFilters(uint16_t selectedParam, int8_t inc)
+{
+	static const uint16_t filterParams[6] = {
+		PAR_FILTER_FREQ_1, PAR_FILTER_FREQ_2, PAR_FILTER_FREQ_3,
+		PAR_FILTER_FREQ_4, PAR_FILTER_FREQ_5, PAR_FILTER_FREQ_6
+	};
+	static const uint16_t resonanceParams[6] = {
+		PAR_RESO_1, PAR_RESO_2, PAR_RESO_3,
+		PAR_RESO_4, PAR_RESO_5, PAR_RESO_6
+	};
+	const uint16_t *group = NULL;
+	for (uint8_t voice = 0; voice < 6; ++voice) {
+		if (selectedParam == filterParams[voice]) group = filterParams;
+		if (selectedParam == resonanceParams[voice]) group = resonanceParams;
+	}
+	if (group == NULL) return 0;
+
+	for (uint8_t voice = 0; voice < 6; ++voice) {
+		const uint16_t param = group[voice];
+		const uint8_t oldValue = activeParameters[param];
+		const uint8_t newValue = jb_relativeEditClamp127(oldValue, inc);
+		if (newValue == oldValue) continue;
+		activeParameters[param] = newValue;
+		frontPanel_sendData(MIDI_CC, (uint8_t)param, newValue);
+	}
+	return 1;
+}
+
 static void menu_encoderChangeParameter(int8_t inc)
 {
 	preset_touchTimer(PRESET_KIT_TIMER);
@@ -3033,6 +3063,9 @@ static void menu_encoderChangeParameter(int8_t inc)
 
 	//get address from top1-8 from activeParameter (base adress top1 + offset)
 	uint16_t paramNr		= pgm_read_word(&menuPages[menu_activePage][activePage].bot1 + activeParameter);
+	if (inc != 0 && buttonHandler_getShift() &&
+	    !seq_isAutomationStepArmed() && !seq_isRecordingMode() &&
+	    menu_shiftEditVoiceFilters(paramNr, inc)) return;
 	//uint8_t *paramValue = &mainParameters[paramNr];
 	uint8_t *paramValue;
 

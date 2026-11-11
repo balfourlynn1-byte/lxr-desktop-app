@@ -267,6 +267,7 @@ void seq_setRollRate(uint8_t rate);
 void seq_addNote(uint8_t trackNr,uint8_t vel, uint8_t note);
 //------------------------------------------------------------------------------
 void seq_setRecordingMode(uint8_t active);
+uint8_t seq_isRecordingMode(void);
 //------------------------------------------------------------------------------
 void seq_setErasingMode(uint8_t active);
 //------------------------------------------------------------------------------
