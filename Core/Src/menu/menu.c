@@ -64,6 +64,7 @@ static void setNoteName(uint8_t num, char *buf);
 static void menu_moveToMenuItem(int8_t inc);
 static void menu_encoderChangeParameter(int8_t inc);
 static uint8_t menu_shiftEditVoiceFilters(uint16_t selectedParam, int8_t inc);
+static uint8_t menu_tryShiftEditVoiceFilters(uint16_t selectedParam, int8_t inc);
 
 #define ARROW_SIGN '>'
 #define ARROW_UP 0b11000101
@@ -3054,6 +3055,13 @@ static uint8_t menu_shiftEditVoiceFilters(uint16_t selectedParam, int8_t inc)
 	return 1;
 }
 
+static uint8_t menu_tryShiftEditVoiceFilters(uint16_t selectedParam, int8_t inc)
+{
+	if (inc == 0 || !buttonHandler_getShift() ||
+	    seq_isAutomationStepArmed() || seq_isRecordingMode()) return 0;
+	return menu_shiftEditVoiceFilters(selectedParam, inc);
+}
+
 static void menu_encoderChangeParameter(int8_t inc)
 {
 	preset_touchTimer(PRESET_KIT_TIMER);
@@ -3063,9 +3071,7 @@ static void menu_encoderChangeParameter(int8_t inc)
 
 	//get address from top1-8 from activeParameter (base adress top1 + offset)
 	uint16_t paramNr		= pgm_read_word(&menuPages[menu_activePage][activePage].bot1 + activeParameter);
-	if (inc != 0 && buttonHandler_getShift() &&
-	    !seq_isAutomationStepArmed() && !seq_isRecordingMode() &&
-	    menu_shiftEditVoiceFilters(paramNr, inc)) return;
+	if (menu_tryShiftEditVoiceFilters(paramNr, inc)) return;
 	//uint8_t *paramValue = &mainParameters[paramNr];
 	uint8_t *paramValue;
 
