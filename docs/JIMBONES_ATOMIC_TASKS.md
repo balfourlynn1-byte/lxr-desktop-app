@@ -763,3 +763,8 @@ User wants Torso Electronics S-4-style press-and-hold behavior and Digitakt TRAC
 ### P0 project-save continuation — 2026-11-11 18:34 UTC (IN PROGRESS)
 - Pushed `7fb89cf2877ed4bcdc7583b0dcd6965e7ad990a6`: full-card, removed-card, before/after rename, repeat failure/retry, fresh slot and synthetic legacy upgrade tests. Native CTest 6/6 PASS with 57 injected failed saves; Step FX/Shift PASS; last production source PCM 12/12 zero mismatches. Project generation checks include metadata, all 194 files via tx.ok, kit/pattern/song identifiers and data, BPM, selection and cold restart.
 - Still open: checksummed globals for same-length corruption during independent save, torn FAT/power-loss validation, backup cleanup failure points, physical SD. ARM candidate BLOCKED. See latest live checkpoint for commands and precise limits.
+
+
+### P0 globals CRC and corrupt-primary resave — 2026-11-11 19:04 UTC (HOST PASS, TASK OPEN)
+- Production `fe8c69eef3cf039b58e5e66070ce9e6100ef9517` protects last valid glo.bak when a same-length corrupt primary is resaved and the new promotion fails. Appended CRC32 preserves old globals prefix and reads original short files. Native globals matrix 24 cases and full-project matrix 57 injected failures PASS; six CTests and exact-source PCM 12/12 PASS. No ARM/image/hardware evidence.
+- Open: third-save backup cleanup faults, torn FAT/power loss, ambiguous unmarked target plus backup, physical SD validation. Candidate remains blocked. See latest live checkpoint.
