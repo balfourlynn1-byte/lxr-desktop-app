@@ -56,6 +56,8 @@ void led_init()
 	//init bitfield to zero
 	led_pulsingLeds = 0;	
 	led_blinkingLeds = 0;
+	led_blinkToggleState = 0;
+	led_blinkPrescaler = 0;
 	memset((void*)led_originalLedState,0,NUM_OUTS/8);
 };
 //--------------------------------------------
@@ -233,6 +235,12 @@ void led_setValue(uint8_t val, uint8_t ledNr)
 
 	if(ledNr == LED_PAGE_DOWN)
 	{
+#ifdef JB_HOST_PROBE
+		/* The page-down LED is wired directly to STM32 GPIO. The host
+		 * regression observes this boundary without touching MMIO. */
+		extern uint8_t jb_hostPageDownLed;
+		jb_hostPageDownLed = val ? 1u : 0u;
+#else
 		if(val)
 		{
 			LED_43_GPIO_Port->ODR |= LED_43_Pin;
@@ -241,6 +249,7 @@ void led_setValue(uint8_t val, uint8_t ledNr)
 		{
 			LED_43_GPIO_Port->ODR &= ~LED_43_Pin;
 		}
+#endif
 	}
 	else
 	{
