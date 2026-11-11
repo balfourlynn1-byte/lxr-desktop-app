@@ -491,3 +491,13 @@ result: Real LED handler host test now simulates running chase and stopped resto
 changed_files: tests/test_led_handler_host.c; docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md; docs/JIMBONES_ATOMIC_TASKS.md; docs/JIMBONES_WORK_QUEUE.md
 next_command: Add focused Shift+encoder menu-to-DSP host integration test with six distinct filter values and recording guard
 safety: NO ARM; NO IMG; NO MERGE; NO FLASH; £0 additional spending
+
+## 2026-11-11 04:25 UTC | TASK UI SAFETY | LCD AUTOMATION LABEL OVERFLOW FIXED
+branch: agents/jb-wavetable-host-experiment
+source_sha: d08b2c934484475df2041314dba35448557c55a1 (pushed, remote verified)
+tested_sha: d08b2c934484475df2041314dba35448557c55a1
+commands: clang -std=gnu11 -fsyntax-only -Werror=implicit-function-declaration -Werror=fortify-source -DSTM32F765xx -DUSE_HAL_DRIVER -DJB_HOST_PROBE -include stdint.h -include tests/host_dsp_intrinsics.h with project host includes Core/Src/menu/menu.c (exit 0, no diagnostics); sh tests/run_stepfx_ui.sh (exit 0); git diff --check (0)
+result: Clear-automation labels at editDisplayBuffer[0][7] previously copied 11 bytes into a 10-byte remainder of the 17-byte LCD row. Shortened both labels by one character, preserving their meaning and fitting the row. No DSP change. Earlier Shift and LED source/test commits remain pushed. Physical UI and full ARM/CI NOT RUN.
+changed_files: Core/Src/menu/menu.c; docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md; docs/JIMBONES_ATOMIC_TASKS.md; docs/JIMBONES_WORK_QUEUE.md
+next_command: Add focused Shift+encoder menu-to-DSP host integration test with six distinct filter values and recording guard
+safety: NO ARM; NO IMG; NO MERGE; NO FLASH; £0 additional spending

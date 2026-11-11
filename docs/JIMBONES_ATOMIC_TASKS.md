@@ -702,3 +702,6 @@ User wants Torso Electronics S-4-style press-and-hold behavior and Digitakt TRAC
 
 ### 2026-11-11 04:21 UTC — L01 running/stopped LED regression coverage
 - Test-only commit `99373c617a2681ded1e957ffafa27bd37dc93272` exercised real LED handler Step 1/2/16 chase and stop restoration for armed and unarmed steps, with sequencer/Performance transitions. `sh tests/run_stepfx_ui.sh` exit 0 on pushed SHA; physical LEDs and button routing runtime still NOT RUN. Next R05 focused Shift UI-to-DSP host integration. No ARM/image/merge/flash; £0 spending.
+
+### 2026-11-11 04:25 UTC — Clear automation LCD row overflow
+- Pushed `d08b2c934484475df2041314dba35448557c55a1`: shortened two clear-automation labels so the string and terminator fit `editDisplayBuffer[0][7..16]`. Host Clang menu syntax check with `-Werror=fortify-source` exit 0 without diagnostics; `sh tests/run_stepfx_ui.sh` exit 0 at source SHA. Physical UI NOT RUN. Next R05 Shift menu-to-DSP host integration. No ARM/image/merge/flash; £0 spending.
