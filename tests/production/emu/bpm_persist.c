@@ -186,8 +186,15 @@ int main(int argc, char **argv)
             FRESULT project_file = f_stat("/proj00/prj.nfo", &info);
             FRESULT loaded = preset_loadProject(0, 0);
             printf("project file=%d project load=%d\n", project_file, loaded);
-            return (project_file == FR_OK && loaded == FR_OK &&
-                    (lxr_get_param(PAR_BPM) == 137 || lxr_get_param(PAR_BPM) == 145)) ? 0 : 4;
+            int bpm = lxr_get_param(PAR_BPM);
+            FILINFO globals_info;
+            FRESULT globals_file = f_stat("/proj00/glo.cfg", &globals_info);
+            printf("project globals=%d bpm=%d runtime=%u\\n",
+                   globals_file, bpm, seq_getBpm());
+            return (project_file == FR_OK && info.fsize >= 8 &&
+                    globals_file == FR_OK && globals_info.fsize > 0 &&
+                    loaded == FR_OK && menu_loadedPresetNr[CURRENT_PROJECT] == 0 &&
+                    (bpm == 137 || bpm == 145) && seq_getBpm() == bpm) ? 0 : 4;
         }
         return (lxr_get_param(PAR_BPM) == 137 && seq_getBpm() == 137) ? 0 : 4;
     }
