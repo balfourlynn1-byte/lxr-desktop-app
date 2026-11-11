@@ -1,16 +1,16 @@
 # JIMBONES — CURRENT STATUS
 
-TASK: P2 latest-HEAD OFF-path PCM identity; R05 full Shift path pending
-STATUS: 12-CASE PCM PASS; full UI-to-DSP and hardware NOT RUN
+TASK: R05 Shift UI-to-DSP integration; next BPM persistence
+STATUS: NATIVE FULL-PATH SHIFT PASS; HARDWARE NOT RUN
 BRANCH: agents/jb-wavetable-host-experiment
-CURRENT COMMIT: f9c56e298970b9d1927c95a2d2ff8f4b539a6f08 (pre-checkpoint)
-LAST SOURCE COMMIT: b6c67cb97a725c14e39ea5cedaea67a039b59314
-TESTED COMMIT: f9c56e298970b9d1927c95a2d2ff8f4b539a6f08
-CHANGED FILES: docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md; docs/JIMBONES_ATOMIC_TASKS.md; docs/JIMBONES_WORK_QUEUE.md
-LAST TEST COMMAND: bash tests/run_off_path_pcm_compare.sh
+CURRENT COMMIT: 81b26906889e2afef5cd4eab37aba8bf90f49d4b (pre-checkpoint)
+LAST SOURCE COMMIT: b6c67cb97a725c14e39ea5cedaea67a039b59314 (firmware); 81b26906889e2afef5cd4eab37aba8bf90f49d4b (emulator test)
+TESTED COMMIT: 81b26906889e2afef5cd4eab37aba8bf90f49d4b
+CHANGED FILES: tests/production/emu/CMakeLists.txt; tests/production/emu/shift_relative.c; docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md; docs/JIMBONES_ATOMIC_TASKS.md; docs/JIMBONES_WORK_QUEUE.md
+LAST TEST COMMAND: ctest --test-dir /tmp/jb-host-emu --output-on-failure
 TEST EXIT CODE: 0
-ACTUAL RESULT: At exact f9c56e2, 12 original OFF-path cases (kick, tom1, tom2, FM, retrigger, long, overlap, snare, clap, cymbal, hihat, openhat) each rendered 4096 samples and had zero mismatches versus integration f797ec786fc57d008afeaabad964906f35a43177; exit 0. Kick peak 16786/clipped 0, retrigger peak 23495/clipped 0, overlap host sum peak 32767/clipped 3 in both builds. Per-renderer timeout 120s; all cases completed. Focused production menu/CC Shift test PASS at b6c67cb. Full button-to-DSP, physical hardware, ARM and CI NOT RUN.
-CURRENT BLOCKER: Full Shift button-to-DSP path needs a suitable production emulator/harness; physical controls remain unverified.
-EXACT NEXT ACTION: Check production host emulator build viability and LED GitHub Actions run status, then trace BPM save/load path.
+ACTUAL RESULT: Existing native emulator source registration fixed at 4d7cfa69d332650f0dc14a753609de3099e3ba07. At pushed 81b2690, real front-panel button/encoder, buttonHandler, menu, MIDI and all six DSP filter pointers exercised in native emulator. Both CTest tests PASS: selftest and shift_relative. Shift test verifies cutoff and resonance all six, positive/negative deltas, 0/127 saturation, unshifted single voice, recording single voice and armed automation single lock. sh tests/run_stepfx_ui.sh and sh tests/run_shift_relative_menu_host.sh exit 0 at same SHA. Previous 12-case OFF-path PCM comparison at f9c56e298970b9d1927c95a2d2ff8f4b539a6f08 had zero mismatches; only test/docs/workflow changes since then. LED GitHub Actions workflow run still not observed. ARM, image and physical hardware NOT RUN.
+CURRENT BLOCKER: BPM reversion cause and save/reload/cold-start evidence pending; physical LED/Shift behavior unverified.
+EXACT NEXT ACTION: Trace preset BPM save/load/runtime update order and add a 137-BPM native emulator restart regression before any firmware change.
 
 £0 additional spending; no Codespace, ARM build, image, merge or flash.

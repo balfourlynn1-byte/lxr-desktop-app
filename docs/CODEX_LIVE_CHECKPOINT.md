@@ -532,3 +532,15 @@ result: kick, tom1, tom2, FM, retrigger, long, overlap, snare, clap, cymbal, hih
 changed_files: docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md; docs/JIMBONES_ATOMIC_TASKS.md; docs/JIMBONES_WORK_QUEUE.md
 next_command: Check existing production host emulator build viability and LED Actions status; then trace BPM save/load
 safety: NO ARM; NO IMG; NO MERGE; NO FLASH; £0 additional spending
+
+## 2026-11-11 09:54 UTC | TASK R05 | FULL NATIVE SHIFT BUTTON-TO-DSP PATH PASS
+branch: agents/jb-wavetable-host-experiment
+firmware_source_sha: b6c67cb97a725c14e39ea5cedaea67a039b59314
+emulator_build_sha: 4d7cfa69d332650f0dc14a753609de3099e3ba07
+test_sha: 81b26906889e2afef5cd4eab37aba8bf90f49d4b (pushed and verified)
+tested_sha: 81b26906889e2afef5cd4eab37aba8bf90f49d4b
+commands: cmake -S tests/production/emu -B /tmp/jb-host-emu -DFW=<repo> (0); cmake --build /tmp/jb-host-emu --target shift_relative -j2 (0); ctest --test-dir /tmp/jb-host-emu --output-on-failure (0, 2/2 PASS); sh tests/run_stepfx_ui.sh (0); sh tests/run_shift_relative_menu_host.sh (0)
+result: Added missing genuine JIMBONES modules to native emulator; prior link failed on those symbols, updated build and selftest PASS. New test drives emulated physical Shift, page, voice and encoder through real buttonHandler, menu, MIDI and six live DSP filter pointers. Cutoff and resonance +1, cutoff -1, 0/127 limits, unshifted one-voice edit, recording isolation and armed automation single parameter lock PASS. This establishes native-host integration, not physical hardware behavior. LED workflow had no observed run; no Actions re-enable. Previous P2 12-case PCM identity PASS at f9c56e2 with zero mismatches; only test/docs/workflow changes since then.
+changed_files: tests/production/emu/CMakeLists.txt; tests/production/emu/shift_relative.c; docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md; docs/JIMBONES_ATOMIC_TASKS.md; docs/JIMBONES_WORK_QUEUE.md
+next_command: Trace BPM save/load/runtime order; build a 137-BPM native emulator save/restart regression
+safety: NO ARM; NO IMG; NO MERGE; NO FLASH; £0 additional spending
