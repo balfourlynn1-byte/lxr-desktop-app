@@ -70,6 +70,20 @@ int main(int argc, char **argv)
         if (preset_saveGlobals() != FR_OK) return 3;
         return save_card(argv[2]);
     }
+    if (!strcmp(argv[1], "project_repeat")) {
+        if (lxr_boot(123) != 0) return 2;
+        /* Three successful replacements exercise deletion of an older /bak00.
+         * FatFs rejects rename when the destination directory still exists. */
+        const int tempos[] = {137, 145, 160};
+        for (unsigned i = 0; i < 3; ++i) {
+            int bpm = tempos[i];
+            lxr_set_param(PAR_BPM, bpm);
+            FRESULT result = preset_saveProject(0);
+            printf("project replacement BPM=%d FatFs=%d\n", bpm, result);
+            if (result != FR_OK) return 3;
+        }
+        return save_card(argv[2]);
+    }
     if (!strcmp(argv[1], "project_fault")) {
         if (lxr_boot(123) != 0) return 2;
         lxr_set_param(PAR_BPM, 137);
@@ -161,7 +175,7 @@ int main(int argc, char **argv)
     }
     if (!strcmp(argv[1], "verify") || !strcmp(argv[1], "verify_fault") ||
         !strcmp(argv[1], "verify_old") || !strcmp(argv[1], "verify_context") ||
-        !strcmp(argv[1], "verify_sync") || !strcmp(argv[1], "verify_project")) {
+        !strcmp(argv[1], "verify_sync") || !strcmp(argv[1], "verify_project") || !strcmp(argv[1], "verify_repeat")) {
         if (load_card(argv[2]) || lxr_boot(123) != 0) return 2;
         printf("after restart: parameter=%d runtime=%u global_channel=%d project=%u\n",
                lxr_get_param(PAR_BPM), seq_getBpm(),
@@ -183,6 +197,11 @@ int main(int argc, char **argv)
         if (!strcmp(argv[1], "verify_sync")) {
             printf("external sync mode=%u\n", seq_getExtSync());
             return (lxr_get_param(PAR_BPM) == 0 && seq_getExtSync() == 1) ? 0 : 4;
+        }
+        if (!strcmp(argv[1], "verify_repeat")) {
+            FRESULT result = preset_loadProject(0, 0);
+            return (result == FR_OK && lxr_get_param(PAR_BPM) == 160 &&
+                    seq_getBpm() == 160 && menu_loadedPresetNr[CURRENT_PROJECT] == 0) ? 0 : 4;
         }
         if (!strcmp(argv[1], "verify_project")) {
             FILINFO info;
