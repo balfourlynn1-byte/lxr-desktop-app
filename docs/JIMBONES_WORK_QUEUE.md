@@ -521,3 +521,6 @@ User wants Torso Electronics S-4-style press-and-hold behavior and Digitakt TRAC
 
 ### 2026-11-11 04:18 UTC — R01–R04 Shift relative filter editing
 - Pushed source `0611c62fd08e3ee9897f2ee5b2cd65ade341b7cb`: Shift+encoder applies a signed, saturating delta to each of six independent filter cutoff or resonance values via explicit parameter IDs and existing front-panel CC dispatch. Recording or armed automation stays on the original single-parameter path. Firmware helper test, Step FX/LED host suite, and host syntax checks for edited firmware files PASS at source SHA; menu syntax check emits two existing strcpy overflow warnings. Actual UI-to-DSP runtime, CI and hardware NOT RUN. Next R05: focused host integration test with distinct voice values and recording guard, then extend compatible groups. No ARM/image/merge/flash; £0 spending.
+
+### 2026-11-11 04:21 UTC — L01 running/stopped LED regression coverage
+- Test-only commit `99373c617a2681ded1e957ffafa27bd37dc93272` exercised real LED handler Step 1/2/16 chase and stop restoration for armed and unarmed steps, with sequencer/Performance transitions. `sh tests/run_stepfx_ui.sh` exit 0 on pushed SHA; physical LEDs and button routing runtime still NOT RUN. Next R05 focused Shift UI-to-DSP host integration. No ARM/image/merge/flash; £0 spending.

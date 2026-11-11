@@ -480,3 +480,14 @@ changed_files: Core/Inc/menu/JimbonesRelativeEdit.h; Core/Inc/Soundengine/Sequen
 blocker: Runtime UI-to-DSP verification pending; physical controls not tested
 next_command: Inspect tests/host menu harness and add a focused Shift+encoder integration test with six distinct filter values and recording guard
 safety: NO ARM; NO IMG; NO MERGE; NO FLASH; £0 additional spending
+
+## 2026-11-11 04:21 UTC | TASK L01 | RUNNING/STOPPED STEP LED HOST COVERAGE
+branch: agents/jb-wavetable-host-experiment
+source_sha: 0611c62fd08e3ee9897f2ee5b2cd65ade341b7cb (firmware unchanged)
+test_sha: 99373c617a2681ded1e957ffafa27bd37dc93272 (pushed, remote verified)
+tested_sha: 99373c617a2681ded1e957ffafa27bd37dc93272
+command: sh tests/run_stepfx_ui.sh (exit 0)
+result: Real LED handler host test now simulates running chase and stopped restoration on Step 1, 2 and 16 for armed and unarmed states, plus sequencer/Performance mode transitions. Step FX and source guard tests also PASS. Button routing runtime, physical LEDs and CI NOT RUN.
+changed_files: tests/test_led_handler_host.c; docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md; docs/JIMBONES_ATOMIC_TASKS.md; docs/JIMBONES_WORK_QUEUE.md
+next_command: Add focused Shift+encoder menu-to-DSP host integration test with six distinct filter values and recording guard
+safety: NO ARM; NO IMG; NO MERGE; NO FLASH; £0 additional spending
