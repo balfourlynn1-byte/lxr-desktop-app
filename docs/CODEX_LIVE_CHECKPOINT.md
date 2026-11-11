@@ -544,3 +544,12 @@ result: Added missing genuine JIMBONES modules to native emulator; prior link fa
 changed_files: tests/production/emu/CMakeLists.txt; tests/production/emu/shift_relative.c; docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md; docs/JIMBONES_ATOMIC_TASKS.md; docs/JIMBONES_WORK_QUEUE.md
 next_command: Trace BPM save/load/runtime order; build a 137-BPM native emulator save/restart regression
 safety: NO ARM; NO IMG; NO MERGE; NO FLASH; £0 additional spending
+
+## 2026-11-11 10:03 UTC | TASK L03/P2 | PROJECT GLOBALS PATH AND PCM PASS
+branch: agents/jb-wavetable-host-experiment
+source_sha: 27cd885cdd7f383dfe26a5416ceb5295f34dadcc (pushed, verified)
+integration_sha: f797ec786fc57d008afeaabad964906f35a43177 (read only)
+commands: cmake -S tests/production/emu -B /tmp/jb-host-emu -DFW=<repo> (0); cmake --build /tmp/jb-host-emu -j2 (0); ctest --test-dir /tmp/jb-host-emu --output-on-failure (0, 3/3 PASS); sh tests/run_stepfx_ui.sh (0); sh tests/run_shift_relative_menu_host.sh (0); bash tests/run_off_path_pcm_compare.sh (0)
+result: 137 BPM became 120 after emulator cold restart before fix, even with explicit preset_saveGlobals. Production boot leaves FatFs cwd /tmp, so relative glo.cfg save wrote to /tmp while load read /proj00. Save/load now address currentFolder/glo.cfg. Two-process 137 BPM explicit save/restart passes; no format change. All 12 OFF-path cases yield 4096 samples, zero mismatches, max abs 0; overlap host sum clipped 3 samples equally in both builds. PCM evidence dir /var/folders/2z/y9mhhtg91q1_tq9nfqj43pqr0000gn/T/jb-off-path-compare.ePhJC0. Kit-associated BPM, unsaved edit behavior, SD fault recovery, ARM/image/hardware remain open.
+next_command: Examine existing project/global SD failure behavior and implement compatible kit tempo semantics only after focused regression; run ctest --test-dir /tmp/jb-host-emu --output-on-failure
+safety: NO ARM; NO IMG; NO MERGE; NO FLASH; £0 additional spending

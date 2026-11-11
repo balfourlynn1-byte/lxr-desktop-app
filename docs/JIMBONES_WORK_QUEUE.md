@@ -536,3 +536,6 @@ User wants Torso Electronics S-4-style press-and-hold behavior and Digitakt TRAC
 
 ### 2026-11-11 09:54 UTC — R05 full native Shift integration
 - Native emulator build source registration `4d7cfa69d332650f0dc14a753609de3099e3ba07` and full-path test `81b26906889e2afef5cd4eab37aba8bf90f49d4b` are pushed. `ctest --test-dir /tmp/jb-host-emu --output-on-failure` exit 0 (selftest and shift_relative). The test drives emulated physical Shift, page, voice and encoder through real buttonHandler, menu, MIDI and all six DSP filter pointers; signed edits, limits, unshifted edit, recording guard and armed single parameter lock pass. `sh tests/run_stepfx_ui.sh` and `sh tests/run_shift_relative_menu_host.sh` exit 0 at test SHA. Hardware still NOT RUN. Next: 137-BPM save/reload/cold-start regression; preserve existing formats. No ARM/image/merge/flash; £0 spending.
+
+### 2026-11-11 L03 partial milestone
+Pushed `27cd885cdd7f383dfe26a5416ceb5295f34dadcc`: fixed active-project globals path. Native 137 BPM explicit save/restart, CTest 3/3 and 12-case OFF-path PCM identity PASS. Kit-specific BPM and SD failure tests remain OPEN; next inspect save failure and compatibility before changing kit behavior. See latest checkpoint.
