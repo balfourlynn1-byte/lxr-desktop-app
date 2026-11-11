@@ -2661,6 +2661,11 @@ FRESULT preset_saveProject(uint8_t presetNr)
 		if (backupRes == FR_OK) {
 			res = empty_directory(backup);
 			if (res != FR_OK) return res;
+			/* FatFs f_rename requires the destination path to be absent.
+			 * empty_directory() removes children, not the backup folder itself.
+			 * The current target remains intact until the following rename. */
+			res = f_unlink(backup);
+			if (res != FR_OK) return res;
 		} else if (backupRes != FR_NO_FILE) return backupRes;
 		res = f_rename(target, backup);
 		if (res != FR_OK) return res;
