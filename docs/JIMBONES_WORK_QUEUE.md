@@ -558,3 +558,8 @@ Project-owned 137/145 BPM recall, kit-load stability, unsaved-edit rollback and 
 
 ### 2026-11-11 release blocker — full project save
 Red native emulator reproducer: injected write 2 during resave removes saved project's `prj.nfo`; cold restart cannot load it. Write faults 8-10 also reset BPM to 120. ARM candidate blocked. Next stage whole project directory and retain last valid backup through final rename; verify fault matrix before any candidate build. See latest checkpoint.
+
+### 2026-11-11 12:23 UTC — L02 recovery regression strengthened (unverified)
+- Experimental commit `42e3be2115a4a9bbce95c91b1b723dfffe492d53` strengthens existing native `verify_project` cold-start assertions: project info must exist and have at least 8 bytes, primary globals must exist and be nonempty, the recovered project must be selected, and the runtime sequencer BPM must equal recovered 137/145 parameter BPM. Previously the test accepted either parameter BPM without checking runtime tempo or globals completeness. No firmware DSP or persistence source changed.
+- Experimental commit `8d5bf6bf7e075db64ac9987094aac7eedc416bea` added a GitHub Actions native save/BPM fault-matrix workflow. Execution remains **NOT VERIFIED**; commit-status lookup returned no checks and the local environment cannot execute a repository checkout. Do not mark the recovery regression PASS or promote an ARM image on source review alone.
+- Next: run `cmake -S tests/production/emu -B /tmp/jimbones-emu -DFW="$PWD" && cmake --build /tmp/jimbones-emu -j2 && ctest --test-dir /tmp/jimbones-emu --output-on-failure`; inspect `project_save_faults` failures and stage/backup rename recovery. Preserve all original voices, PCM identity, and £0 additional spending.
