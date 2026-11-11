@@ -449,7 +449,18 @@ int main(int argc, char **argv)
                     bytes[PAR_BPM - PAR_BEGINNING_OF_GLOBALS] != 137 ||
                     bytes[PAR_MIDI_CHAN_GLOBAL - PAR_BEGINNING_OF_GLOBALS] != 2)
                     return 4;
-                return 0;
+                /* A full-length backup with the right two settings may still
+                 * have silent corruption elsewhere. Verify its CRC too. */
+                const UINT payload = NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS;
+                uint32_t crc = 0xffffffffUL, stored = 0;
+                for (UINT j = 0; j < payload; ++j) {
+                    crc ^= bytes[j];
+                    for (unsigned bit = 0; bit < 8; ++bit)
+                        crc = (crc >> 1) ^ ((crc & 1) ? 0xedb88320UL : 0);
+                }
+                crc = ~crc;
+                memcpy(&stored, bytes + payload, sizeof stored);
+                return crc == stored ? 0 : 4;
             }
             return (bpm == 160 && lxr_get_param(PAR_MIDI_CHAN_GLOBAL) == 6) ? 0 : 4;
         }
