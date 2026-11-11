@@ -246,6 +246,27 @@ int main(int argc, char **argv)
         if (result == FR_OK) return 5;
         return save_card(argv[2]);
     }
+    /* Diagnostic red regression: same-size corruption of independently saved
+     * globals must fall back to the previous complete glo.bak generation.
+     * Run explicitly; do not treat this as a passing release gate yet. */
+    if (!strcmp(argv[1], "globals_same_length_corrupt")) {
+        if (lxr_boot(123) != 0) return 2;
+        lxr_set_param(PAR_BPM, 137);
+        lxr_set_param(PAR_MIDI_CHAN_GLOBAL, 2);
+        if (preset_saveGlobals() != FR_OK) return 3;
+        lxr_set_param(PAR_BPM, 145);
+        lxr_set_param(PAR_MIDI_CHAN_GLOBAL, 5);
+        if (preset_saveGlobals() != FR_OK) return 3;
+        FIL file;
+        UINT count = 0;
+        uint8_t poison[NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS];
+        memset(poison, 0xff, sizeof poison);
+        if (f_open(&file, "/proj00/glo.cfg", FA_WRITE | FA_OPEN_EXISTING) != FR_OK) return 3;
+        FRESULT result = f_write(&file, poison, sizeof poison, &count);
+        FRESULT closed = f_close(&file);
+        if (result != FR_OK || closed != FR_OK || count != sizeof poison) return 3;
+        return save_card(argv[2]);
+    }
     if (!strcmp(argv[1], "legacy_project")) {
         if (lxr_boot(123) != 0) return 2;
         lxr_set_param(PAR_BPM, 137);
