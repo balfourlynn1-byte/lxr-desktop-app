@@ -753,3 +753,8 @@ User wants Torso Electronics S-4-style press-and-hold behavior and Digitakt TRAC
 
 ### P0 late promotion FAIL — 2026-11-11
 - `project_save_faults` at source `0ae1b6b0e9c9b9e7b21b557616255cd3fc9e82f7` fails when low-level write 2052 interrupts final project promotion: save returns error, but cold boot accepts incomplete `/proj00`, misses valid backup, project load fails and BPM becomes 120. Earlier write points recover old project. Recovery must validate complete target/backup generation, not directory presence. Candidate and ARM hold remain.
+
+
+### P0 project-save integrity — 2026-11-11 16:37 UTC (IN PROGRESS)
+- Source/test `e7d329edd7560133f0d0aafbcec5fc8ee37f60ff` adds a separate full-project manifest and validates marked project/backup generations on boot. Native CTest 6/6 PASS, including measured late-write/sync faults and old/new kit, pattern, song and BPM assertions. Step FX/Shift PASS; OFF-path PCM 12/12 zero mismatches. No ARM or hardware test.
+- Remaining atomic checks: SD-full during full project save; create/sync/close and rename stage boundaries; repeated failed saves and successful retry; legacy project fixture; physical card power-loss safety. Keep ARM release gate blocked until complete. See live checkpoint.
