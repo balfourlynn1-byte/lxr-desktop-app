@@ -969,7 +969,12 @@ FRESULT preset_saveGlobals()
 {
 #if USE_SD_CARD
 	FRESULT res;
+	FRESULT closeRes;
+	UINT written = 0;
+	FILINFO info;
 	char path[sizeof(currentFolder) + sizeof("/glo.cfg")];
+	char staged[sizeof(currentFolder) + sizeof("/glo.new")];
+	char backup[sizeof(currentFolder) + sizeof("/glo.bak")];
 /*
 	res = f_mount((FATFS*)&SDFatFS, (TCHAR const*)SDPath,1);
 	if( res != FR_OK)
@@ -977,17 +982,34 @@ FRESULT preset_saveGlobals()
 		return res;
 	}
 	*/
-	//open the file
+	/* Commit only after the new globals have been written and synced. Keep
+	 * the previous file as a recovery copy across a failed rename or reset. */
 	snprintf(path, sizeof path, "%s/glo.cfg", currentFolder);
-	res = f_open((FIL*)&SDFile,path,FA_CREATE_ALWAYS | FA_WRITE);
+	snprintf(staged, sizeof staged, "%s/glo.new", currentFolder);
+	snprintf(backup, sizeof backup, "%s/glo.bak", currentFolder);
+	res = f_open((FIL*)&SDFile,staged,FA_CREATE_ALWAYS | FA_WRITE);
 	if(res != FR_OK) return res;
-	preset_writeGlobalData();
+	res = f_write((FIL*)&SDFile, &activeParameters[PAR_BEGINNING_OF_GLOBALS],
+	              NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS, &written);
+	if (res == FR_OK && written != NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS)
+		res = FR_DISK_ERR;
+	if (res == FR_OK) res = f_sync((FIL*)&SDFile);
+	closeRes = f_close((FIL*)&SDFile);
+	if (res != FR_OK) return res;
+	if (closeRes != FR_OK) return closeRes;
 
-	//close the file
-	f_close((FIL*)&SDFile);
-
-	//f_unmount((TCHAR const*)SDPath);
-	return FR_OK;
+	/* Never remove the only valid copy after a prior interrupted commit. */
+	res = f_stat(path, &info);
+	if (res == FR_OK) {
+		FRESULT backupRes = f_stat(backup, &info);
+		if (backupRes == FR_OK) {
+			res = f_unlink(backup);
+			if (res != FR_OK) return res;
+		} else if (backupRes != FR_NO_FILE) return backupRes;
+		res = f_rename(path, backup);
+		if (res != FR_OK) return res;
+	} else if (res != FR_NO_FILE) return res;
+	return f_rename(staged, path);
 #else
 #endif	
 }
@@ -1010,9 +1032,11 @@ static uint8_t preset_readGlobalData()
 	return 1;
 #else
 	const uint8_t numGlobals = NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS;
-	f_read((FIL*)&SDFile,&activeParameters[PAR_BEGINNING_OF_GLOBALS],numGlobals,&bytesRead);
-	if(bytesRead != numGlobals)	return 0;
-	else return 1;
+	uint8_t globals[NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS];
+	if (f_read((FIL*)&SDFile, globals, numGlobals, &bytesRead) != FR_OK ||
+	    bytesRead != numGlobals) return 0;
+	memcpy(&activeParameters[PAR_BEGINNING_OF_GLOBALS], globals, numGlobals);
+	return 1;
 
 #endif
 #endif
@@ -1024,6 +1048,7 @@ uint8_t preset_loadGlobals()
 
 	FRESULT res;
 	char path[sizeof(currentFolder) + sizeof("/glo.cfg")];
+	char backup[sizeof(currentFolder) + sizeof("/glo.bak")];
 /*
 	res = f_mount((FATFS*)&SDFatFS, (TCHAR const*)SDPath,1);
 	if( res != FR_OK)
@@ -1034,17 +1059,22 @@ uint8_t preset_loadGlobals()
 
 	//open the file
 	snprintf(path, sizeof path, "%s/glo.cfg", currentFolder);
+	snprintf(backup, sizeof backup, "%s/glo.bak", currentFolder);
 	res = f_open((FIL*)&SDFile,path,FA_OPEN_EXISTING | FA_READ);
-	
-	if(res!=FR_OK)
-		return 0; //file open error... maybe the file does not exist?
-
-	if(!preset_readGlobalData())
-	{
+	if (res == FR_OK) {
+		uint8_t valid = preset_readGlobalData();
 		f_close((FIL*)&SDFile);
-		return 0;
+		if (valid) {
+			menu_sendAllGlobals();
+			return 1;
+		}
 	}
+	/* A missing or incomplete primary can follow a reset during rename. */
+	res = f_open((FIL*)&SDFile,backup,FA_OPEN_EXISTING | FA_READ);
+	if (res != FR_OK) return 0;
+	uint8_t valid = preset_readGlobalData();
 	f_close((FIL*)&SDFile);
+	if (!valid) return 0;
 	menu_sendAllGlobals();
 	
 	//f_unmount((TCHAR const*)SDPath);

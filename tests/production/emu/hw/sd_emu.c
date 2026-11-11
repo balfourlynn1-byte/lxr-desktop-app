@@ -26,6 +26,14 @@ static uint8_t *dirty;           /* one flag per chunk, set on write */
 static uint32_t num_chunks;
 static uint32_t num_sectors;
 static int card_present = 1;
+static uint32_t write_calls, sync_calls, fail_write_call, fail_sync_call;
+
+void emu_sd_fault(uint32_t write_call, uint32_t sync_call)
+{
+	write_calls = sync_calls = 0;
+	fail_write_call = write_call;
+	fail_sync_call = sync_call;
+}
 
 int emu_sd_init(uint32_t size_bytes)
 {
@@ -119,6 +127,7 @@ static DRESULT sd_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
 {
 	(void)lun;
 	if (!card_present || !chunks) return RES_NOTRDY;
+	if (fail_write_call && ++write_calls >= fail_write_call) return RES_ERROR;
 	if ((uint64_t)sector + count > num_sectors) return RES_PARERR;
 	for (UINT i = 0; i < count; i++) {
 		memcpy(sector_ptr(sector + i, 1), buff + i * SECTOR_SIZE, SECTOR_SIZE);
@@ -132,7 +141,9 @@ static DRESULT sd_ioctl(BYTE lun, BYTE cmd, void *buff)
 	(void)lun;
 	if (!card_present || !chunks) return RES_NOTRDY;
 	switch (cmd) {
-	case CTRL_SYNC: return RES_OK;
+	case CTRL_SYNC:
+		if (fail_sync_call && ++sync_calls >= fail_sync_call) return RES_ERROR;
+		return RES_OK;
 	case GET_SECTOR_COUNT: *(DWORD *)buff = num_sectors; return RES_OK;
 	case GET_SECTOR_SIZE: *(WORD *)buff = SECTOR_SIZE; return RES_OK;
 	case GET_BLOCK_SIZE: *(DWORD *)buff = 1; return RES_OK;

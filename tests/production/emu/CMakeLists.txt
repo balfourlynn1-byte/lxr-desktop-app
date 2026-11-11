@@ -217,3 +217,6 @@ target_link_libraries(bpm_persist PRIVATE lxr_core m)
 add_test(NAME bpm_persist COMMAND ${CMAKE_COMMAND} -E env
     BPM_PERSIST_EXE=$<TARGET_FILE:bpm_persist>
     sh ${EMU}/run_bpm_persist.sh ${CMAKE_CURRENT_BINARY_DIR}/bpm-persist.sdchunks)
+add_test(NAME bpm_fault_matrix COMMAND ${CMAKE_COMMAND} -E env
+    BPM_PERSIST_EXE=$<TARGET_FILE:bpm_persist>
+    sh ${EMU}/run_bpm_fault_matrix.sh ${CMAKE_CURRENT_BINARY_DIR}/bpm-fault)

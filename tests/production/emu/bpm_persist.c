@@ -3,6 +3,7 @@
 #include "Parameters.h"
 #include "Preset/PresetManager.h"
 #include "Soundengine/Sequencer/sequencer.h"
+#include "menu/menu.h"
 #include "emu_hw.h"
 #include <stdint.h>
 #include <stdio.h>
@@ -42,15 +43,30 @@ static int load_card(const char *path)
 int main(int argc, char **argv)
 {
     if (argc != 3 || lxr_sd_create(128) != 0) return 2;
-    if (!strcmp(argv[1], "save") || !strcmp(argv[1], "save_explicit")) {
+    if (!strcmp(argv[1], "save") || !strcmp(argv[1], "save_explicit") ||
+        !strcmp(argv[1], "save_fault")) {
         if (lxr_boot(123) != 0) return 2;
         lxr_idle_blocks(1600);
         lxr_set_param(PAR_BPM, 137);
         lxr_idle_blocks(1600); /* allow the production delayed-save timer */
         printf("before restart: parameter=%d runtime=%u\n", lxr_get_param(PAR_BPM), seq_getBpm());
         if (lxr_get_param(PAR_BPM) != 137 || seq_getBpm() != 137) return 3;
-        if (!strcmp(argv[1], "save_explicit")) {
+        if (!strcmp(argv[1], "save_explicit") || !strcmp(argv[1], "save_fault")) {
+            if (!strcmp(argv[1], "save_fault")) lxr_set_param(PAR_MIDI_CHAN_GLOBAL, 2);
             if (preset_saveGlobals() != FR_OK) return 3;
+            if (!strcmp(argv[1], "save_fault")) {
+                lxr_set_param(PAR_BPM, 145);
+                lxr_set_param(PAR_MIDI_CHAN_GLOBAL, 5);
+                const char *write_at = getenv("JB_FAIL_WRITE");
+                const char *sync_at = getenv("JB_FAIL_SYNC");
+                emu_sd_fault(write_at ? (uint32_t)atoi(write_at) : 0,
+                             sync_at ? (uint32_t)atoi(sync_at) : 0);
+                FRESULT failed_save = preset_saveGlobals();
+                emu_sd_fault(0, 0);
+                printf("injected save failure: FatFs=%d\n", failed_save);
+                if (failed_save == FR_OK) return 5;
+                return save_card(argv[2]);
+            }
             lxr_set_param(PAR_BPM, 120);
             emu_sd_set_present(0);
             FRESULT failed_save = preset_saveGlobals();
@@ -65,9 +81,18 @@ int main(int argc, char **argv)
         }
         return save_card(argv[2]);
     }
-    if (!strcmp(argv[1], "verify")) {
+    if (!strcmp(argv[1], "verify") || !strcmp(argv[1], "verify_fault")) {
         if (load_card(argv[2]) || lxr_boot(123) != 0) return 2;
-        printf("after restart: parameter=%d runtime=%u\n", lxr_get_param(PAR_BPM), seq_getBpm());
+        printf("after restart: parameter=%d runtime=%u global_channel=%d project=%u\n",
+               lxr_get_param(PAR_BPM), seq_getBpm(),
+               lxr_get_param(PAR_MIDI_CHAN_GLOBAL), menu_loadedPresetNr[CURRENT_PROJECT]);
+        if (!strcmp(argv[1], "verify_fault")) {
+            int bpm = lxr_get_param(PAR_BPM);
+            return (menu_loadedPresetNr[CURRENT_PROJECT] == 0 &&
+                    ((bpm == 137 && lxr_get_param(PAR_MIDI_CHAN_GLOBAL) == 2) ||
+                     (bpm == 145 && lxr_get_param(PAR_MIDI_CHAN_GLOBAL) == 5)) &&
+                    seq_getBpm() == bpm) ? 0 : 4;
+        }
         return (lxr_get_param(PAR_BPM) == 137 && seq_getBpm() == 137) ? 0 : 4;
     }
     return 2;
