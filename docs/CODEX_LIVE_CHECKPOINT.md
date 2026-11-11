@@ -650,3 +650,8 @@ result: Red same-length globals corruption changed 145 BPM/channel 5 primary to 
 remaining: Source audit found a corrupt-primary resave can delete valid glo.bak before a new replacement commits; not yet reproduced/tested. Torn FAT power loss and backup cleanup remain open. Candidate blocked.
 next_command: Add host sequence corrupt primary -> load valid backup -> inject failure during resave -> cold restart; then preserve glo.bak if primary CRC is invalid and rerun both fault suites.
 safety: £0 additional spending; experimental branch only; no ARM/image/merge/flash
+
+### 2026-11-11 20:24 UTC — P0 globals corrupt-primary failed-save retry (SOURCE/TEST ONLY)
+- Verified experimental branch HEAD before edits: c4eeb2e3247168a3c32ec85fc7c17542fdd3a414. Inspected atomic tasks, work queue, checkpoint, current globals CRC code and existing fault runner. Existing source already preserves valid glo.bak when glo.cfg fails CRC; the existing runner tests four injected resave write failures.
+- Test commits bd00c8b3396fff788248f230340e73426eede4a6 and d8231d0abc2f380a39417b124d6397968c3aff2c add a successful 160 BPM/channel 6 retry after each corrupt-primary failed resave and verify cold-start recovery using the existing emulator harness. No duplicate suite, no firmware/DSP change.
+- NOT EXECUTED: GitHub connector writes only. No current-HEAD native CTest, Step FX/Shift, PCM, ARM or hardware verification claimed. Next: run full native CTest and investigate any retry failures; rerun OFF-path PCM, then consider ARM candidate only after gates. Saturday release remains BLOCKED; no image/merge/flash/paid service.
