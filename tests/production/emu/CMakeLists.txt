@@ -207,3 +207,7 @@ endif()
 
 add_executable(regression regression.c)
 target_link_libraries(regression PRIVATE lxr_core m)
+
+add_executable(shift_relative shift_relative.c)
+target_link_libraries(shift_relative PRIVATE lxr_core m)
+add_test(NAME shift_relative COMMAND shift_relative)
