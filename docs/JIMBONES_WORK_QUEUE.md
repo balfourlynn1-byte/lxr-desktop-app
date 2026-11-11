@@ -545,3 +545,6 @@ Native removed-card save failure reports FatFs error 1 and preserves prior 137 B
 
 ### 2026-11-11 L02 staged-save milestone
 Source `d00087716c95c8818e56d7f12babf7937134802d` fixes a reproduced false-success globals write. Native CTest 4/4, 16 injected write/sync cold restarts, Step FX/LED, Shift menu and 12-case OFF-path PCM pass. Continue SD-full/corrupt/rename recovery and L03 tempo semantics before ARM candidate. See live checkpoint.
+
+### 2026-11-11 L02 full-card milestone
+Zero-byte primary and genuine full FAT32 card cold-start recovery pass in native emulator; CTest 4/4. Firmware source unchanged from `d00087716c95c8818e56d7f12babf7937134802d`. Continue L03 two-context tempo and external-clock checks, then remaining SD crash points. See live checkpoint.

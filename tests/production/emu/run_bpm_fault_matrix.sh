@@ -12,3 +12,11 @@ for n in 1 2 3 4; do
     JB_FAIL_SYNC="$n" "$BPM_PERSIST_EXE" save_fault "$card"
     "$BPM_PERSIST_EXE" verify_fault "$card"
 done
+echo "zero-byte primary recovery"
+card="$1-corrupt.sdchunks"
+"$BPM_PERSIST_EXE" save_corrupt "$card"
+"$BPM_PERSIST_EXE" verify_old "$card"
+echo "full-card recovery"
+card="$1-full.sdchunks"
+"$BPM_PERSIST_EXE" save_full "$card"
+"$BPM_PERSIST_EXE" verify_old "$card"

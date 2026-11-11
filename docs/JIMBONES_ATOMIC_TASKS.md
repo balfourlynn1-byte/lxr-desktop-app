@@ -741,3 +741,6 @@ User wants Torso Electronics S-4-style press-and-hold behavior and Digitakt TRAC
 
 ### L02 partial — 2026-11-11 staged project-globals save
 - Pushed `d00087716c95c8818e56d7f12babf7937134802d`. Reproduced false-success/data-loss on the second low-level write before fix. Staged `glo.new`, sync/close status checks, backup `glo.bak`, and complete-read fallback now pass 12 write-fault and 4 sync-fault cold restarts in native emulator (CTest 4/4). Exact-source 12-case OFF-path PCM remains identical to pinned integration. L02 remains OPEN for SD-full, corrupt-file, rename crash and unrelated-file checks; ARM candidate blocked pending those and L03 semantics. See latest live checkpoint.
+
+### L02 partial — 2026-11-11 corrupt-primary and genuine full-card host recovery
+- Host-only extension of `bpm_fault_matrix`: a zero-byte primary falls back to complete 137 BPM/channel 2 backup; a genuinely filled 128 MB FAT32 card (133235712 filler bytes) rejects new globals save with FatFs error 1 and cold-boots prior 137 BPM/channel 2, project 0. CTest 4/4 PASS; firmware source remains `d00087716c95c8818e56d7f12babf7937134802d`. Mid-sector failures, all rename crash points, unrelated-file invariants and physical SD remain OPEN.
