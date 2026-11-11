@@ -1067,11 +1067,11 @@ static void menu_repaintSimplePage()
 			break;
 
 			case CLEAR_AUTOMATION1:
-				strcpy(&editDisplayBuffer[0][7], "autom. 1]?");
+				strcpy(&editDisplayBuffer[0][7], "autom.1]?");
 			break;
 
 			case CLEAR_AUTOMATION2:
-				strcpy(&editDisplayBuffer[0][7], "autom. 2]?");
+				strcpy(&editDisplayBuffer[0][7], "autom.2]?");
 			break;
 		}
 
