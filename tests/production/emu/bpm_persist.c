@@ -43,6 +43,33 @@ static int load_card(const char *path)
 int main(int argc, char **argv)
 {
     if (argc != 3 || lxr_sd_create(128) != 0) return 2;
+    if (!strcmp(argv[1], "contexts")) {
+        if (lxr_boot(123) != 0) return 2;
+        lxr_idle_blocks(1600);
+        lxr_set_param(PAR_BPM, 137);
+        if (preset_saveProject(0) != FR_OK) return 3;
+        lxr_set_param(PAR_BPM, 145);
+        if (preset_saveProject(1) != FR_OK) return 3;
+        if (preset_loadProject(0, 1) != FR_OK) return 3;
+        lxr_idle_blocks(32);
+        printf("project 0 tempo=%d/%u\n", lxr_get_param(PAR_BPM), seq_getBpm());
+        if (lxr_get_param(PAR_BPM) != 137 || seq_getBpm() != 137) return 4;
+        if (preset_loadProject(1, 1) != FR_OK) return 3;
+        lxr_idle_blocks(32);
+        printf("project 1 tempo=%d/%u\n", lxr_get_param(PAR_BPM), seq_getBpm());
+        if (lxr_get_param(PAR_BPM) != 145 || seq_getBpm() != 145) return 4;
+        preset_loadDrumsetRam(0, 0, 1);
+        lxr_idle_blocks(32);
+        if (lxr_get_param(PAR_BPM) != 145 || seq_getBpm() != 145) return 4;
+        lxr_set_param(PAR_BPM, 160); /* unsaved edit must not replace project BPM */
+        return save_card(argv[2]);
+    }
+    if (!strcmp(argv[1], "save_sync")) {
+        if (lxr_boot(123) != 0) return 2;
+        lxr_set_param(PAR_BPM, 0); /* external trigger clock */
+        if (preset_saveGlobals() != FR_OK) return 3;
+        return save_card(argv[2]);
+    }
     if (!strcmp(argv[1], "save") || !strcmp(argv[1], "save_explicit") ||
         !strcmp(argv[1], "save_fault") || !strcmp(argv[1], "save_corrupt") ||
         !strcmp(argv[1], "save_full")) {
@@ -116,7 +143,8 @@ int main(int argc, char **argv)
         return save_card(argv[2]);
     }
     if (!strcmp(argv[1], "verify") || !strcmp(argv[1], "verify_fault") ||
-        !strcmp(argv[1], "verify_old")) {
+        !strcmp(argv[1], "verify_old") || !strcmp(argv[1], "verify_context") ||
+        !strcmp(argv[1], "verify_sync")) {
         if (load_card(argv[2]) || lxr_boot(123) != 0) return 2;
         printf("after restart: parameter=%d runtime=%u global_channel=%d project=%u\n",
                lxr_get_param(PAR_BPM), seq_getBpm(),
@@ -132,6 +160,13 @@ int main(int argc, char **argv)
             return (lxr_get_param(PAR_BPM) == 137 && seq_getBpm() == 137 &&
                     lxr_get_param(PAR_MIDI_CHAN_GLOBAL) == 2 &&
                     menu_loadedPresetNr[CURRENT_PROJECT] == 0) ? 0 : 4;
+        if (!strcmp(argv[1], "verify_context"))
+            return (lxr_get_param(PAR_BPM) == 145 && seq_getBpm() == 145 &&
+                    menu_loadedPresetNr[CURRENT_PROJECT] == 1) ? 0 : 4;
+        if (!strcmp(argv[1], "verify_sync")) {
+            printf("external sync mode=%u\n", seq_getExtSync());
+            return (lxr_get_param(PAR_BPM) == 0 && seq_getExtSync() == 1) ? 0 : 4;
+        }
         return (lxr_get_param(PAR_BPM) == 137 && seq_getBpm() == 137) ? 0 : 4;
     }
     return 2;

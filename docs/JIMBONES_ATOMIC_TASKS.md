@@ -744,3 +744,6 @@ User wants Torso Electronics S-4-style press-and-hold behavior and Digitakt TRAC
 
 ### L02 partial — 2026-11-11 corrupt-primary and genuine full-card host recovery
 - Host-only extension of `bpm_fault_matrix`: a zero-byte primary falls back to complete 137 BPM/channel 2 backup; a genuinely filled 128 MB FAT32 card (133235712 filler bytes) rejects new globals save with FatFs error 1 and cold-boots prior 137 BPM/channel 2, project 0. CTest 4/4 PASS; firmware source remains `d00087716c95c8818e56d7f12babf7937134802d`. Mid-sector failures, all rename crash points, unrelated-file invariants and physical SD remain OPEN.
+
+### L03 partial — 2026-11-11 project-owned tempo semantics
+- Real preset-manager emulator test saves project 0 at 137 BPM and project 1 at 145, recalls both live sequencer tempos, confirms kit load leaves project tempo unchanged, unsaved 160 BPM reverts after cold restart, and saved external-trigger mode 0 restores external sync mode 1. CTest 5/5 PASS; no legacy kit format change. Performance BPM and legacy preset fixtures remain OPEN. Full project-save failure path remains candidate blocker; see latest live checkpoint.

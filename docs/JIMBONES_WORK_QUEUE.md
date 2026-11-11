@@ -548,3 +548,6 @@ Source `d00087716c95c8818e56d7f12babf7937134802d` fixes a reproduced false-succe
 
 ### 2026-11-11 L02 full-card milestone
 Zero-byte primary and genuine full FAT32 card cold-start recovery pass in native emulator; CTest 4/4. Firmware source unchanged from `d00087716c95c8818e56d7f12babf7937134802d`. Continue L03 two-context tempo and external-clock checks, then remaining SD crash points. See live checkpoint.
+
+### 2026-11-11 L03 project tempo milestone
+Project-owned 137/145 BPM recall, kit-load stability, unsaved-edit rollback and saved external trigger mode pass in native emulator (CTest 5/5). Preserve legacy kit format. Next reproduce and fix full `preset_saveProject` failure: it currently deletes the old project folder before writing and ignores globals-save error. ARM candidate blocked pending this data-integrity gate.

@@ -587,3 +587,11 @@ commands: cmake --build /tmp/jb-host-emu --target bpm_persist -j2 (0); /tmp/jb-h
 result: Host test now saves old 137 BPM/channel 2, commits new 145/channel 5, truncates primary glo.cfg to zero bytes, then cold boots and restores complete old backup 137/channel 2. Separate test fills virtual 128 MB FAT32 card with 133235712 bytes using actual FatFs, attempts new globals save, receives FatFs error 1, then cold boots and recovers old 137/channel 2 and project 0. No full-card success claim or physical SD evidence. P2 PCM at firmware source SHA d000877 previously PASS 12/12, zero mismatches. Mid-sector failure, rename power-loss, file-list invariants, kit tempo remain open; ARM not run.
 next_command: Trace kit/project/performance load order and external clock; test two saved contexts and unsaved edits before ARM build.
 safety: NO PAID SERVICE; NO MERGE; NO FLASH; NO ARM IMAGE YET
+
+## 2026-11-11 10:38 UTC | TASK L03 | TWO PROJECT TEMPOS AND CLOCK MODE PASS
+branch: agents/jb-wavetable-host-experiment
+firmware_source_sha: d00087716c95c8818e56d7f12babf7937134802d (unchanged)
+commands: cmake -S tests/production/emu -B /tmp/jb-host-emu -DFW=<repo> (0); cmake --build /tmp/jb-host-emu --target bpm_persist -j2 (0); ctest --test-dir /tmp/jb-host-emu -R bpm_contexts --output-on-failure -V (0); ctest --test-dir /tmp/jb-host-emu --output-on-failure (0, 5/5 PASS)
+result: Native firmware presetManager saves project 0 at 137 BPM and project 1 at 145; loading each restores both active parameter and sequencer runtime. Kit RAM load leaves project tempo 145. Unsaved edit 160 reverts to saved project 1 tempo 145 after cold boot. Separate saved PAR_BPM=0 restores external trigger sync mode 1 after cold boot (runtime numeric BPM remains initial 120 until clock). Existing kit format unchanged; project-level BPM is least disruptive. Source audit found preset_saveProject empties the existing project folder before replacement and ignores preset_saveGlobals error. Full project-save failure remains a critical release blocker; performance BPM not yet tested. No ARM/image/hardware run.
+next_command: Reproduce failure during preset_saveProject on a previously saved project; verify whether old kits, patterns, globals and project selection survive. Do not promote ARM image until resolved.
+safety: NO PAID SERVICE; NO MERGE; NO FLASH
