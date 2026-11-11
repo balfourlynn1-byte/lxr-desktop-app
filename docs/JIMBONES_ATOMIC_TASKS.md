@@ -750,3 +750,6 @@ User wants Torso Electronics S-4-style press-and-hold behavior and Digitakt TRAC
 
 ### L02 critical FAIL — 2026-11-11 full project save data loss
 - Diagnostic `tests/production/emu/run_project_save_repro.sh` intentionally exits 4: after a saved 137 BPM project, fault on write 2 of resave removes `/proj00/prj.nfo`; cold restart cannot load the project. Faults 2-10 lost project info, 8-10 also reset BPM to 120. Source cause is destructive `empty_directory(currentFolder)` before new files exist and ignored globals-save result in `preset_saveProject`. Previous globals-only tests remain PASS but do not cover full-project save. L02 and ARM candidate BLOCKED until staged directory replacement/backup/cold-start recovery passes. See latest checkpoint.
+
+### P0 late promotion FAIL — 2026-11-11
+- `project_save_faults` at source `0ae1b6b0e9c9b9e7b21b557616255cd3fc9e82f7` fails when low-level write 2052 interrupts final project promotion: save returns error, but cold boot accepts incomplete `/proj00`, misses valid backup, project load fails and BPM becomes 120. Earlier write points recover old project. Recovery must validate complete target/backup generation, not directory presence. Candidate and ARM hold remain.

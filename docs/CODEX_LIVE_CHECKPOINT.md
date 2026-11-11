@@ -604,3 +604,11 @@ command: BPM_PERSIST_EXE=/tmp/jb-host-emu/bpm_persist sh tests/production/emu/ru
 result: Save project 0 at 137 BPM, inject persistent low-level write failure on call 2 of resave. preset_saveProject reports FatFs error 1, but cold restart has /proj00/prj.nfo missing (FatFs 4) and preset_loadProject returns 4. Manual fault ordinals 2-10 all lost project info; 8-10 also reverted BPM to 120. Cause: preset_saveProject empties existing project folder before writing, and does not propagate preset_saveGlobals error. Earlier project-globals fault matrix PASS does not protect full-project saves. Candidate BLOCKED. No ARM build/image/flash.
 next_command: Stage all project files in a separate folder, preserve prior project as backup until complete replacement, recover on cold boot, then run the red reproducer and broaden its fault matrix.
 safety: £0 additional spending; experimental branch only; no merge/flash
+
+## 2026-11-11 16:15 UTC | TASK P0 | LATE PROJECT PROMOTION FAULT REPRODUCED — FAIL
+branch: agents/jb-wavetable-host-experiment
+source_sha: 0ae1b6b0e9c9b9e7b21b557616255cd3fc9e82f7 (pushed and verified)
+command: ctest --test-dir /tmp/jb-host-emu -R project_save_faults --output-on-failure (exit 8, FAIL after adding write ordinal 2052)
+result: Concurrent branch added repeated-save and sync-fault tests; local execution first found second clean save FatFs 4. Inspected empty_directory: it appends child names to caller buffer. Fixed 13-byte path overflow with 256-byte bounded work buffer; six CTests then PASS at source SHA. Host count shows 2052 low-level writes in clean second save. After adding fault 2052, save reports FatFs 1, but cold boot sees /proj00/prj.nfo absent (FatFs 4), preset_loadProject fails, BPM 120. Faults 1-40, 1000, 2000, 2040, 2048, 2051 recovered old project. Recovery currently accepts existing directory without validating contents and misses valid backup. ARM/image/flash NOT RUN; release blocked.
+next_command: Validate staged project via separate manifest/commit marker and check target/backup on boot before accepting either; rerun project_save_faults and all host regressions.
+safety: £0 additional spending; experimental branch only; no merge/flash
