@@ -50,7 +50,7 @@ static void set_project_generation(int newer)
     seq_songData[0][0] = newer ? 44 : 22;
 }
 
-static int check_project_generation(int newer)
+static int check_project_generation(int newer, int marker_required)
 {
     FILINFO info;
     const char *prefix = newer ? "NEW" : "OLD";
@@ -70,10 +70,11 @@ static int check_project_generation(int newer)
             return 1;
         }
     }
-    if (f_stat("/proj00/tx.ok", &info) != FR_OK || info.fsize != 20) {
-        printf("generation marker missing\n");
-        return 1;
+    FRESULT marker_status = f_stat("/proj00/tx.ok", &info);
+    if (marker_required && (marker_status != FR_OK || info.fsize != 20)) {
+        printf("generation marker missing\n"); return 1;
     }
+    if (!marker_required && marker_status != FR_NO_FILE) return 1;
     FIL file;
     UINT read = 0;
     char name[8];
@@ -245,6 +246,16 @@ int main(int argc, char **argv)
         if (result == FR_OK) return 5;
         return save_card(argv[2]);
     }
+    if (!strcmp(argv[1], "legacy_project")) {
+        if (lxr_boot(123) != 0) return 2;
+        lxr_set_param(PAR_BPM, 137);
+        set_project_generation(0);
+        if (preset_saveProject(0) != FR_OK || f_unlink("/proj00/tx.ok") != FR_OK) return 3;
+        FILINFO info;
+        if (f_stat("/bak00", &info) == FR_OK &&
+            f_rename("/bak00", "/old00") != FR_OK) return 3;
+        return save_card(argv[2]);
+    }
     if (!strcmp(argv[1], "project_retry")) {
         if (load_card(argv[2]) || lxr_boot(123) != 0) return 2;
         FILINFO info;
@@ -318,7 +329,8 @@ int main(int argc, char **argv)
     }
     if (!strcmp(argv[1], "verify") || !strcmp(argv[1], "verify_fault") ||
         !strcmp(argv[1], "verify_old") || !strcmp(argv[1], "verify_context") ||
-        !strcmp(argv[1], "verify_sync") || !strcmp(argv[1], "verify_project") || !strcmp(argv[1], "verify_repeat")) {
+        !strcmp(argv[1], "verify_sync") || !strcmp(argv[1], "verify_project") ||
+        !strcmp(argv[1], "verify_legacy") || !strcmp(argv[1], "verify_repeat")) {
         if (load_card(argv[2]) || lxr_boot(123) != 0) return 2;
         printf("after restart: parameter=%d runtime=%u global_channel=%d project=%u\n",
                lxr_get_param(PAR_BPM), seq_getBpm(),
@@ -346,6 +358,11 @@ int main(int argc, char **argv)
             return (result == FR_OK && lxr_get_param(PAR_BPM) == 160 &&
                     seq_getBpm() == 160 && menu_loadedPresetNr[CURRENT_PROJECT] == 0) ? 0 : 4;
         }
+        if (!strcmp(argv[1], "verify_legacy")) {
+            FRESULT result = preset_loadProject(0, 0);
+            return result == FR_OK && lxr_get_param(PAR_BPM) == 137 &&
+                   seq_getBpm() == 137 && check_project_generation(0, 0) == 0 ? 0 : 4;
+        }
         if (!strcmp(argv[1], "verify_project")) {
             FILINFO info;
             FRESULT project_file = f_stat("/proj00/prj.nfo", &info);
@@ -357,7 +374,7 @@ int main(int argc, char **argv)
             printf("project globals=%d bpm=%d runtime=%u\\n",
                    globals_file, bpm, seq_getBpm());
             int generation = bpm == 145;
-            int consistent = check_project_generation(generation) == 0;
+            int consistent = check_project_generation(generation, 1) == 0;
             printf("project generation=%s consistent=%d\n",
                    generation ? "new" : "old", consistent);
             return (project_file == FR_OK && info.fsize >= 8 &&
