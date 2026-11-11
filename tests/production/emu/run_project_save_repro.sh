@@ -6,7 +6,13 @@ set -eu
 # checks that the newest BPM survives a separate process cold start.
 "$BPM_PERSIST_EXE" project_repeat "$1-repeat.sdchunks"
 "$BPM_PERSIST_EXE" verify_repeat "$1-repeat.sdchunks"
-for n in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 1000 2000 2040 2048 2051 2052; do
+last_write=$("$BPM_PERSIST_EXE" project_measure "$1-measure.sdchunks")
+case "$last_write" in *[!0-9]*|'') exit 2;; esac
+echo "project replacement low-level writes=$last_write"
+late_one=$((last_write - 1))
+late_two=$((last_write - 2))
+late_three=$((last_write - 3))
+for n in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 1000 2000 "$late_three" "$late_two" "$late_one" "$last_write"; do
     card="$1-$n.sdchunks"
     JB_FAIL_WRITE="$n" "$BPM_PERSIST_EXE" project_fault "$card"
     "$BPM_PERSIST_EXE" verify_project "$card"

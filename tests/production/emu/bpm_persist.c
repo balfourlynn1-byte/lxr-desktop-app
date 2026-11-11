@@ -40,6 +40,53 @@ static int load_card(const char *path)
     return fclose(in) != 0;
 }
 
+static void set_project_generation(int newer)
+{
+    memcpy(savefileNames[0][PROJECT_NAMES], newer ? "NEWPROJ " : "OLDPROJ ", 8);
+    memcpy(savefileNames[0][KIT_NAMES], newer ? "NEWKIT  " : "OLDKIT  ", 8);
+    memcpy(savefileNames[0][PATTERN_NAMES], newer ? "NEWPAT  " : "OLDPAT  ", 8);
+    memcpy(savefileNames[0][SONG_NAMES], newer ? "NEWSONG " : "OLDSONG ", 8);
+    seq_patternSet.shuffle[0] = newer ? 33 : 11;
+    seq_songData[0][0] = newer ? 44 : 22;
+}
+
+static int check_project_generation(int newer)
+{
+    FILINFO info;
+    const char *prefix = newer ? "NEW" : "OLD";
+    const char *other = newer ? "OLD" : "NEW";
+    const char *extensions[] = {"KI.snd", "PA.pat", "SO.sng"};
+    char path[32];
+    for (unsigned i = 0; i < 3; ++i) {
+        snprintf(path, sizeof path, "/proj00/00-%.3s%s", prefix, extensions[i]);
+        FRESULT found = f_stat(path, &info);
+        if (found != FR_OK || info.fsize <= 8) {
+            printf("generation missing %s status=%d\n", path, found);
+            return 1;
+        }
+        snprintf(path, sizeof path, "/proj00/00-%.3s%s", other, extensions[i]);
+        if (f_stat(path, &info) == FR_OK) {
+            printf("generation stale %s\n", path);
+            return 1;
+        }
+    }
+    if (f_stat("/proj00/tx.ok", &info) != FR_OK || info.fsize != 20) {
+        printf("generation marker missing\n");
+        return 1;
+    }
+    FIL file;
+    UINT read = 0;
+    char name[8];
+    if (f_open(&file, "/proj00/prj.nfo", FA_READ) != FR_OK) return 1;
+    FRESULT result = f_read(&file, name, sizeof name, &read);
+    FRESULT close_result = f_close(&file);
+    if (result != FR_OK || close_result != FR_OK || read != sizeof name ||
+        memcmp(name, newer ? "NEWPROJ " : "OLDPROJ ", 8)) return 1;
+    printf("generation values pattern=%u song=%u\n", seq_patternSet.shuffle[0], seq_songData[0][0]);
+    return seq_patternSet.shuffle[0] != (newer ? 33 : 11) ||
+           seq_songData[0][0] != (newer ? 44 : 22);
+}
+
 int main(int argc, char **argv)
 {
     if (argc != 3 || lxr_sd_create(128) != 0) return 2;
@@ -84,11 +131,23 @@ int main(int argc, char **argv)
         }
         return save_card(argv[2]);
     }
-    if (!strcmp(argv[1], "project_fault")) {
+    if (!strcmp(argv[1], "project_measure")) {
         if (lxr_boot(123) != 0) return 2;
         lxr_set_param(PAR_BPM, 137);
         if (preset_saveProject(0) != FR_OK) return 3;
         lxr_set_param(PAR_BPM, 145);
+        emu_sd_fault(UINT32_MAX, 0); /* count writes without a reachable failure */
+        if (preset_saveProject(0) != FR_OK) return 3;
+        printf("%u\n", emu_sd_write_count());
+        return 0;
+    }
+    if (!strcmp(argv[1], "project_fault")) {
+        if (lxr_boot(123) != 0) return 2;
+        lxr_set_param(PAR_BPM, 137);
+        set_project_generation(0);
+        if (preset_saveProject(0) != FR_OK) return 3;
+        lxr_set_param(PAR_BPM, 145);
+        set_project_generation(1);
         const char *write_at = getenv("JB_FAIL_WRITE");
         const char *sync_at = getenv("JB_FAIL_SYNC");
         if (!write_at && !sync_at) return 2;
@@ -214,10 +273,15 @@ int main(int argc, char **argv)
             FRESULT globals_file = f_stat("/proj00/glo.cfg", &globals_info);
             printf("project globals=%d bpm=%d runtime=%u\\n",
                    globals_file, bpm, seq_getBpm());
+            int generation = bpm == 145;
+            int consistent = check_project_generation(generation) == 0;
+            printf("project generation=%s consistent=%d\n",
+                   generation ? "new" : "old", consistent);
             return (project_file == FR_OK && info.fsize >= 8 &&
                     globals_file == FR_OK && globals_info.fsize > 0 &&
                     loaded == FR_OK && menu_loadedPresetNr[CURRENT_PROJECT] == 0 &&
-                    (bpm == 137 || bpm == 145) && seq_getBpm() == bpm) ? 0 : 4;
+                    (bpm == 137 || bpm == 145) && seq_getBpm() == bpm &&
+                    consistent) ? 0 : 4;
         }
         return (lxr_get_param(PAR_BPM) == 137 && seq_getBpm() == 137) ? 0 : 4;
     }

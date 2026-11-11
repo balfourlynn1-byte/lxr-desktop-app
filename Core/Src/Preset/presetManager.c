@@ -1062,8 +1062,14 @@ uint8_t preset_loadGlobals()
 	    currentFolder[5] >= '0' && currentFolder[5] <= '9' &&
 	    currentFolder[6] >= '0' && currentFolder[6] <= '9') {
 		uint8_t project = (uint8_t)((currentFolder[5] - '0') * 10 + currentFolder[6] - '0');
-		if (preset_recoverProjectFolder(project) != FR_OK ||
-		    !preset_projectDirectoryValid(currentFolder)) return 0;
+		if (preset_recoverProjectFolder(project) != FR_OK) return 0;
+		/* A new/legacy card may hold only globals before its first project save. */
+		char metadata[sizeof(currentFolder) + sizeof("/prj.nfo")];
+		FILINFO info;
+		snprintf(metadata, sizeof metadata, "%s/prj.nfo", currentFolder);
+		FRESULT found = f_stat(metadata, &info);
+		if (found == FR_OK && !preset_projectDirectoryValid(currentFolder)) return 0;
+		if (found != FR_OK && found != FR_NO_FILE) return 0;
 	}
 /*
 	res = f_mount((FATFS*)&SDFatFS, (TCHAR const*)SDPath,1);
@@ -2652,11 +2658,177 @@ static FRESULT preset_writeProjectFolder(uint8_t presetNr, const char *folder)
 }
 
 //----------------------------------------------------
+/* tx.ok is separate from the legacy kit/pattern/song formats. Its checksum
+ * covers file names and contents; an interrupted promotion must not turn a
+ * partially written directory into a loadable project. */
+#define PROJECT_MARKER_MAGIC 0x3142584aUL /* JXB1, little endian */
+#define PROJECT_FILE_COUNT (2u + 3u * NUM_KIT_SLOTS)
+
+static uint8_t preset_nameEndsWith(const char *name, const char *suffix)
+{
+	size_t length = strlen(name), suffixLength = strlen(suffix);
+	if (length < suffixLength) return 0;
+	name += length - suffixLength;
+	for (size_t i = 0; i < suffixLength; ++i) {
+		char a = name[i], b = suffix[i];
+		if (a >= 'A' && a <= 'Z') a += 'a' - 'A';
+		if (a != b) return 0;
+	}
+	return 1;
+}
+
+static FRESULT preset_projectFingerprint(const char *folder, uint32_t result[5])
+{
+	DIR dir;
+	FILINFO info;
+	FIL file;
+	char path[256];
+	uint8_t buffer[128];
+	/* _FS_LOCK is one: close the directory before opening any file. */
+	static char names[PROJECT_FILE_COUNT][13];
+	static uint32_t sizes[PROJECT_FILE_COUNT];
+	uint64_t slots[3] = {0, 0, 0};
+	uint8_t metadata = 0, globals = 0;
+	uint32_t count = 0, sum = 0, xorHash = 0, total = 0;
+	char primary[sizeof(currentFolder) + sizeof("/glo.cfg")];
+	snprintf(primary, sizeof primary, "%s/glo.cfg", folder);
+	FILINFO primaryInfo;
+	FRESULT primaryResult = f_stat(primary, &primaryInfo);
+	if (primaryResult != FR_OK && primaryResult != FR_NO_FILE) return primaryResult;
+	uint8_t hasPrimary = primaryResult == FR_OK &&
+	                     primaryInfo.fsize == NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS;
+	FRESULT res = f_opendir(&dir, folder);
+	if (res != FR_OK) return res;
+	for (;;) {
+		res = f_readdir(&dir, &info);
+		if (res != FR_OK || !info.fname[0]) break;
+		if (!strcmp(info.fname, ".") || !strcmp(info.fname, "..") ||
+		    preset_nameEndsWith(info.fname, "tx.ok") ||
+		    (!hasPrimary && preset_nameEndsWith(info.fname, "glo.cfg")) ||
+		    (hasPrimary && preset_nameEndsWith(info.fname, "glo.bak")) ||
+		    preset_nameEndsWith(info.fname, "glo.new")) continue;
+		if ((info.fattrib & AM_DIR) || count >= PROJECT_FILE_COUNT ||
+		    strlen(info.fname) >= sizeof names[0]) { res = FR_DISK_ERR; break; }
+		int kind = -1;
+		if (preset_nameEndsWith(info.fname, ".snd")) kind = 0;
+		else if (preset_nameEndsWith(info.fname, ".pat")) kind = 1;
+		else if (preset_nameEndsWith(info.fname, ".sng")) kind = 2;
+		if (kind >= 0) {
+			if (info.fname[0] < '0' || info.fname[0] > '9' ||
+			    info.fname[1] < '0' || info.fname[1] > '9' ||
+			    info.fname[2] != '-' || info.fsize < 8) { res = FR_DISK_ERR; break; }
+			unsigned slot = (unsigned)(info.fname[0] - '0') * 10u +
+			                (unsigned)(info.fname[1] - '0');
+			if (slot >= NUM_KIT_SLOTS || (slots[kind] & (1ULL << slot))) {
+				res = FR_DISK_ERR; break;
+			}
+			slots[kind] |= 1ULL << slot;
+		} else if (preset_nameEndsWith(info.fname, "prj.nfo")) {
+			if (metadata || info.fsize != 8) { res = FR_DISK_ERR; break; }
+			metadata = 1;
+		} else if (preset_nameEndsWith(info.fname, "glo.cfg") ||
+		           (!hasPrimary && preset_nameEndsWith(info.fname, "glo.bak"))) {
+			if (globals || info.fsize != NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS) {
+				res = FR_DISK_ERR; break;
+			}
+			globals = 1;
+		} else { res = FR_DISK_ERR; break; }
+		strcpy(names[count], info.fname);
+		sizes[count] = info.fsize;
+		++count;
+	}
+	FRESULT closeRes = f_closedir(&dir);
+	if (res == FR_OK) res = closeRes;
+	if (res != FR_OK) return res;
+	if (!metadata || !globals || count != PROJECT_FILE_COUNT) return FR_DISK_ERR;
+#if NUM_KIT_SLOTS == 64
+	uint64_t expected = ~(uint64_t)0;
+#else
+	uint64_t expected = (1ULL << NUM_KIT_SLOTS) - 1ULL;
+#endif
+	if (slots[0] != expected || slots[1] != expected || slots[2] != expected)
+		return FR_DISK_ERR;
+	for (uint32_t entry = 0; entry < count; ++entry) {
+		int n = snprintf(path, sizeof path, "%s/%s", folder, names[entry]);
+		if (n < 0 || (size_t)n >= sizeof path) return FR_INVALID_NAME;
+		res = f_open(&file, path, FA_READ);
+		if (res != FR_OK) return res;
+		uint32_t hash = 2166136261UL;
+		const char *hashName = preset_nameEndsWith(names[entry], "glo.bak") ?
+		                       "glo.cfg" : names[entry];
+		for (const char *p = hashName; *p; ++p) {
+			char c = *p >= 'A' && *p <= 'Z' ? *p + ('a' - 'A') : *p;
+			hash = (hash ^ (uint8_t)c) * 16777619UL;
+		}
+		uint32_t remaining = sizes[entry];
+		while (remaining) {
+			UINT amount = remaining < sizeof buffer ? (UINT)remaining : (UINT)sizeof buffer;
+			UINT read = 0;
+			res = f_read(&file, buffer, amount, &read);
+			if (res != FR_OK || read != amount) {
+				if (res == FR_OK) res = FR_DISK_ERR;
+				break;
+			}
+			/* Globals have their own staged save and backup protocol. They
+			 * may change without a whole-project replacement. */
+			if (!preset_nameEndsWith(names[entry], "glo.cfg") &&
+			    !preset_nameEndsWith(names[entry], "glo.bak"))
+				for (UINT i = 0; i < read; ++i)
+					hash = (hash ^ buffer[i]) * 16777619UL;
+			remaining -= read;
+		}
+		closeRes = f_close(&file);
+		if (res == FR_OK) res = closeRes;
+		if (res != FR_OK) return res;
+		hash = (hash ^ sizes[entry]) * 16777619UL;
+		sum += hash;
+		xorHash ^= hash;
+		total += sizes[entry];
+	}
+	result[0] = PROJECT_MARKER_MAGIC;
+	result[1] = count;
+	result[2] = total;
+	result[3] = sum;
+	result[4] = xorHash;
+	return FR_OK;
+}
+
+static FRESULT preset_sealProjectFolder(const char *folder)
+{
+	uint32_t marker[5];
+	char path[sizeof(currentFolder) + sizeof("/tx.ok")];
+	FRESULT res = preset_projectFingerprint(folder, marker);
+	if (res != FR_OK) return res;
+	snprintf(path, sizeof path, "%s/tx.ok", folder);
+	res = f_open((FIL*)&SDFile, path, FA_CREATE_ALWAYS | FA_WRITE);
+	if (res != FR_OK) return res;
+	res = preset_writeChecked(marker, sizeof marker);
+	if (res == FR_OK) res = f_sync((FIL*)&SDFile);
+	FRESULT closeRes = f_close((FIL*)&SDFile);
+	return res == FR_OK ? closeRes : res;
+}
+
 static uint8_t preset_projectDirectoryValid(const char *folder)
 {
 	char path[sizeof(currentFolder) + sizeof("/glo.cfg")];
 	FILINFO info;
 	if (f_stat(folder, &info) != FR_OK || !(info.fattrib & AM_DIR)) return 0;
+	snprintf(path, sizeof path, "%s/tx.ok", folder);
+	FRESULT markerResult = f_stat(path, &info);
+	if (markerResult == FR_OK) {
+		if (info.fsize != 5 * sizeof(uint32_t)) return 0;
+		uint32_t expected[5], actual[5];
+		FIL marker;
+		UINT read = 0;
+		if (f_open(&marker, path, FA_READ) != FR_OK) return 0;
+		FRESULT res = f_read(&marker, expected, sizeof expected, &read);
+		FRESULT closeRes = f_close(&marker);
+		if (res != FR_OK || closeRes != FR_OK || read != sizeof expected) return 0;
+		return preset_projectFingerprint(folder, actual) == FR_OK &&
+		       memcmp(expected, actual, sizeof expected) == 0;
+	}
+	if (markerResult != FR_NO_FILE) return 0;
+	/* Legacy projects have no marker. Keep their original file formats readable. */
 	snprintf(path, sizeof path, "%s/prj.nfo", folder);
 	if (f_stat(path, &info) != FR_OK || info.fsize < 8) return 0;
 	snprintf(path, sizeof path, "%s/glo.cfg", folder);
@@ -2676,7 +2848,14 @@ static FRESULT preset_recoverProjectFolder(uint8_t presetNr)
 	snprintf(target, sizeof target, "/proj%02u", presetNr);
 	snprintf(backup, sizeof backup, "/bak%02u", presetNr);
 	FRESULT res = f_stat(target, &info);
-	if (res == FR_OK && preset_projectDirectoryValid(target)) return FR_OK;
+	if (res == FR_OK && preset_projectDirectoryValid(target)) {
+		/* A backup means a replacement was underway. A target without its
+		 * marker may be an incomplete promotion, not a legacy project. */
+		char marker[sizeof target + sizeof("/tx.ok")];
+		snprintf(marker, sizeof marker, "%s/tx.ok", target);
+		if (f_stat(marker, &info) == FR_OK ||
+		    !preset_projectDirectoryValid(backup)) return FR_OK;
+	}
 	if (res != FR_OK && res != FR_NO_FILE) return res;
 	if (!preset_projectDirectoryValid(backup)) return FR_OK;
 	if (res == FR_OK) {
@@ -2706,9 +2885,10 @@ FRESULT preset_saveProject(uint8_t presetNr)
 	strcpy(currentFolder, target);
 	if (res != FR_OK) return res;
 	/* Never move the known-good project aside unless the staged generation
-	 * contains a readable project header and globals. A failed final sync
-	 * must not promote a partially written replacement. */
-	if (!preset_projectDirectoryValid(stage)) return FR_DISK_ERR;
+	 * has a synced marker covering every required project file. */
+	res = preset_sealProjectFolder(stage);
+	if (res != FR_OK || !preset_projectDirectoryValid(stage))
+		return res == FR_OK ? FR_DISK_ERR : res;
 
 	res = f_stat(target, &info);
 	if (res == FR_OK) {
