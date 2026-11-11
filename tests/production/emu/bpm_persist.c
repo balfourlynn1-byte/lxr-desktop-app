@@ -135,6 +135,28 @@ int main(int argc, char **argv)
         if (preset_saveGlobals() != FR_OK) return 3;
         return save_card(argv[2]);
     }
+    if (!strcmp(argv[1], "project_fresh_slot")) {
+        if (lxr_boot(123) != 0) return 2;
+        /* Regression: a never-saved slot must reach the original creation
+         * branch rather than fail the new integrity-marker validation. */
+        FILINFO info;
+        if (f_stat("/proj02", &info) == FR_OK) return 3;
+        lxr_set_param(PAR_BPM, 151);
+        set_project_generation(0);
+        FRESULT result = preset_saveProject(2);
+        printf("fresh project slot save=%d\\n", result);
+        if (result != FR_OK || f_stat("/proj02/tx.ok", &info) != FR_OK ||
+            info.fsize != 5 * sizeof(uint32_t)) return 4;
+        return save_card(argv[2]);
+    }
+    if (!strcmp(argv[1], "verify_fresh_slot")) {
+        if (load_card(argv[2]) || lxr_boot(123) != 0) return 2;
+        FRESULT result = preset_loadProject(2, 0);
+        printf("fresh project slot load=%d bpm=%d runtime=%u\\n",
+               result, lxr_get_param(PAR_BPM), seq_getBpm());
+        return (result == FR_OK && lxr_get_param(PAR_BPM) == 151 &&
+                seq_getBpm() == 151) ? 0 : 4;
+    }
     if (!strcmp(argv[1], "project_repeat")) {
         if (lxr_boot(123) != 0) return 2;
         /* Three successful replacements exercise deletion of an older /bak00.
