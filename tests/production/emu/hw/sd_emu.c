@@ -34,6 +34,7 @@ void emu_sd_fault(uint32_t write_call, uint32_t sync_call)
 	fail_write_call = write_call;
 	fail_sync_call = sync_call;
 }
+uint32_t emu_sd_write_count(void) { return write_calls; }
 
 int emu_sd_init(uint32_t size_bytes)
 {

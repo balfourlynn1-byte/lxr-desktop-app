@@ -34,6 +34,7 @@ int emu_sd_init(uint32_t size_bytes);
 void emu_sd_set_present(int present);
 /* Fail low-level writes/syncs from the selected call onward (1-based). */
 void emu_sd_fault(uint32_t write_call, uint32_t sync_call);
+uint32_t emu_sd_write_count(void);
 uint32_t emu_sd_chunk_size(void);
 uint32_t emu_sd_num_chunks(void);
 const uint8_t *emu_sd_chunk(uint32_t c);

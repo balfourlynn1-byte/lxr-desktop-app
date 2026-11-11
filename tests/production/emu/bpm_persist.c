@@ -95,9 +95,10 @@ int main(int argc, char **argv)
         emu_sd_fault(write_at ? (uint32_t)atoi(write_at) : 0,
                      sync_at ? (uint32_t)atoi(sync_at) : 0);
         FRESULT result = preset_saveProject(0);
+        uint32_t writes = emu_sd_write_count();
         emu_sd_fault(0, 0);
-        printf("project save fault write=%s sync=%s FatFs=%d\n",
-               write_at ? write_at : "0", sync_at ? sync_at : "0", result);
+        printf("project save fault write=%s sync=%s FatFs=%d calls=%u\n",
+               write_at ? write_at : "0", sync_at ? sync_at : "0", result, writes);
         if (result == FR_OK) return 5;
         return save_card(argv[2]);
     }

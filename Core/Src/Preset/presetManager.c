@@ -708,35 +708,35 @@ void preset_processTimer()
 
 
 
-FRESULT empty_directory (
-    char* path      /* Working buffer filled with start directory */
-)
+static FRESULT empty_directory(char *path, size_t capacity)
 {
 	FILINFO fno;
-    UINT i, j;
+    size_t base = strlen(path);
     FRESULT fr;
     DIR dir;
+	if (base + 2 > capacity) return FR_INVALID_NAME;
 
     fr = f_opendir(&dir, path);
     if (fr == FR_OK) {
-        for (i = 0; path[i]; i++) ;
-        path[i++] = '/';
+        path[base++] = '/';
         for (;;) {
             fr = f_readdir(&dir, &fno);
             if (fr != FR_OK || !fno.fname[0]) break;
             if (_FS_RPATH && fno.fname[0] == '.') continue;
-            j = 0;
-            do
-                path[i+j] = fno.fname[j];
-            while (fno.fname[j++]);
+            size_t length = strlen(fno.fname);
+            if (base + length + 1 > capacity) {
+                fr = FR_INVALID_NAME;
+                break;
+            }
+            memcpy(path + base, fno.fname, length + 1);
             if (fno.fattrib & AM_DIR) {
-                fr = empty_directory(path);
+                fr = empty_directory(path, capacity);
                 if (fr != FR_OK) break;
             }
             fr = f_unlink(path);
             if (fr != FR_OK) break;
         }
-        path[--i] = '\0';
+        path[base - 1] = '\0';
         f_closedir(&dir);
     }
 
@@ -2418,7 +2418,9 @@ static FRESULT preset_writeProjectFolder(uint8_t presetNr, const char *folder)
 	}
 	else
 	{
-		res = empty_directory(currentFolder);
+		char work[256];
+		strcpy(work, currentFolder);
+		res = empty_directory(work, sizeof work);
 		if(res != FR_OK)
 		{
 			lcd_process_display_interrupt = 1;
@@ -2659,11 +2661,10 @@ FRESULT preset_saveProject(uint8_t presetNr)
 	if (res == FR_OK) {
 		FRESULT backupRes = f_stat(backup, &info);
 		if (backupRes == FR_OK) {
-			res = empty_directory(backup);
+			char work[256];
+			strcpy(work, backup);
+			res = empty_directory(work, sizeof work);
 			if (res != FR_OK) return res;
-			/* FatFs f_rename requires the destination path to be absent.
-			 * empty_directory() removes children, not the backup folder itself.
-			 * The current target remains intact until the following rename. */
 			res = f_unlink(backup);
 			if (res != FR_OK) return res;
 		} else if (backupRes != FR_NO_FILE) return backupRes;
