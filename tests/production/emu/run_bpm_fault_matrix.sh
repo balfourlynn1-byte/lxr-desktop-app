@@ -29,6 +29,8 @@ for n in 7 8 9 10; do
     card="$1-corrupt-resave-$n.sdchunks"
     JB_FAIL_WRITE="$n" "$BPM_PERSIST_EXE" globals_corrupt_resave_fault "$card"
     "$BPM_PERSIST_EXE" verify_corrupt_resave "$card"
+    "$BPM_PERSIST_EXE" globals_corrupt_resave_retry "$card"
+    "$BPM_PERSIST_EXE" verify_corrupt_resave "$card"
 done
 echo "full-card recovery"
 card="$1-full.sdchunks"
