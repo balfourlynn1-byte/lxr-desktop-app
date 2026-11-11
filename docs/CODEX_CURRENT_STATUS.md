@@ -1,16 +1,16 @@
 # JIMBONES — CURRENT STATUS
 
-TASK: L03 BPM cold-start persistence; P2 OFF-path audio identity
-STATUS: PROJECT GLOBALS PATH FIX AND REMOVED-CARD REGRESSION PASS; KIT-SPECIFIC TEMPO OPEN
+TASK: L02 project-globals interrupted-write recovery; L03 tempo semantics
+STATUS: STAGED SAVE AND 16-POINT HOST FAULT MATRIX PASS; ARM CANDIDATE BLOCKED
 BRANCH: agents/jb-wavetable-host-experiment
-CURRENT COMMIT: 27cd885cdd7f383dfe26a5416ceb5295f34dadcc (pre-checkpoint)
-LAST SOURCE COMMIT: 27cd885cdd7f383dfe26a5416ceb5295f34dadcc
-TESTED COMMIT: 27cd885cdd7f383dfe26a5416ceb5295f34dadcc
-CHANGED FILES: Core/Src/Preset/presetManager.c; tests/production/emu/CMakeLists.txt; tests/production/emu/bpm_persist.c; tests/production/emu/run_bpm_persist.sh; recovery/job-tree docs
-LAST TEST COMMAND: ctest --test-dir /tmp/jb-host-emu --output-on-failure
+CURRENT COMMIT: d00087716c95c8818e56d7f12babf7937134802d (pre-checkpoint)
+LAST SOURCE COMMIT: d00087716c95c8818e56d7f12babf7937134802d
+TESTED COMMIT: d00087716c95c8818e56d7f12babf7937134802d
+CHANGED FILES: Core/Src/Preset/presetManager.c; tests/production/emu/CMakeLists.txt; tests/production/emu/bpm_persist.c; tests/production/emu/hw/emu_hw.h; tests/production/emu/hw/sd_emu.c; tests/production/emu/run_bpm_fault_matrix.sh; recovery/job-tree docs
+LAST TEST COMMAND: bash tests/run_off_path_pcm_compare.sh
 TEST EXIT CODE: 0
-ACTUAL RESULT: Native emulator reproduced 137 BPM before restart becoming 120 after restart, including after an explicit globals save. Root cause: live working directory is /tmp, while project globals load from /proj00. Absolute current-project glo.cfg path fixes explicit save/restart and same-process reload from /tmp; CTest 3/3 PASS (selftest, full Shift, 137 BPM cold start). Removed-card globals save returns FatFs error 1, and the prior 137 BPM remains recoverable after reinsertion and cold restart. Step FX/LED and Shift menu host suites PASS. At source SHA 27cd885, 12 OFF-path PCM cases versus pinned f797ec7 each produced 4096 samples with zero mismatches and max absolute difference 0; overlap host sum clipped 3 samples in both builds. ARM, image and physical hardware NOT RUN.
-CURRENT BLOCKER: Kit-associated BPM policy and corrupt/SD-full/interrupted-write recovery remain unverified. Live BPM edits without explicit globals/project save still revert; no autosave policy change made.
-EXACT NEXT ACTION: Test project/global save failure paths and decide compatible kit tempo recall semantics before implementation; keep current 137 BPM explicit-save regression and rerun host tests after any change.
+ACTUAL RESULT: Before fix, injected second low-level write caused preset_saveGlobals to report success while 137 BPM became 120 after cold restart. New save writes glo.new, checks byte count, syncs and closes, retains glo.bak during replacement; load falls back to complete backup and never installs a short read. Native emulator CTest 4/4 PASS including 12 persistent write-fault and 4 sync-fault cold restarts; every failed save reports FatFs error and restores a complete old (137 BPM/channel 2) or committed new (145 BPM/channel 5) configuration, project 0. Step FX/LED and Shift menu suites PASS. At exact source SHA, 12 OFF-path PCM cases versus pinned integration f797ec7 have zero mismatches; overlap host sum clips 3 samples equally in both builds. ARM/image/hardware NOT RUN.
+CURRENT BLOCKER: Fault matrix does not yet cover SD-full, short writes, corrupt primary, all rename crash points or unrelated-file invariants. Kit/project/performance tempo semantics are incomplete; candidate is not ready for ARM packaging.
+EXACT NEXT ACTION: Add corrupt-primary and SD-full emulator fault cases, verify fallback/return values, then audit kit/project/performance BPM recall. Only after persistence gate and host regressions pass, attempt local arm-none-eabi-gcc build.
 
-£0 additional spending; no Codespace, ARM build, image, merge or flash.
+£0 additional spending; no Codespace, merge or flash.

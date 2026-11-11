@@ -738,3 +738,6 @@ User wants Torso Electronics S-4-style press-and-hold behavior and Digitakt TRAC
 
 ### L02 partial — 2026-11-11 removed-card globals regression
 - Native emulator test removes SD during explicit globals save: FatFs returns error 1; the prior 137 BPM project setting survives reinsertion and cold restart. Test source is host-only; firmware source is unchanged since `27cd885cdd7f383dfe26a5416ceb5295f34dadcc`. SD-full, interrupted write, corrupt-file and rollback tests remain OPEN. See latest checkpoint.
+
+### L02 partial — 2026-11-11 staged project-globals save
+- Pushed `d00087716c95c8818e56d7f12babf7937134802d`. Reproduced false-success/data-loss on the second low-level write before fix. Staged `glo.new`, sync/close status checks, backup `glo.bak`, and complete-read fallback now pass 12 write-fault and 4 sync-fault cold restarts in native emulator (CTest 4/4). Exact-source 12-case OFF-path PCM remains identical to pinned integration. L02 remains OPEN for SD-full, corrupt-file, rename crash and unrelated-file checks; ARM candidate blocked pending those and L03 semantics. See latest live checkpoint.

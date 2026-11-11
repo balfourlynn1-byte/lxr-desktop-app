@@ -542,3 +542,6 @@ Pushed `27cd885cdd7f383dfe26a5416ceb5295f34dadcc`: fixed active-project globals 
 
 ### 2026-11-11 L02 partial milestone
 Native removed-card save failure reports FatFs error 1 and preserves prior 137 BPM after reinsertion/cold start; CTest 3/3 PASS. SD-full/interrupted-write and kit tempo remain OPEN. See latest checkpoint.
+
+### 2026-11-11 L02 staged-save milestone
+Source `d00087716c95c8818e56d7f12babf7937134802d` fixes a reproduced false-success globals write. Native CTest 4/4, 16 injected write/sync cold restarts, Step FX/LED, Shift menu and 12-case OFF-path PCM pass. Continue SD-full/corrupt/rename recovery and L03 tempo semantics before ARM candidate. See live checkpoint.

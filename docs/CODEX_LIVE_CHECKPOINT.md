@@ -569,3 +569,13 @@ commands: cmake -S tests/production/emu -B /tmp/jb-host-emu -DFW=<repo> (0); cma
 result: Host-only SD removal injected after saving 137 BPM. preset_saveGlobals returned FatFs error 1 while card absent; after reinsertion, preset_loadGlobals restored 137 BPM parameter/runtime and separate cold boot restored 137. CTest data file is virtual SD chunks, not firmware image. SD-full and interrupted-write recovery remain NOT RUN. No firmware source change since 27cd885; P2 PCM previously PASS at that exact SHA.
 next_command: Inspect remaining L02/L03 recovery/kit tempo work without changing persistent format prematurely.
 safety: NO ARM BUILD; NO FIRMWARE IMAGE; NO MERGE; NO FLASH; £0 additional spending
+
+## 2026-11-11 10:26 UTC | TASK L02 | STAGED GLOBALS SAVE AND 16 FAULTS PASS
+branch: agents/jb-wavetable-host-experiment
+source_sha: d00087716c95c8818e56d7f12babf7937134802d (pushed and verified)
+integration_sha: f797ec786fc57d008afeaabad964906f35a43177
+reproduction: Before source fix, second low-level SD write fault during explicit 145 BPM save returned FR_OK and cold boot changed prior saved 137 BPM to 120. Command JB_FAIL_WRITE=2 /tmp/jb-host-emu/bpm_persist save_fault /tmp/jb-bpm-fault.sdchunks; then verify returned 4 with 120.
+commands: cmake --build /tmp/jb-host-emu -j2 (0); ctest --test-dir /tmp/jb-host-emu --output-on-failure (0, 4/4 PASS); sh tests/run_stepfx_ui.sh (0); sh tests/run_shift_relative_menu_host.sh (0); bash tests/run_off_path_pcm_compare.sh (0 at exact source SHA).
+result: Production save now writes/syncs/closes staged glo.new, checks write length and errors, preserves previous glo.cfg as glo.bak during replacement. Loader tries complete primary, then complete backup without partial active-parameter mutation. Host-only sparse SD injects persistent low-level write/sync faults. Write ordinals 1-12 and sync ordinals 1-4 each returned a save error; cold restart recovered consistent old 137 BPM/channel 2 or committed new 145 BPM/channel 5, with project 0. 12 original OFF-path PCM cases, 4096 samples each, zero mismatches; overlap host sum 3 clipped samples in both reference and experimental. Evidence dir /var/folders/2z/y9mhhtg91q1_tq9nfqj43pqr0000gn/T/jb-off-path-compare.wfAbfI. SD-full, corrupt-primary, detailed rename faults, kit tempo and hardware still open. Local arm-none-eabi-gcc available but ARM NOT RUN because persistence gate incomplete.
+next_command: Extend tests/production/emu/bpm_persist.c with corrupt-primary fallback and SD-full fault cases; rerun ctest --test-dir /tmp/jb-host-emu --output-on-failure.
+safety: NO PAID SERVICE; NO MERGE; NO FLASH; NO ARM IMAGE YET
