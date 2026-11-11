@@ -969,6 +969,7 @@ FRESULT preset_saveGlobals()
 {
 #if USE_SD_CARD
 	FRESULT res;
+	char path[sizeof(currentFolder) + sizeof("/glo.cfg")];
 /*
 	res = f_mount((FATFS*)&SDFatFS, (TCHAR const*)SDPath,1);
 	if( res != FR_OK)
@@ -977,7 +978,8 @@ FRESULT preset_saveGlobals()
 	}
 	*/
 	//open the file
-	res = f_open((FIL*)&SDFile,"glo.cfg",FA_CREATE_ALWAYS | FA_WRITE);
+	snprintf(path, sizeof path, "%s/glo.cfg", currentFolder);
+	res = f_open((FIL*)&SDFile,path,FA_CREATE_ALWAYS | FA_WRITE);
 	if(res != FR_OK) return res;
 	preset_writeGlobalData();
 
@@ -1021,6 +1023,7 @@ uint8_t preset_loadGlobals()
 
 
 	FRESULT res;
+	char path[sizeof(currentFolder) + sizeof("/glo.cfg")];
 /*
 	res = f_mount((FATFS*)&SDFatFS, (TCHAR const*)SDPath,1);
 	if( res != FR_OK)
@@ -1030,7 +1033,8 @@ uint8_t preset_loadGlobals()
 	*/
 
 	//open the file
-	res = f_open((FIL*)&SDFile,"glo.cfg",FA_OPEN_EXISTING | FA_READ);
+	snprintf(path, sizeof path, "%s/glo.cfg", currentFolder);
+	res = f_open((FIL*)&SDFile,path,FA_OPEN_EXISTING | FA_READ);
 	
 	if(res!=FR_OK)
 		return 0; //file open error... maybe the file does not exist?
