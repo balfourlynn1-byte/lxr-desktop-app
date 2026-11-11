@@ -814,10 +814,16 @@ void preset_init(uint8_t presetNr)
 }
 
 //----------------------------------------------------
-static void preset_writeDrumsetData(uint8_t presetNr, uint8_t isMorph)
+static FRESULT preset_writeChecked(const void *data, UINT size)
+{
+	UINT written = 0;
+	FRESULT res = f_write((FIL*)&SDFile, data, size, &written);
+	return res == FR_OK && written != size ? FR_DISK_ERR : res;
+}
+
+static FRESULT preset_writeDrumsetData(uint8_t presetNr, uint8_t isMorph)
 {
 	uint16_t i;
-	unsigned int bytesWritten;
 
 	if(isMorph)
 	{
@@ -839,14 +845,17 @@ static void preset_writeDrumsetData(uint8_t presetNr, uint8_t isMorph)
 			{
 				value = preset_getMorphValue(i,activeParameters[PAR_MORPH]);
 			}					
-			f_write((FIL*)&SDFile,&value,1,&bytesWritten);
+			FRESULT res = preset_writeChecked(&value, 1);
+			if (res != FR_OK) return res;
 		}
 	} else {
 		for(i=0;i<END_OF_SOUND_PARAMETERS;i++)
 		{
-			f_write((FIL*)&SDFile,&mainParameters[presetNr][i],1,&bytesWritten);
+			FRESULT res = preset_writeChecked(&mainParameters[presetNr][i], 1);
+			if (res != FR_OK) return res;
 		}
 	}
+	return FR_OK;
 }
 
 //----------------------------------------------------
@@ -922,7 +931,6 @@ FRESULT preset_saveDrumsetSD(uint8_t presetNr, uint8_t isMorph)
 {
 #if USE_SD_CARD
 	FRESULT res;
-	unsigned int bytesWritten;
 	//filename in 8.3  format
 	char filename[13];
 	preset_makeFileNameSave(filename,presetNr,FEXT_SOUND, savefileNames[presetNr][KIT_NAMES]);
@@ -936,21 +944,20 @@ FRESULT preset_saveDrumsetSD(uint8_t presetNr, uint8_t isMorph)
 	
 	//write preset name to file
 
-	res = f_write((FIL*)&SDFile,(void*)savefileNames[presetNr][KIT_NAMES],8,&bytesWritten);
-	if(res != FR_OK) return res;
+	res = preset_writeChecked(savefileNames[presetNr][KIT_NAMES], 8);
+	if(res != FR_OK) { f_close((FIL*)&SDFile); return res; }
 	//write the preset data
-	preset_writeDrumsetData(presetNr, isMorph);
+	res = preset_writeDrumsetData(presetNr, isMorph);
+	if(res != FR_OK) { f_close((FIL*)&SDFile); return res; }
  uint8_t record[JB_RECORD_BYTES];
  jb_pack(record,isMorph?&jb_parameters[0][0]:jb_kits[presetNr]);
- res=f_write((FIL*)&SDFile,record,sizeof(record),&bytesWritten);
- if(res!=FR_OK || bytesWritten!=sizeof(record)) {
-  f_close((FIL*)&SDFile); return res==FR_OK?FR_DISK_ERR:res;
+ res = preset_writeChecked(record, sizeof(record));
+ if(res != FR_OK) {
+  f_close((FIL*)&SDFile); return res;
  }
 	
 	//close the file
-	f_close((FIL*)&SDFile);
-
-	return FR_OK;
+	return f_close((FIL*)&SDFile);
 #else
 #endif
 };
@@ -1653,19 +1660,21 @@ void preset_queryMainStepDataFromSeq(uint16_t stepNr, uint16_t *mainStepData, ui
 };
 
 //----------------------------------------------------
-static void preset_writePatternData(uint8_t patternNr)
+static FRESULT preset_writePatternData(uint8_t patternNr)
 {
 #if 0
 #else
-		UINT bytesWritten;
 		uint8_t length;
+		FRESULT res;
 
 		//---------------  write the step data (note, vol, prob, autom.) ---------------
 		for(uint8_t trk=0; trk<NUM_TRACKS;trk++)
 		{
-			f_write((FIL*)&SDFile,(const void*)&seq_patternSet.seq_subStepPattern[patternNr][trk][0],sizeof(Step)*STEPS_PER_PATTERN,&bytesWritten);
+			res = preset_writeChecked(&seq_patternSet.seq_subStepPattern[patternNr][trk][0], sizeof(Step)*STEPS_PER_PATTERN);
+			if (res != FR_OK) return res;
 
-			f_write((FIL*)&SDFile,(const void*)&seq_patternSet.seq_stepTiming[patternNr][trk][0],sizeof(uint8_t)*STEPS_PER_PATTERN,&bytesWritten);
+			res = preset_writeChecked(&seq_patternSet.seq_stepTiming[patternNr][trk][0], sizeof(uint8_t)*STEPS_PER_PATTERN);
+			if (res != FR_OK) return res;
 		}
 
 		//--------------- now the main step data ---------------
@@ -1674,7 +1683,8 @@ static void preset_writePatternData(uint8_t patternNr)
 			for(uint8_t bar=0;bar<NUM_BARS; bar++)
 			{
 				const uint16_t mainStepData = seq_patternSet.seq_mainSteps[bar][patternNr][trk];
-				f_write((FIL*)&SDFile,(const void*)&mainStepData,sizeof(uint16_t),&bytesWritten);
+				res = preset_writeChecked(&mainStepData, sizeof(uint16_t));
+				if (res != FR_OK) return res;
 			}
 		}
 
@@ -1682,7 +1692,8 @@ static void preset_writePatternData(uint8_t patternNr)
 
 
 		//f_write((FIL*)&SDFile,(const void*)&activeParameters[PAR_SHUFFLE],sizeof(uint8_t),&bytesWritten);
-		f_write((FIL*)&SDFile,(const void*)&seq_patternSet.shuffle[patternNr],sizeof(uint8_t),&bytesWritten);
+		res = preset_writeChecked(&seq_patternSet.shuffle[patternNr], sizeof(uint8_t));
+		if (res != FR_OK) return res;
 
 		//----- pattern/track lengths ------
 		// we reuse the same call from above (when saving main step data)
@@ -1693,13 +1704,16 @@ static void preset_writePatternData(uint8_t patternNr)
 		for(uint8_t trk=0; trk<NUM_TRACKS;trk++)
 		{
 				length = seq_patternSet.length[patternNr][trk] ;//seq_patternSet.seq_mainSteps[bar][pat][trk];
-				f_write((FIL*)&SDFile,(const void*)&length,sizeof(uint8_t),&bytesWritten);
+				res = preset_writeChecked(&length, sizeof(uint8_t));
+				if (res != FR_OK) return res;
 		}
 
 		//write associated kit nr
-		f_write((FIL*)&SDFile,&seq_patternSet.kitNr[patternNr],sizeof(uint8_t),&bytesWritten);
+		res = preset_writeChecked(&seq_patternSet.kitNr[patternNr], sizeof(uint8_t));
+		if (res != FR_OK) return res;
 
 #endif
+	return FR_OK;
 }
 
 //----------------------------------------------------
@@ -1739,7 +1753,6 @@ FRESULT preset_savePatternSD(uint8_t presetNr)
 {
 
 	FRESULT res;
-	UINT bytesWritten;
 	//lcd_clear();
 	//lcd_home();
 	//lcd_string(PSTR("Saving pattern"));
@@ -1754,17 +1767,19 @@ FRESULT preset_savePatternSD(uint8_t presetNr)
 	if(res != FR_OK) return res;
 
 	//write preset name to file
-	res = f_write((FIL*)&SDFile,(void*)savefileNames[presetNr][PATTERN_NAMES],8,&bytesWritten);
-	if(res != FR_OK) return res;
+	res = preset_writeChecked(savefileNames[presetNr][PATTERN_NAMES], 8);
+	if(res != FR_OK) { f_close((FIL*)&SDFile); return res; }
 	//write version tag
-	res = f_write((FIL*)&SDFile,"PatV03",6,&bytesWritten);
-	if(res != FR_OK) return res;
+	res = preset_writeChecked("PatV03", 6);
+	if(res != FR_OK) { f_close((FIL*)&SDFile); return res; }
 
 	//write pattern data
-	preset_writePatternData(presetNr);
+	res = preset_writePatternData(presetNr);
+	if(res != FR_OK) { f_close((FIL*)&SDFile); return res; }
 
 	//close the file
-	f_close((FIL*)&SDFile);
+	res = f_close((FIL*)&SDFile);
+	if(res != FR_OK) return res;
 	
 	//reset the lcd
 	menu_repaintAll();
@@ -2757,14 +2772,13 @@ FRESULT preset_saveSongSD(uint8_t songNr)
 {
 	FRESULT res;
 	char filename[13];
-	unsigned int bytesWritten;
 	preset_makeFileNameSave(filename,songNr,FEXT_SONG, savefileNames[songNr][SONG_NAMES]);
 	//open the file
 	res = f_open((FIL*)&SDFile,filename,FA_CREATE_ALWAYS | FA_WRITE);
 	if(res!=FR_OK)
 		return res; //file open error... maybe the file does not exist?
 	//write name
-	res = f_write((FIL*)&SDFile,(void*)savefileNames[songNr][SONG_NAMES],8,&bytesWritten);
+	res = preset_writeChecked(savefileNames[songNr][SONG_NAMES], 8);
 	if (res != FR_OK)
 	{
 		f_close((FIL*)&SDFile);
@@ -2772,7 +2786,7 @@ FRESULT preset_saveSongSD(uint8_t songNr)
 	}
 
 	//write song data
-	res = f_write((FIL*)&SDFile,seq_songData[songNr],MAX_SONG_LENGTH,&bytesWritten);
+	res = preset_writeChecked(seq_songData[songNr], MAX_SONG_LENGTH);
 	if (res != FR_OK)
 	{
 		f_close((FIL*)&SDFile);
