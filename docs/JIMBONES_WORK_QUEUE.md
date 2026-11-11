@@ -1,3 +1,7 @@
+## 🚨 TOP PRIORITY — SAVE INTEGRITY / FULL PROJECT RECOVERY (RELEASE BLOCKER)
+
+**Do this before any other firmware feature or ARM release candidate.** `preset_saveProject` currently empties the existing project directory before replacement and does not propagate `preset_saveGlobals` errors. Native emulator fault injection reproduced loss of `prj.nfo` on cold restart (write faults 2–10), with some cases resetting BPM to 120. Fix with staged whole-project writes, verified sync/close, atomic or recovery-safe replacement and retained last-known-good backup. Test injected write, sync, rename, SD-full, removal and cold-start recovery; require consistent project metadata, kits/patterns, globals and BPM. Never report a failed save as successful. Preserve legacy format and unrelated files. **Do not promote an ARM image until this gate passes.** See `docs/CODEX_LIVE_CHECKPOINT.md` and `docs/JIMBONES_ATOMIC_TASKS.md`.
+
 # JIMBONES project tree — active path to next full hardware candidate
 
 Updated 2026-11-08. **User is testing v1.8.06 and finds it far from ready. v1.8.08 is a proposed feature-rich target, not a guaranteed release. ARM builds and image packaging are on HOLD until user explicitly approves a feature-frozen candidate.**
