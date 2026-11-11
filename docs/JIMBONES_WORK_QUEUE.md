@@ -586,3 +586,8 @@ Red native emulator reproducer: injected write 2 during resave removes saved pro
 
 ### 2026-11-11 P0 late promotion blocker
 Local host execution found write-fault 2052 after project staging leaves an incomplete `/proj00` with valid backup overlooked; cold boot fails and BPM reverts to 120. Recovery must validate generation completeness before choosing target or backup. See latest checkpoint; ARM candidate blocked.
+
+### 2026-11-11 16:29 UTC — P0 staged-generation promotion guard (UNTESTED)
+- Current source reviewed via GitHub connector; prior checkpoint at `0ae1b6b` reproduced late fault write 2052 and 120 BPM fallback. Current source already has target/backup directory validity checks for project header and globals, but `preset_saveProject` did not validate stage before moving target aside.
+- Pushed source `9dfb7e3262edfb40bfb7ffd05e4fd016f8935741`: refuse promotion with `FR_DISK_ERR` if staged project header/globals validation fails. This is fail-closed, preserves the current project for an incomplete stage, and changes no DSP or file format.
+- **NOT EXECUTED:** No checkout in this runtime and github.com DNS unavailable; no native test, PCM, ARM or hardware evidence at this SHA. Existing `project_save_faults` late-write regression must be rerun, followed by full CTest, Step FX/LED, Shift CC and 12-case PCM. Current validator does not prove all kits/patterns/songs are complete; full generation manifest and power-loss rename windows remain open. Candidate remains BLOCKED; no image/flash/merge.
