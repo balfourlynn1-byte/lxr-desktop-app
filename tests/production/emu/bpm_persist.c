@@ -48,7 +48,15 @@ int main(int argc, char **argv)
         lxr_idle_blocks(1600); /* allow the production delayed-save timer */
         printf("before restart: parameter=%d runtime=%u\n", lxr_get_param(PAR_BPM), seq_getBpm());
         if (lxr_get_param(PAR_BPM) != 137 || seq_getBpm() != 137) return 3;
-        if (!strcmp(argv[1], "save_explicit") && preset_saveGlobals() != FR_OK) return 3;
+        if (!strcmp(argv[1], "save_explicit")) {
+            if (preset_saveGlobals() != FR_OK) return 3;
+            lxr_set_param(PAR_BPM, 120);
+            if (!preset_loadGlobals()) return 3;
+            lxr_idle_blocks(32);
+            printf("same-process reload: parameter=%d runtime=%u\n",
+                   lxr_get_param(PAR_BPM), seq_getBpm());
+            if (lxr_get_param(PAR_BPM) != 137 || seq_getBpm() != 137) return 3;
+        }
         return save_card(argv[2]);
     }
     if (!strcmp(argv[1], "verify")) {

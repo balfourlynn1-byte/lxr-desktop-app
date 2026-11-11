@@ -553,3 +553,11 @@ commands: cmake -S tests/production/emu -B /tmp/jb-host-emu -DFW=<repo> (0); cma
 result: 137 BPM became 120 after emulator cold restart before fix, even with explicit preset_saveGlobals. Production boot leaves FatFs cwd /tmp, so relative glo.cfg save wrote to /tmp while load read /proj00. Save/load now address currentFolder/glo.cfg. Two-process 137 BPM explicit save/restart passes; no format change. All 12 OFF-path cases yield 4096 samples, zero mismatches, max abs 0; overlap host sum clipped 3 samples equally in both builds. PCM evidence dir /var/folders/2z/y9mhhtg91q1_tq9nfqj43pqr0000gn/T/jb-off-path-compare.ePhJC0. Kit-associated BPM, unsaved edit behavior, SD fault recovery, ARM/image/hardware remain open.
 next_command: Examine existing project/global SD failure behavior and implement compatible kit tempo semantics only after focused regression; run ctest --test-dir /tmp/jb-host-emu --output-on-failure
 safety: NO ARM; NO IMG; NO MERGE; NO FLASH; £0 additional spending
+
+## 2026-11-11 10:08 UTC | TASK L03 | SAME-PROCESS GLOBALS RELOAD PASS
+branch: agents/jb-wavetable-host-experiment
+source_sha: 27cd885cdd7f383dfe26a5416ceb5295f34dadcc
+command: cmake --build /tmp/jb-host-emu --target bpm_persist -j2 (0); ctest --test-dir /tmp/jb-host-emu -R bpm_persist --output-on-failure -V (0)
+result: Extended test explicitly saves 137 BPM, changes live BPM to 120, reloads active project globals while FatFs cwd is /tmp, and checks parameter/runtime 137. A separate process cold boots the card and checks 137. All three stages PASS. Kit tempo recall and SD failure injection still OPEN. No firmware source change since 27cd885; 12-case PCM PASS at that SHA.
+next_command: Inspect and test SD failure reporting for project globals; keep existing preset format.
+safety: NO ARM; NO IMG; NO MERGE; NO FLASH; £0 additional spending
