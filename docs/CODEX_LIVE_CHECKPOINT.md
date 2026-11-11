@@ -398,6 +398,7 @@ blocker: Real DSP dependency map and host link pending
 next_command: rg -n "DecayEg_calc|SVF_calcBlockZDF|calcNextOscSampleBlock" Core/Src/Soundengine/DSPAudio
 safety: NO ARM; NO IMG; NO MERGE; NO FLASH; £0 additional spending
 
+
 ## 2026-11-10 19:41 UTC | TASK P1 | PROGRESS / HOST OSCILLATOR OBJECT PASS
 branch: agents/jb-wavetable-host-experiment
 integration_sha: f797ec786fc57d008afeaabad964906f35a43177 (read only)
@@ -467,4 +468,15 @@ result: Prior PCM comparison was not stalled: earlier exact b95fe57 run complete
 changed_files: Core/Src/ledHandler.c; tests/test_led_handler_host.c; tests/run_stepfx_ui.sh; docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md; docs/JIMBONES_ATOMIC_TASKS.md; docs/JIMBONES_WORK_QUEUE.md
 blocker: Physical Step 1/2/16 running/stopped validation pending; button-handler integration requires hardware or a broader host harness
 next_command: rg -n 'PAR_FILTER_FREQ_[1-6]|menu_encoderChangeParameter' Core/Inc/Parameters.h Core/Src/menu/menu.c Core/Src/Soundengine/MIDI/ParameterArray.c
+safety: NO ARM; NO IMG; NO MERGE; NO FLASH; £0 additional spending
+
+## 2026-11-11 04:18 UTC | TASK R01–R04 | SHIFT RELATIVE FILTER EDIT INTEGRATED
+branch: agents/jb-wavetable-host-experiment
+source_sha: 0611c62fd08e3ee9897f2ee5b2cd65ade341b7cb (pushed and remote verified)
+tested_sha: 0611c62fd08e3ee9897f2ee5b2cd65ade341b7cb
+commands: cc -std=c11 -O2 -Wall -Wextra -Werror -fsanitize=undefined -ICore/Inc tests/test_jb_shift_relative_host.c -o /tmp/jb-shift-relative-host && /tmp/jb-shift-relative-host (0); sh tests/run_stepfx_ui.sh (0); clang -std=gnu11 -fsyntax-only -Werror=implicit-function-declaration with host CMSIS intrinsics and project includes on Core/Src/menu/menu.c (0, two pre-existing strcpy overflow warnings) and Core/Src/Soundengine/Sequencer/sequencer.c (0)
+result: Shift+encoder now applies the same signed, saturating delta to six independent filter cutoff or resonance values; explicit parameter IDs map to six real DSP filters. Armed automation or recording uses the original single-parameter path. Host arithmetic and syntax PASS; actual menu-to-DSP runtime, hardware and CI NOT RUN. Prior Step FX/LED suite remains PASS. Earlier 12-case OFF-path PCM comparison at b95fe57 exit 0, zero mismatches; no active process when checked this session.
+changed_files: Core/Inc/menu/JimbonesRelativeEdit.h; Core/Inc/Soundengine/Sequencer/sequencer.h; Core/Src/Soundengine/Sequencer/sequencer.c; Core/Src/menu/menu.c; tests/test_jb_shift_relative_host.c; docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md; docs/JIMBONES_ATOMIC_TASKS.md; docs/JIMBONES_WORK_QUEUE.md
+blocker: Runtime UI-to-DSP verification pending; physical controls not tested
+next_command: Inspect tests/host menu harness and add a focused Shift+encoder integration test with six distinct filter values and recording guard
 safety: NO ARM; NO IMG; NO MERGE; NO FLASH; £0 additional spending
