@@ -522,3 +522,13 @@ result: Comparison script now reports start and completion for each of 12 cases 
 changed_files: tests/run_off_path_pcm_compare.sh; docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md
 next_command: bash tests/run_off_path_pcm_compare.sh
 safety: NO ARM; NO IMG; NO MERGE; NO FLASH; £0 additional spending
+
+## 2026-11-11 04:41 UTC | TASK P2 | LATEST-HEAD 12-CASE PCM IDENTITY PASS
+branch: agents/jb-wavetable-host-experiment
+experimental_sha: f9c56e298970b9d1927c95a2d2ff8f4b539a6f08
+integration_sha: f797ec786fc57d008afeaabad964906f35a43177 (read only)
+command: bash tests/run_off_path_pcm_compare.sh (exit 0); all 12 renderers completed within 120s per renderer
+result: kick, tom1, tom2, FM, retrigger, long, overlap, snare, clap, cymbal, hihat and openhat each produced 4096 samples; all 12 experimental/reference comparisons had 0 mismatches, first none, max absolute difference 0. Kick peak 16786/clipped 0; retrigger peak 23495/clipped 0. Overlap host sum clipped 3 samples at peak 32767 in both builds, not a new OFF-path regression. Evidence logs: /var/folders/2z/y9mhhtg91q1_tq9nfqj43pqr0000gn/T/jb-off-path-compare.4lksXT. Host identity does not establish hardware CPU/headroom or physical behavior.
+changed_files: docs/CODEX_CURRENT_STATUS.md; docs/CODEX_LIVE_CHECKPOINT.md; docs/JIMBONES_ATOMIC_TASKS.md; docs/JIMBONES_WORK_QUEUE.md
+next_command: Check existing production host emulator build viability and LED Actions status; then trace BPM save/load
+safety: NO ARM; NO IMG; NO MERGE; NO FLASH; £0 additional spending
