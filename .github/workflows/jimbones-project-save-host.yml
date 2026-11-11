@@ -1,0 +1,29 @@
+name: JIMBONES project save recovery host gate
+on:
+  push:
+    branches:
+      - agents/jb-wavetable-host-experiment
+    paths:
+      - 'Core/Src/Preset/**'
+      - 'tests/production/emu/**'
+      - '.github/workflows/jimbones-project-save-host.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  project-save-native:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Record tested source SHA
+        run: git rev-parse HEAD
+      - name: Configure native firmware emulator
+        run: cmake -S tests/production/emu -B /tmp/jimbones-emu -DFW="$GITHUB_WORKSPACE" -DCMAKE_BUILD_TYPE=Release
+      - name: Compile native emulator and regression tests
+        run: cmake --build /tmp/jimbones-emu --parallel 2
+      - name: Run full project save and BPM cold-start fault gates
+        run: ctest --test-dir /tmp/jimbones-emu --output-on-failure --timeout 240 -R '^(bpm_persist|bpm_fault_matrix|bpm_contexts|project_save_faults)$'
+      - name: Verification scope
+        if: always()
+        run: echo "NATIVE HOST ONLY - not ARM, hardware, or power-cut verification"
