@@ -622,3 +622,14 @@ result: Source e3f2042 recovers a damaged target after leaving its directory. So
 remaining: Project SD-full, exact rename-stage failures, repeated failure/retry, true power-loss/sector tear and legacy fixture load are not yet verified. Globals data can be independently updated; tx.ok checks its size/readability, while glo.cfg/glo.bak use a separate recovery path. Release remains blocked.
 next_command: Extend native emulator fault injection for rename/SD-full and cold-restart generation checks; then rerun all CTests.
 safety: £0 additional spending; experimental branch only; no merge/flash
+
+
+## 2026-11-11 18:34 UTC | TASK P0 | PROJECT FAULT MATRIX EXPANDED — PASS, CANDIDATE BLOCKED
+branch: agents/jb-wavetable-host-experiment
+tested_sha: 7fb89cf2877ed4bcdc7583b0dcd6965e7ad990a6 (pushed and verified)
+last_production_sha: 05f36a077753b85c2a8f43282375e8c13f2ac692
+commands: cmake --build /tmp/jb-host-emu -j2 (0); ctest --test-dir /tmp/jb-host-emu --output-on-failure (0, 6/6 PASS); sh tests/run_stepfx_ui.sh (0); sh tests/run_shift_relative_menu_host.sh (0); bash tests/run_off_path_pcm_compare.sh at SHA 602c1d62fcbad67f30bb31e8cbbf40fe47a7d030 with identical production source (0, 12/12 zero mismatches vs f797ec786fc57d008afeaabad964906f35a43177)
+result: Pushed full-card project test 926acb6 (FatFs 7, old generation survives, then new generation saves/recalls after space returns); before/after both project renames 6ce9235 (all four cold restarts internally consistent, final after-rename reports error but recovers complete new generation); checked staging chdir baaac14 (six CTests PASS); concurrent fresh-slot loader fix 05f36a0 and test 44776d7 (slot 2 at 151 BPM); SD-removal full-project fault 602c1d6 (FatFs 1, old generation survives); synthetic unmarked legacy load and first marked replacement 7fb89cf (both PASS). Existing project runner also covers 46 write ordinals, four sync faults and a repeated late fault: 57 injected failed saves total, zero cold-start consistency failures. Exact-source PCM was run after last production edit; three overlap host-sum clipped samples are equal in reference and experiment. No ARM/image/flash.
+remaining: No physical power-loss/torn-sector evidence. Host rename hook models before/after call failures, not a torn FAT update. tx.ok excludes globals contents to permit independent glo.cfg updates, leaving same-length globals corruption undetected. Third-save backup-cleanup fault points remain untested. Synthetic legacy target with valid backup is conservatively rolled back; assess ambiguity. ARM candidate blocked.
+next_command: Add a backward-compatible checksum for independently saved globals with backup recovery; inject same-length corruption and cold restart, then test backup cleanup faults and rerun host suites.
+safety: £0 additional spending; experimental branch only; no ARM/image/merge/flash

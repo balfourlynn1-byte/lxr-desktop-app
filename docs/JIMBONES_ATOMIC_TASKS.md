@@ -758,3 +758,8 @@ User wants Torso Electronics S-4-style press-and-hold behavior and Digitakt TRAC
 ### P0 project-save integrity — 2026-11-11 16:37 UTC (IN PROGRESS)
 - Source/test `e7d329edd7560133f0d0aafbcec5fc8ee37f60ff` adds a separate full-project manifest and validates marked project/backup generations on boot. Native CTest 6/6 PASS, including measured late-write/sync faults and old/new kit, pattern, song and BPM assertions. Step FX/Shift PASS; OFF-path PCM 12/12 zero mismatches. No ARM or hardware test.
 - Remaining atomic checks: SD-full during full project save; create/sync/close and rename stage boundaries; repeated failed saves and successful retry; legacy project fixture; physical card power-loss safety. Keep ARM release gate blocked until complete. See live checkpoint.
+
+
+### P0 project-save continuation — 2026-11-11 18:34 UTC (IN PROGRESS)
+- Pushed `7fb89cf2877ed4bcdc7583b0dcd6965e7ad990a6`: full-card, removed-card, before/after rename, repeat failure/retry, fresh slot and synthetic legacy upgrade tests. Native CTest 6/6 PASS with 57 injected failed saves; Step FX/Shift PASS; last production source PCM 12/12 zero mismatches. Project generation checks include metadata, all 194 files via tx.ok, kit/pattern/song identifiers and data, BPM, selection and cold restart.
+- Still open: checksummed globals for same-length corruption during independent save, torn FAT/power-loss validation, backup cleanup failure points, physical SD. ARM candidate BLOCKED. See latest live checkpoint for commands and precise limits.
