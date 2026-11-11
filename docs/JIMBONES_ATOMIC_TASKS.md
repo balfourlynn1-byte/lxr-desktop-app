@@ -735,3 +735,6 @@ User wants Torso Electronics S-4-style press-and-hold behavior and Digitakt TRAC
 
 ### L03 partial — 2026-11-11 native 137 BPM cold-start fix
 - Source `27cd885cdd7f383dfe26a5416ceb5295f34dadcc`: explicit globals save from live `/tmp` now writes the active project's absolute `glo.cfg` path. Native two-process cold-start test reproduced 120 BPM before fix and restores 137 BPM after fix; CTest 3/3 PASS. The 12-case OFF-path PCM comparison at this SHA has zero sample mismatches versus pinned integration. This fixes explicit project-globals persistence only. Kit-associated tempo recall, unsaved edits, SD failure recovery and hardware remain OPEN. See latest `docs/CODEX_LIVE_CHECKPOINT.md`.
+
+### L02 partial — 2026-11-11 removed-card globals regression
+- Native emulator test removes SD during explicit globals save: FatFs returns error 1; the prior 137 BPM project setting survives reinsertion and cold restart. Test source is host-only; firmware source is unchanged since `27cd885cdd7f383dfe26a5416ceb5295f34dadcc`. SD-full, interrupted write, corrupt-file and rollback tests remain OPEN. See latest checkpoint.

@@ -561,3 +561,11 @@ command: cmake --build /tmp/jb-host-emu --target bpm_persist -j2 (0); ctest --te
 result: Extended test explicitly saves 137 BPM, changes live BPM to 120, reloads active project globals while FatFs cwd is /tmp, and checks parameter/runtime 137. A separate process cold boots the card and checks 137. All three stages PASS. Kit tempo recall and SD failure injection still OPEN. No firmware source change since 27cd885; 12-case PCM PASS at that SHA.
 next_command: Inspect and test SD failure reporting for project globals; keep existing preset format.
 safety: NO ARM; NO IMG; NO MERGE; NO FLASH; £0 additional spending
+
+## 2026-11-11 10:13 UTC | TASK L02/L03 | REMOVED-CARD GLOBAL SAVE FAILURE PASS
+branch: agents/jb-wavetable-host-experiment
+firmware_source_sha: 27cd885cdd7f383dfe26a5416ceb5295f34dadcc
+commands: cmake -S tests/production/emu -B /tmp/jb-host-emu -DFW=<repo> (0); cmake --build /tmp/jb-host-emu --target bpm_persist -j2 (0); ctest --test-dir /tmp/jb-host-emu -R bpm_persist --output-on-failure -V (0); ctest --test-dir /tmp/jb-host-emu --output-on-failure (0, 3/3 PASS)
+result: Host-only SD removal injected after saving 137 BPM. preset_saveGlobals returned FatFs error 1 while card absent; after reinsertion, preset_loadGlobals restored 137 BPM parameter/runtime and separate cold boot restored 137. CTest data file is virtual SD chunks, not firmware image. SD-full and interrupted-write recovery remain NOT RUN. No firmware source change since 27cd885; P2 PCM previously PASS at that exact SHA.
+next_command: Inspect remaining L02/L03 recovery/kit tempo work without changing persistent format prematurely.
+safety: NO ARM BUILD; NO FIRMWARE IMAGE; NO MERGE; NO FLASH; £0 additional spending

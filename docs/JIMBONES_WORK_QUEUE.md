@@ -539,3 +539,6 @@ User wants Torso Electronics S-4-style press-and-hold behavior and Digitakt TRAC
 
 ### 2026-11-11 L03 partial milestone
 Pushed `27cd885cdd7f383dfe26a5416ceb5295f34dadcc`: fixed active-project globals path. Native 137 BPM explicit save/restart, CTest 3/3 and 12-case OFF-path PCM identity PASS. Kit-specific BPM and SD failure tests remain OPEN; next inspect save failure and compatibility before changing kit behavior. See latest checkpoint.
+
+### 2026-11-11 L02 partial milestone
+Native removed-card save failure reports FatFs error 1 and preserves prior 137 BPM after reinsertion/cold start; CTest 3/3 PASS. SD-full/interrupted-write and kit tempo remain OPEN. See latest checkpoint.

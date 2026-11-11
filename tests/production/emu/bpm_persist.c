@@ -3,6 +3,7 @@
 #include "Parameters.h"
 #include "Preset/PresetManager.h"
 #include "Soundengine/Sequencer/sequencer.h"
+#include "emu_hw.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,6 +52,11 @@ int main(int argc, char **argv)
         if (!strcmp(argv[1], "save_explicit")) {
             if (preset_saveGlobals() != FR_OK) return 3;
             lxr_set_param(PAR_BPM, 120);
+            emu_sd_set_present(0);
+            FRESULT failed_save = preset_saveGlobals();
+            printf("removed-card globals save: FatFs=%d\n", failed_save);
+            if (failed_save == FR_OK) return 3;
+            emu_sd_set_present(1);
             if (!preset_loadGlobals()) return 3;
             lxr_idle_blocks(32);
             printf("same-process reload: parameter=%d runtime=%u\n",
