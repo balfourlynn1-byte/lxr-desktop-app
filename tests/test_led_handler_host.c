@@ -59,10 +59,15 @@ int main(void)
     led_clearAllBlinkLeds();
     assert(lit(step1) && lit(step2) && lit(step16));
 
-    /* Stopped and running chase state must restore armed LEDs. */
-    led_setActive_step(0);
-    led_setActive_step(1);
-    led_clearActive_step();
+    /* Playback chase temporarily inverts each armed step; stop restores it. */
+    const uint8_t chaseSteps[] = {0, 1, 15};
+    for (unsigned i = 0; i < sizeof(chaseSteps); ++i) {
+        const uint8_t chaseLed = led_idx2StepLed(chaseSteps[i]);
+        led_setActive_step(chaseSteps[i]);
+        assert(!lit(chaseLed) && stored(chaseLed));
+        led_clearActive_step();
+        assert(lit(chaseLed));
+    }
     assert(lit(step1) && lit(step2) && lit(step16));
 
     host_mode = SELECT_MODE_PERF;
@@ -74,6 +79,13 @@ int main(void)
     host_mode = SELECT_MODE_STEP;
     led_updateSeqLeds();
     assert(!lit(step1) && !lit(step2) && !lit(step16));
+    for (unsigned i = 0; i < sizeof(chaseSteps); ++i) {
+        const uint8_t chaseLed = led_idx2StepLed(chaseSteps[i]);
+        led_setActive_step(chaseSteps[i]);
+        assert(lit(chaseLed) && !stored(chaseLed));
+        led_clearActive_step();
+        assert(!lit(chaseLed));
+    }
     armed[0] = armed[1] = armed[15] = 1;
     led_updateSeqLeds();
     assert(lit(step1) && lit(step2) && lit(step16));
