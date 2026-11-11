@@ -2705,6 +2705,10 @@ FRESULT preset_saveProject(uint8_t presetNr)
 	res = preset_writeProjectFolder(presetNr, stage);
 	strcpy(currentFolder, target);
 	if (res != FR_OK) return res;
+	/* Never move the known-good project aside unless the staged generation
+	 * contains a readable project header and globals. A failed final sync
+	 * must not promote a partially written replacement. */
+	if (!preset_projectDirectoryValid(stage)) return FR_DISK_ERR;
 
 	res = f_stat(target, &info);
 	if (res == FR_OK) {
