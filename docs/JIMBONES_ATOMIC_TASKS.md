@@ -711,3 +711,8 @@ User wants Torso Electronics S-4-style press-and-hold behavior and Digitakt TRAC
 
 ### 2026-11-11 04:41 UTC — Latest-HEAD OFF-path PCM identity
 - At experimental `f9c56e298970b9d1927c95a2d2ff8f4b539a6f08` versus pinned integration `f797ec786fc57d008afeaabad964906f35a43177`, `bash tests/run_off_path_pcm_compare.sh` exit 0: all 12 original-voice cases, 4096 samples each, zero mismatches and max absolute difference 0. Kick and retrigger clipped 0; overlap host sum clipped 3 samples equally in both builds. Script commit `7d6ce7d` added per-case progress and 120-second per-renderer timeout. Host audio identity does not prove physical performance. Next: full Shift emulator path and BPM persistence trace. No ARM/image/merge/flash; £0 spending.
+
+
+### Shift integration source guard (2026-11-11)
+- Added source-level assertions to `tests/test_stepfx_ui_source.py` in commit `3f4a98a8cec8dddd001aab42adda79466bdb38e3` for all six `PAR_FILTER_FREQ_*` and `PAR_RESO_*` references, `jb_relativeEditClamp127`, MIDI CC dispatch, armed/recording exclusion, and the early return in `menu_encoderChangeParameter`.
+- **Not executed in this session**; not a substitute for a real UI-to-DSP host integration test. Run `sh tests/run_stepfx_ui.sh` and the dedicated Shift helper test, then create a production-path host test with stubs or a simulator for DSP parameter delivery and automation-event isolation. Do not claim ARM or hardware verification.
