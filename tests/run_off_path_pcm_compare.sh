@@ -18,14 +18,40 @@ echo "EXPERIMENTAL: $(git rev-parse HEAD)"
 echo "INTEGRATION: $reference"
 echo "HOST TARGET: $("${CC:-clang}" -dumpmachine)"
 echo "EVIDENCE DIR: $work"
+run_renderer() {
+  local log=$1
+  shift
+  python3 - "$log" "$@" <<'PY'
+import subprocess
+import sys
+
+log, *command = sys.argv[1:]
+with open(log, "w") as output:
+    try:
+        result = subprocess.run(command, stdout=output,
+                                stderr=subprocess.STDOUT, timeout=120)
+    except subprocess.TimeoutExpired:
+        output.write("TIMEOUT: renderer exceeded 120 seconds\n")
+        raise SystemExit(124)
+raise SystemExit(result.returncode)
+PY
+}
+case_index=0
 for scenario in kick tom1 tom2 fm retrigger long overlap snare clap cymbal hihat openhat; do
+  case_index=$((case_index + 1))
+  case_start=$SECONDS
+  echo "CASE $case_index/12 START $scenario"
   experimental_status=0
   reference_status=0
-  bash tests/run_native_drumvoice_render.sh "$work/experimental-$scenario.pcm" "$scenario" \
-    > "$work/experimental-$scenario.log" 2>&1 || experimental_status=$?
-  (cd "$work/reference" && bash tests/run_native_drumvoice_render.sh \
-    "$work/reference-$scenario.pcm" "$scenario") \
-    > "$work/reference-$scenario.log" 2>&1 || reference_status=$?
+  run_renderer "$work/experimental-$scenario.log" bash \
+    tests/run_native_drumvoice_render.sh "$work/experimental-$scenario.pcm" "$scenario" \
+    || experimental_status=$?
+  (cd "$work/reference" && run_renderer "$work/reference-$scenario.log" bash \
+    tests/run_native_drumvoice_render.sh "$work/reference-$scenario.pcm" "$scenario") \
+    || reference_status=$?
+  if [[ "$experimental_status" -eq 124 || "$reference_status" -eq 124 ]]; then
+    echo "FAIL $scenario: renderer timeout; logs in $work" >&2; exit 1
+  fi
   if [[ "$experimental_status" -ne "$reference_status" ]]; then
     echo "FAIL $scenario: renderer exits $experimental_status vs $reference_status" >&2; exit 1
   fi
@@ -56,5 +82,6 @@ print(f"{case}: samples=4096 mismatches={len(differences)} "
 if differences:
     raise SystemExit(1)
 PY
+  echo "CASE $case_index/12 DONE $scenario elapsed=$((SECONDS - case_start))s"
 done
 echo "PASS: 12 original OFF-path scenarios, zero PCM mismatches; overlap host-sum clipping documented."
