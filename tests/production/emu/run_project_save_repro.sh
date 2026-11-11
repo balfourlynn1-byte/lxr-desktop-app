@@ -24,3 +24,18 @@ for n in 1 2 3 4; do
     JB_FAIL_SYNC="$n" "$BPM_PERSIST_EXE" project_fault "$card"
     "$BPM_PERSIST_EXE" verify_project "$card"
 done
+
+# A genuinely full FAT32 volume must keep the old generation. Once space is
+# released, a new save must succeed and survive another cold start.
+card="$1-full.sdchunks"
+"$BPM_PERSIST_EXE" project_full "$card"
+"$BPM_PERSIST_EXE" verify_project "$card"
+"$BPM_PERSIST_EXE" project_retry "$card"
+"$BPM_PERSIST_EXE" verify_project "$card"
+
+# A failed replacement must not poison the next save after restart.
+card="$1-retry.sdchunks"
+JB_FAIL_WRITE="$last_write" "$BPM_PERSIST_EXE" project_fault "$card"
+"$BPM_PERSIST_EXE" verify_project "$card"
+"$BPM_PERSIST_EXE" project_retry "$card"
+"$BPM_PERSIST_EXE" verify_project "$card"

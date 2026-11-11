@@ -87,6 +87,24 @@ static int check_project_generation(int newer)
            seq_songData[0][0] != (newer ? 44 : 22);
 }
 
+static int fill_virtual_card(void)
+{
+    FIL filler;
+    uint8_t block[65536] = {0};
+    if (f_open(&filler, "/fill.dat", FA_CREATE_ALWAYS | FA_WRITE) != FR_OK) return 1;
+    unsigned long total = 0;
+    for (;;) {
+        UINT written = 0;
+        FRESULT result = f_write(&filler, block, sizeof block, &written);
+        total += written;
+        if (result != FR_OK || written != sizeof block) break;
+        if (total > 128ul * 1024ul * 1024ul) return 1;
+    }
+    if (f_close(&filler) != FR_OK) return 1;
+    printf("filled virtual SD bytes=%lu\n", total);
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     if (argc != 3 || lxr_sd_create(128) != 0) return 2;
@@ -161,6 +179,29 @@ int main(int argc, char **argv)
         if (result == FR_OK) return 5;
         return save_card(argv[2]);
     }
+    if (!strcmp(argv[1], "project_full")) {
+        if (lxr_boot(123) != 0) return 2;
+        lxr_set_param(PAR_BPM, 137);
+        set_project_generation(0);
+        if (preset_saveProject(0) != FR_OK || fill_virtual_card()) return 3;
+        lxr_set_param(PAR_BPM, 145);
+        set_project_generation(1);
+        FRESULT result = preset_saveProject(0);
+        printf("full-card project save FatFs=%d\n", result);
+        if (result == FR_OK) return 5;
+        return save_card(argv[2]);
+    }
+    if (!strcmp(argv[1], "project_retry")) {
+        if (load_card(argv[2]) || lxr_boot(123) != 0) return 2;
+        FILINFO info;
+        if (f_stat("/fill.dat", &info) == FR_OK && f_unlink("/fill.dat") != FR_OK) return 3;
+        lxr_set_param(PAR_BPM, 145);
+        set_project_generation(1);
+        FRESULT result = preset_saveProject(0);
+        printf("retry project save FatFs=%d\n", result);
+        if (result != FR_OK) return 3;
+        return save_card(argv[2]);
+    }
     if (!strcmp(argv[1], "save") || !strcmp(argv[1], "save_explicit") ||
         !strcmp(argv[1], "save_fault") || !strcmp(argv[1], "save_corrupt") ||
         !strcmp(argv[1], "save_full")) {
@@ -175,19 +216,7 @@ int main(int argc, char **argv)
             if (strcmp(argv[1], "save_explicit")) lxr_set_param(PAR_MIDI_CHAN_GLOBAL, 2);
             if (preset_saveGlobals() != FR_OK) return 3;
             if (!strcmp(argv[1], "save_full")) {
-                FIL filler;
-                uint8_t block[65536] = {0};
-                if (f_open(&filler, "/fill.dat", FA_CREATE_ALWAYS | FA_WRITE) != FR_OK) return 3;
-                unsigned long total = 0;
-                for (;;) {
-                    UINT written = 0;
-                    FRESULT result = f_write(&filler, block, sizeof block, &written);
-                    total += written;
-                    if (result != FR_OK || written != sizeof block) break;
-                    if (total > 128ul * 1024ul * 1024ul) return 3;
-                }
-                if (f_close(&filler) != FR_OK) return 3;
-                printf("filled virtual SD bytes=%lu\n", total);
+                if (fill_virtual_card()) return 3;
                 lxr_set_param(PAR_BPM, 145);
                 lxr_set_param(PAR_MIDI_CHAN_GLOBAL, 5);
                 FRESULT full_save = preset_saveGlobals();
