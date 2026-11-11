@@ -43,6 +43,8 @@ static uint8_t morph_index = 0;
 char savefileNames[NUM_KIT_SLOTS][NUM_SAVEFILE_NAMES][8];
 
 char currentFolder[13];
+static FRESULT preset_recoverProjectFolder(uint8_t presetNr);
+static uint8_t preset_projectDirectoryValid(const char *folder);
 
 //char presetNameBuffer[8];
 //char currentName[8];
@@ -1049,6 +1051,13 @@ uint8_t preset_loadGlobals()
 	FRESULT res;
 	char path[sizeof(currentFolder) + sizeof("/glo.cfg")];
 	char backup[sizeof(currentFolder) + sizeof("/glo.bak")];
+	if (strlen(currentFolder) == 7 && !strncmp(currentFolder, "/proj", 5) &&
+	    currentFolder[5] >= '0' && currentFolder[5] <= '9' &&
+	    currentFolder[6] >= '0' && currentFolder[6] <= '9') {
+		uint8_t project = (uint8_t)((currentFolder[5] - '0') * 10 + currentFolder[6] - '0');
+		if (preset_recoverProjectFolder(project) != FR_OK ||
+		    !preset_projectDirectoryValid(currentFolder)) return 0;
+	}
 /*
 	res = f_mount((FATFS*)&SDFatFS, (TCHAR const*)SDPath,1);
 	if( res != FR_OK)
@@ -2628,6 +2637,21 @@ static FRESULT preset_writeProjectFolder(uint8_t presetNr, const char *folder)
 }
 
 //----------------------------------------------------
+static uint8_t preset_projectDirectoryValid(const char *folder)
+{
+	char path[sizeof(currentFolder) + sizeof("/glo.cfg")];
+	FILINFO info;
+	if (f_stat(folder, &info) != FR_OK || !(info.fattrib & AM_DIR)) return 0;
+	snprintf(path, sizeof path, "%s/prj.nfo", folder);
+	if (f_stat(path, &info) != FR_OK || info.fsize < 8) return 0;
+	snprintf(path, sizeof path, "%s/glo.cfg", folder);
+	if (f_stat(path, &info) == FR_OK &&
+	    info.fsize >= NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS) return 1;
+	snprintf(path, sizeof path, "%s/glo.bak", folder);
+	return f_stat(path, &info) == FR_OK &&
+	       info.fsize >= NUM_PARAMS - PAR_BEGINNING_OF_GLOBALS;
+}
+
 /* A reset can land between moving the old project aside and promoting the
  * staged directory. Restore the old directory before the normal loader. */
 static FRESULT preset_recoverProjectFolder(uint8_t presetNr)
@@ -2637,10 +2661,20 @@ static FRESULT preset_recoverProjectFolder(uint8_t presetNr)
 	snprintf(target, sizeof target, "/proj%02u", presetNr);
 	snprintf(backup, sizeof backup, "/bak%02u", presetNr);
 	FRESULT res = f_stat(target, &info);
-	if (res != FR_NO_FILE) return res;
-	res = f_stat(backup, &info);
-	if (res == FR_NO_FILE) return FR_OK;
-	if (res != FR_OK) return res;
+	if (res == FR_OK && preset_projectDirectoryValid(target)) return FR_OK;
+	if (res != FR_OK && res != FR_NO_FILE) return res;
+	if (!preset_projectDirectoryValid(backup)) return FR_OK;
+	if (res == FR_OK) {
+		char work[256];
+		/* Boot may currently be inside the damaged project directory. */
+		FRESULT leave = f_chdir("/");
+		if (leave != FR_OK) return leave;
+		strcpy(work, target);
+		FRESULT cleanup = empty_directory(work, sizeof work);
+		if (cleanup != FR_OK) return cleanup;
+		cleanup = f_unlink(target);
+		if (cleanup != FR_OK) return cleanup;
+	}
 	return f_rename(backup, target);
 }
 
@@ -2782,6 +2816,11 @@ void preset_loadProjectNames(uint8_t projectNr)
 
 		//open the file
 		res = f_open((FIL*)&SDFile,"prj.nfo",FA_OPEN_EXISTING | FA_READ);
+		if (res != FR_OK) {
+			sprintf((void*)savefileNames[projectNr][PROJECT_NAMES], "Empty");
+			preset_initTmpFolder();
+			return;
+		}
 
 		//read preset name
 		//first the preset name
@@ -2840,6 +2879,7 @@ FRESULT preset_loadProject(uint8_t presetNr, uint8_t clearTmp)
 	sprintf(currentFolder, "/proj%02d", presetNr);
 	res = preset_recoverProjectFolder(presetNr);
 	if (res != FR_OK) return res;
+	if (!preset_projectDirectoryValid(currentFolder)) return FR_DISK_ERR;
 
 	res = f_stat(currentFolder, &fno);
 	if(res == FR_NO_FILE)
