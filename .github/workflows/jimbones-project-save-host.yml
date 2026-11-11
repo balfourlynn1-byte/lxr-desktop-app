@@ -13,9 +13,11 @@ permissions:
 jobs:
   project-save-native:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Record tested source SHA
         run: git rev-parse HEAD
       - name: Configure native firmware emulator
@@ -24,6 +26,12 @@ jobs:
         run: cmake --build /tmp/jimbones-emu --parallel 2
       - name: Run full project save and BPM cold-start fault gates
         run: ctest --test-dir /tmp/jimbones-emu --output-on-failure --timeout 240 -R '^(bpm_persist|bpm_fault_matrix|bpm_contexts|project_save_faults)$'
+      - name: Step FX and Step 1 LED host checks
+        run: sh tests/run_stepfx_ui.sh
+      - name: Shift production-menu CC host checks
+        run: sh tests/run_shift_relative_menu_host.sh
+      - name: Original six voices OFF-path PCM identity
+        run: bash tests/run_off_path_pcm_compare.sh
       - name: Verification scope
         if: always()
-        run: echo "NATIVE HOST ONLY - not ARM, hardware, or power-cut verification"
+        run: echo "NATIVE HOST AND PCM ONLY - not ARM, hardware, or power-cut verification"
