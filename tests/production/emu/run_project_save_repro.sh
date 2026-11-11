@@ -2,6 +2,11 @@
 # Cold-start regression for interrupted replacement of a saved project.
 set -eu
 
+# Fresh project slot must save and cold-boot with its own tempo; this covers
+# integrity validation introduced before the old missing-directory path.
+"$BPM_PERSIST_EXE" project_fresh_slot "$1-fresh.sdchunks"
+"$BPM_PERSIST_EXE" verify_fresh_slot "$1-fresh.sdchunks"
+
 # Three clean replacements must succeed before fault injection; this also
 # checks that the newest BPM survives a separate process cold start.
 "$BPM_PERSIST_EXE" project_repeat "$1-repeat.sdchunks"
