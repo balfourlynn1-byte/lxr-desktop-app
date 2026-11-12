@@ -1,16 +1,16 @@
 # JIMBONES — CURRENT STATUS
 
-TASK: P0 project and globals save data integrity
-STATUS: IN PROGRESS; host regression gates PASS, ARM candidate BLOCKED
+TASK: P0 project/globals save integrity and experimental ARM hardware-test build
+STATUS: HOST AND ARM BUILD PASS; controlled hardware test candidate, hardware untested
 BRANCH: agents/jb-wavetable-host-experiment
-CURRENT COMMIT: fe8c69eef3cf039b58e5e66070ce9e6100ef9517 (pre-checkpoint)
-LAST SOURCE COMMIT: fe8c69eef3cf039b58e5e66070ce9e6100ef9517
-TESTED COMMIT: fe8c69eef3cf039b58e5e66070ce9e6100ef9517
-CHANGED FILES: Core/Src/Preset/presetManager.c; tests/production/emu/bpm_persist.c; tests/production/emu/run_bpm_fault_matrix.sh
-LAST TEST COMMAND: bash tests/run_off_path_pcm_compare.sh
-TEST EXIT CODE: 0 (PASS)
-ACTUAL RESULT: Six native emulator CTests PASS. Full-project gate has 57 injected failed saves (46 write, four sync, four rename-boundary, full SD, removed SD, repeated late failure), all cold-starting a complete old or new generation with matching project header, kit/pattern/song identities and data, BPM and selection. Globals gate has 24 fault/recovery scenarios: 12 write, four sync, zero-byte, single-byte same-length and all-byte same-length corruption, four corrupt-primary interrupted resaves, full SD. All PASS; after corrupt-primary resave fault, old 137/channel 2 or complete new 160/channel 6 recovers. Synthetic original-length globals and unmarked project load and upgrade; fresh project slot 2 saves/recalls 151 BPM. Step FX/LED and Shift host scripts PASS. Exact-source OFF-path PCM 12/12 PASS with zero mismatches against f797ec786fc57d008afeaabad964906f35a43177; overlap host-sum has three clipped samples in both builds. No ARM build/image/flash.
-CURRENT BLOCKER: Native fault injection does not model torn FAT sectors or physical power loss during directory entry updates. Third-save backup cleanup failures have not been selected/tested explicitly. The unmarked target plus valid backup recovery policy conservatively selects backup and could roll back a legacy generation; needs review. New globals CRC catches corruption in checksummed files; a legacy file with no checksum cannot be authenticated. Candidate remains blocked.
-EXACT NEXT ACTION: Add measured third-save backup-cleanup write faults with cold-start generation checks and successful retry; then review/resolve ambiguous unmarked target plus backup, perform physical power-loss validation with rollback plan, and only then reassess ARM build eligibility.
+CURRENT COMMIT: 6c6fbf7dbb4d18dbb0053e42c6f99b8c45c13fe3 (before this documentation checkpoint)
+LAST SOURCE COMMIT: e93185028632b8044c214dc8500b1f62203239e2
+TESTED COMMIT: e93185028632b8044c214dc8500b1f62203239e2
+CHANGED FILES: tests/production/emu/bpm_persist.c; tests/production/emu/run_project_save_repro.sh; artifacts/jimbones-e931850/LXR_V2_V1.8.07.img; artifacts/jimbones-e931850/BUILD_MANIFEST.md
+LAST TEST COMMAND: git show origin/agents/jb-wavetable-host-experiment:artifacts/jimbones-e931850/LXR_V2_V1.8.07.img | shasum -a 256
+TEST EXIT CODE: 0
+ACTUAL RESULT: At e931850: native CTest 6/6 PASS; project matrix 62 injected failed saves with complete old/new cold-start generations and successful retries; globals matrix 24 fault/recovery cases plus four successful retries PASS; Step FX/LED and Shift host scripts PASS; OFF-path PCM 12/12 zero mismatches against f797ec786fc57d008afeaabad964906f35a43177. Overlap host-sum has three clipped samples in both builds. ARM GCC 16.1.0 clean build exit 0, ELF/BIN/IMG generated; img payload/header/checksum verified. Pinned integration also built with same compiler. Experimental image size 306672 B, SHA-256 8698c941e14d8192011399a88172f6f28cbd962772d88fd6f486ae1bbc3dfbab. Remote artifact fetched and hash matches. See artifacts/jimbones-e931850/BUILD_MANIFEST.md.
+CURRENT BLOCKER: Physical SD power loss, FAT sector tearing, target CPU load and on-device audio remain untested. ITCM is 95.36% full. Legacy unchecksummed globals cannot be authenticated. No hardware flash has occurred.
+EXACT NEXT ACTION: Back up a sacrificial SD card and a known-working rollback image; run controlled on-device project save/restart and power-interruption tests on the experimental image, recording the recovered generation and any FatFs errors. Do not use for live performance until hardware behavior is verified.
 
-£0 additional spending; experimental branch only; no ARM image, merge or flash.
+£0 additional spending; experimental branch only; no production merge or automatic flash.
