@@ -35,6 +35,9 @@ void emu_sd_set_present(int present);
 /* Fail low-level writes/syncs from the selected call onward (1-based). */
 void emu_sd_fault(uint32_t write_call, uint32_t sync_call);
 uint32_t emu_sd_write_count(void);
+void emu_projectBackupCleanupStart(void);
+void emu_projectBackupCleanupEnd(void);
+void emu_projectBackupCleanupRange(uint32_t *start, uint32_t *end);
 void emu_projectRenameFault(uint32_t call, uint8_t after);
 uint8_t emu_projectRenameFailBefore(void);
 uint8_t emu_projectRenameFailAfter(void);

@@ -1,6 +1,7 @@
 #!/bin/sh
 # Cold-start regression for interrupted replacement of a saved project.
 set -eu
+case_base=$1
 
 # Fresh project slot must save and cold-boot with its own tempo; this covers
 # integrity validation introduced before the old missing-directory path.
@@ -39,6 +40,24 @@ for n in 1 2; do
         "$BPM_PERSIST_EXE" verify_project "$card"
     done
 done
+
+# Measure the real low-level writes made while removing an older /bak00 on a
+# third save. Probe the start, middle and end of cleanup, then both rotations.
+set -- $("$BPM_PERSIST_EXE" project_third_measure "$case_base-third-measure.sdchunks")
+[ "$#" -eq 3 ]
+cleanup_start=$1
+cleanup_end=$2
+third_total=$3
+echo "third save cleanup writes=$cleanup_start..$cleanup_end total=$third_total"
+cleanup_middle=$((cleanup_start + (cleanup_end - cleanup_start) / 2))
+for n in $((cleanup_start + 1)) "$cleanup_middle" "$cleanup_end" $((cleanup_end + 1)) "$third_total"; do
+    card="$case_base-third-$n.sdchunks"
+    JB_FAIL_WRITE="$n" "$BPM_PERSIST_EXE" project_third_fault "$card"
+    "$BPM_PERSIST_EXE" verify_project "$card"
+    "$BPM_PERSIST_EXE" project_retry "$card"
+    "$BPM_PERSIST_EXE" verify_project "$card"
+done
+set -- "$case_base"
 
 # A genuinely full FAT32 volume must keep the old generation. Once space is
 # released, a new save must succeed and survive another cold start.

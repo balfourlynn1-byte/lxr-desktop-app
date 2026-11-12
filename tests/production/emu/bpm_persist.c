@@ -182,6 +182,36 @@ int main(int argc, char **argv)
         printf("%u\n", emu_sd_write_count());
         return 0;
     }
+    if (!strcmp(argv[1], "project_third_measure") ||
+        !strcmp(argv[1], "project_third_fault")) {
+        if (lxr_boot(123) != 0) return 2;
+        lxr_set_param(PAR_BPM, 137);
+        set_project_generation(0);
+        if (preset_saveProject(0) != FR_OK) return 3;
+        lxr_set_param(PAR_BPM, 145);
+        set_project_generation(1);
+        if (preset_saveProject(0) != FR_OK) return 3;
+        lxr_set_param(PAR_BPM, 137);
+        set_project_generation(0);
+        const char *write_at = getenv("JB_FAIL_WRITE");
+        int measuring = !strcmp(argv[1], "project_third_measure");
+        if (!measuring && !write_at) return 2;
+        emu_sd_fault(measuring ? UINT32_MAX : (uint32_t)atoi(write_at), 0);
+        FRESULT result = preset_saveProject(0);
+        uint32_t start = 0, end = 0;
+        emu_projectBackupCleanupRange(&start, &end);
+        uint32_t writes = emu_sd_write_count();
+        emu_sd_fault(0, 0);
+        if (measuring) {
+            if (result != FR_OK || start == 0 || end <= start) return 3;
+            printf("%u %u %u\n", start, end, writes);
+            return 0;
+        }
+        printf("third save fault write=%s FatFs=%d calls=%u cleanup=%u..%u\n",
+               write_at, result, writes, start, end);
+        if (result == FR_OK) return 5;
+        return save_card(argv[2]);
+    }
     if (!strcmp(argv[1], "project_fault")) {
         if (lxr_boot(123) != 0) return 2;
         lxr_set_param(PAR_BPM, 137);

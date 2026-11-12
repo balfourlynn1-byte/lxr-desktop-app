@@ -2976,10 +2976,18 @@ FRESULT preset_saveProject(uint8_t presetNr)
 		if (backupRes == FR_OK) {
 			char work[256];
 			strcpy(work, backup);
+#if LXR_EMU
+			extern void emu_projectBackupCleanupStart(void);
+			emu_projectBackupCleanupStart();
+#endif
 			res = empty_directory(work, sizeof work);
 			if (res != FR_OK) return res;
 			res = f_unlink(backup);
 			if (res != FR_OK) return res;
+#if LXR_EMU
+			extern void emu_projectBackupCleanupEnd(void);
+			emu_projectBackupCleanupEnd();
+#endif
 		} else if (backupRes != FR_NO_FILE) return backupRes;
 		res = preset_projectRename(target, backup);
 		if (res != FR_OK) return res;
